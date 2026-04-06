@@ -11,15 +11,20 @@ const { generateOTP, compareOTP } = require('../utils/otp');
 const { sendOTPEmail } = require('../utils/email');
 
 const { validateRegister } = require('../validators/auth.validator');
-
-
+const { checkLoginLimit } = require('./rateLimit.service');
 
 // ================= LOGIN =================
-exports.login = async ({ email, password }) => {
+exports.login = async ({ email, password, ip }) => {
 
   if (!email || !password) {
     throw { status: 400, message: "Email dan password wajib diisi" };
   }
+
+  // 🔥 FIX: hanya sekali limiter
+  const userIP = ip || 'unknown';
+  console.log('Login IP:', userIP);
+
+  await checkLoginLimit(userIP);
 
   const user = await userRepository.findByEmail(email);
   if (!user) {
@@ -36,7 +41,9 @@ exports.login = async ({ email, password }) => {
 
   await otpRepository.createOTP(user.id, code, 'login', expiresAt);
 
-  await sendOTPEmail(user.email, code, 'login');
+  // 🔥 NON-BLOCKING EMAIL (AMAN)
+  sendOTPEmail(user.email, code, 'login')
+    .catch(err => console.error('Email error:', err.message));
 
   return {
     message: "OTP telah dikirim ke email"
@@ -69,7 +76,17 @@ exports.register = async (payload) => {
       current_semester
     } = payload;
 
-    // VALIDASI TAMBAHAN
+    // 🔥 VALIDASI TAMBAHAN
+    if (role === 'mahasiswa') {
+      if (!ipk || ipk < 0 || ipk > 4) {
+        throw { status: 400, message: "IPK tidak valid" };
+      }
+
+      if (!current_semester || current_semester < 1) {
+        throw { status: 400, message: "Semester tidak valid" };
+      }
+    }
+
     const existingEmail = await userRepository.findByEmail(email);
     if (existingEmail) throw { status: 400, message: "Email sudah digunakan" };
 
@@ -151,12 +168,9 @@ exports.verifyLoginOTP = async ({ email, code }) => {
     throw { status: 404, message: "User tidak ditemukan" };
   }
 
-  const otpData = await otpRepository.findOTPByUser(
-    Number(user.id),
-    'login'
-  );
+  const otpData = await otpRepository.findOTPByUser(user.id, 'login');
 
-  if (!otpData) {
+  if (!otpData || otpData.expires_at < new Date()) {
     throw { status: 400, message: "OTP tidak valid atau expired" };
   }
 
@@ -173,48 +187,19 @@ exports.verifyLoginOTP = async ({ email, code }) => {
     role: user.role
   });
 
-  let profile = null;
-
-  if (user.role === 'mahasiswa') {
-    profile = await profileRepository.getMahasiswaProfile(user.id);
-  }
-
-  if (user.role === 'dosen') {
-    profile = await profileRepository.getDosenProfile(user.id);
-  }
-
-  return {
-    token,
-    role: user.role,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      npm_nip: user.npm_nip
-    },
-    profile
-  };
+  return { token };
 };
 
 
 // ================= VERIFY REGISTER OTP =================
 exports.verifyRegisterOTP = async ({ email, code }) => {
 
-  if (!email || !code) {
-    throw { status: 400, message: "Email dan OTP wajib diisi" };
-  }
-
   const user = await userRepository.findByEmail(email);
-  if (!user) {
-    throw { status: 404, message: "User tidak ditemukan" };
-  }
+  if (!user) throw { status: 404, message: "User tidak ditemukan" };
 
-  const otpData = await otpRepository.findOTPByUser(
-    Number(user.id),
-    'register'
-  );
+  const otpData = await otpRepository.findOTPByUser(user.id, 'register');
 
-  if (!otpData) {
+  if (!otpData || otpData.expires_at < new Date()) {
     throw { status: 400, message: "OTP tidak valid atau expired" };
   }
 
@@ -225,7 +210,6 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
   }
 
   await otpRepository.markAsUsed(otpData.id);
-
   await userRepository.verifyUser(user.id);
 
   return {
@@ -237,18 +221,15 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
 // ================= RESEND OTP =================
 exports.resendOTP = async ({ email, type }) => {
 
-  if (!email || !type) {
-    throw { status: 400, message: "Email dan type wajib diisi" };
-  }
-
   const user = await userRepository.findByEmail(email);
-  if (!user) {
-    throw { status: 404, message: "User tidak ditemukan" };
-  }
+  if (!user) throw { status: 404, message: "User tidak ditemukan" };
 
   if (!['login', 'register'].includes(type)) {
     throw { status: 400, message: "Type OTP tidak valid" };
   }
+
+  // 🔥 invalidate OTP lama
+  await otpRepository.invalidateOTP(user.id, type);
 
   const code = generateOTP();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000);

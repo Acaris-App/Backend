@@ -2,11 +2,15 @@ const authService = require('../services/auth.service');
 
 exports.login = async (req, res, next) => {
   try {
-    const result = await authService.login(req.body);
 
-    res.status(200).json({
+    const result = await authService.login({
+      ...req.body,
+      ip: req.headers['x-forwarded-for'] || req.ip
+    });
+
+    res.json({
       status: "success",
-      message: result.message
+      data: result
     });
 
   } catch (err) {
