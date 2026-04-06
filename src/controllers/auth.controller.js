@@ -7,9 +7,9 @@ exports.login = async (req, res, next) => {
       ip: req.ip
     });
 
-    res.status(200).json({
+    res.json({
       status: "success",
-      message: result.message
+      data: result
     });
 
   } catch (err) {

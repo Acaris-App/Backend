@@ -40,7 +40,9 @@ exports.login = async ({ email, password, ip }) => {
 
   await otpRepository.createOTP(user.id, code, 'login', expiresAt);
 
-  await sendOTPEmail(user.email, code, 'login');
+  // 🔥 NON-BLOCKING EMAIL (AMAN)
+  sendOTPEmail(user.email, code, 'login')
+    .catch(err => console.error('Email error:', err.message));
 
   return {
     message: "OTP telah dikirim ke email"
@@ -165,7 +167,10 @@ exports.verifyLoginOTP = async ({ email, code }) => {
     throw { status: 404, message: "User tidak ditemukan" };
   }
 
-  const otpData = await otpRepository.findOTPByUser(user.id, 'login');
+  const otpData = await otpRepository.findOTPByUser(
+    Number(user.id),
+    'login'
+  );
 
   if (!otpData || otpData.expires_at < new Date()) {
     throw { status: 400, message: "OTP tidak valid atau expired" };
@@ -219,7 +224,9 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
 exports.resendOTP = async ({ email, type }) => {
 
   const user = await userRepository.findByEmail(email);
-  if (!user) throw { status: 404, message: "User tidak ditemukan" };
+  if (!user) {
+    throw { status: 404, message: "User tidak ditemukan" };
+  }
 
   if (!['login', 'register'].includes(type)) {
     throw { status: 400, message: "Type OTP tidak valid" };
