@@ -50,11 +50,21 @@ The system is deployed using **Google Cloud Run** and utilizes **Docker containe
 
 ## 📁 Project Structure
 ```id="tree-structure"
-/services
-  /auth-service
-  /acaris-service
-  /chatbot-service
+src/
+├── config/
+├── controllers/
+├── services/
+├── repositories/
+├── models/
+├── routes/
+├── middlewares/
+├── utils/
+├── validations/
+├── constants/
+└── app.js
+/docs
 /docker
+/tests
 /.github/workflows
 ```
 
