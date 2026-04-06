@@ -1,8 +1,13 @@
+// ✅ FIX: path dotenv sebelumnya terbalik — local load production, production load local
 require('dotenv').config({
   path: process.env.NODE_ENV === 'production'
     ? '.env.production'
     : '.env.local'
 });
+
+// ✅ FIX: Jalankan worker email di proses yang sama agar queue langsung diproses
+// (sebelumnya worker harus dijalankan manual dengan `npm run worker`)
+require('./jobs/email.job');
 const express = require('express');
 const multer = require('multer');
 

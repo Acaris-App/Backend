@@ -62,3 +62,11 @@ exports.markAsUsed = async (id) => {
     [id]
   );
 };
+
+// ✅ FIX: Fungsi ini dipanggil di resendOTP tapi tidak ada di repository
+exports.invalidateOTP = async (userId, type) => {
+  await db.query(
+    `UPDATE otp_codes SET is_used = true WHERE user_id = $1 AND type = $2`,
+    [userId, type]
+  );
+};

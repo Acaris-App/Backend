@@ -2,7 +2,10 @@ const authService = require('../services/auth.service');
 
 exports.login = async (req, res, next) => {
   try {
-    const result = await authService.login(req.body);
+    const result = await authService.login({
+      ...req.body,
+      ip: req.ip
+    });
 
     res.status(200).json({
       status: "success",
