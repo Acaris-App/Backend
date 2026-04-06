@@ -1,9 +1,33 @@
-const fs = require('fs');
-const path = require('path');
-
 const documentRepository = require('../repositories/document.repository');
 const profileRepository = require('../repositories/profile.repository');
+const { bucket } = require('../config/gcs');
 
+// ================= HELPER GCS =================
+const uploadToGCS = async (file, filename, userId) => {
+
+  const filePath = `${userId}/${filename}`; // tetap folder per user
+
+  const blob = bucket.file(filePath);
+
+  const blobStream = blob.createWriteStream({
+    resumable: false,
+    contentType: file.mimetype
+  });
+
+  return new Promise((resolve, reject) => {
+
+    blobStream.on('finish', () => {
+      const url = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+      resolve(url);
+    });
+
+    blobStream.on('error', reject);
+
+    blobStream.end(file.buffer);
+  });
+};
+
+// ================= UPLOAD =================
 exports.uploadDocument = async ({ user, body, file }) => {
 
   try {
@@ -34,7 +58,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
 
     const currentSemester = profile.current_semester;
 
-    // ================= PARSE SEMESTER =================
+    // ================= PARSE =================
     let semesterInt = null;
 
     if (document_type !== 'transkrip') {
@@ -53,7 +77,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
         throw { status: 400, message: "Semester minimal adalah 1" };
       }
 
-      // 🔥 FIX LOGIKA (boleh upload sampai semester saat ini)
       if (semesterInt > currentSemester) {
         throw {
           status: 400,
@@ -62,7 +85,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
       }
     }
 
-    // ================= DUPLICATE CHECK =================
+    // ================= DUPLICATE =================
     const existing = await documentRepository.findByUserTypeSemester(
       user.id,
       document_type,
@@ -80,7 +103,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
     const lastKRS = await documentRepository.getLastSemester(user.id, 'krs');
     const lastKHS = await documentRepository.getLastSemester(user.id, 'khs');
 
-    // 🔥 KRS HARUS BERURUTAN
     if (document_type === 'krs') {
       if (semesterInt !== lastKRS + 1) {
         throw {
@@ -90,7 +112,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
       }
     }
 
-    // 🔥 KHS HARUS BERURUTAN + WAJIB ADA KRS
     if (document_type === 'khs') {
 
       if (semesterInt !== lastKHS + 1) {
@@ -100,7 +121,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
         };
       }
 
-      // 🔥 VALIDASI: KRS HARUS ADA
       const krs = await documentRepository.findByUserTypeSemester(
         user.id,
         'krs',
@@ -115,14 +135,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
       }
     }
 
-    // ================= FOLDER PER USER =================
-    const userDir = path.join('uploads', String(user.id));
-
-    if (!fs.existsSync(userDir)) {
-      fs.mkdirSync(userDir, { recursive: true });
-    }
-
-    // ================= SAFE NAME =================
+    // ================= NAMA FILE =================
     const safeName = (user.name || 'user')
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-');
@@ -138,20 +151,18 @@ exports.uploadDocument = async ({ user, body, file }) => {
       newFilename = `${safeName}-${document_type}-semester-${semesterInt}-${date}-${unique}.pdf`;
     }
 
-    const newPath = path.join(userDir, newFilename);
-
-    // ================= RENAME FILE =================
-    fs.renameSync(file.path, newPath);
+    // ================= UPLOAD GCS =================
+    const fileUrl = await uploadToGCS(file, newFilename, user.id);
 
     // ================= SAVE DB =================
     const document = await documentRepository.createDocument({
       user_id: user.id,
       document_type,
       semester: semesterInt,
-      file_path: newPath
+      file_path: fileUrl
     });
 
-    // ================= AUTO UPDATE SEMESTER =================
+    // ================= AUTO SEMESTER =================
     if (document_type === 'khs') {
 
       const lastKHSAfter = await documentRepository.getLastSemester(user.id, 'khs');
@@ -168,62 +179,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
     return document;
 
   } catch (err) {
-
-    // 🔥 CLEANUP FILE JIKA ERROR
-    if (file && fs.existsSync(file.path)) {
-      fs.unlinkSync(file.path);
-    }
-
     throw err;
   }
-};
-
-exports.checkCompleteness = async (user) => {
-
-  if (!user || user.role !== 'mahasiswa') {
-    throw { status: 403, message: "Hanya mahasiswa" };
-  }
-
-  const profile = await profileRepository.getMahasiswaProfile(user.id);
-
-  if (!profile) {
-    throw { status: 404, message: "Profile tidak ditemukan" };
-  }
-
-  const currentSemester = profile.current_semester;
-
-  const docs = await documentRepository.getDocumentsByUser(user.id);
-
-  const krsList = docs
-    .filter(d => d.document_type === 'krs')
-    .map(d => d.semester);
-
-  const khsList = docs
-    .filter(d => d.document_type === 'khs')
-    .map(d => d.semester);
-
-  const missingKRS = [];
-  const missingKHS = [];
-
-  for (let i = 1; i <= currentSemester; i++) {
-    if (!krsList.includes(i)) missingKRS.push(i);
-  }
-
-  for (let i = 1; i < currentSemester; i++) {
-    if (!khsList.includes(i)) missingKHS.push(i);
-  }
-
-  return {
-    current_semester: currentSemester,
-    krs: {
-      uploaded: krsList,
-      missing: missingKRS,
-      is_complete: missingKRS.length === 0
-    },
-    khs: {
-      uploaded: khsList,
-      missing: missingKHS,
-      is_complete: missingKHS.length === 0
-    }
-  };
 };

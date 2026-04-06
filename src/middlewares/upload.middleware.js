@@ -1,22 +1,28 @@
-const fs = require('fs');
-const path = require('path');
 const multer = require('multer');
 
-const uploadPath = path.join(__dirname, '../../uploads');
+// 🔥 MEMORY STORAGE (WAJIB untuk GCS)
+const storage = multer.memoryStorage();
 
-// 🔥 AUTO CREATE FOLDER
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
+// 🔥 VALIDASI FILE
+const fileFilter = (req, file, cb) => {
+  if (!file) {
+    return cb(new Error('File wajib diupload'), false);
+  }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname;
-    cb(null, uniqueName);
+  if (file.mimetype !== 'application/pdf') {
+    return cb(new Error('Hanya file PDF'), false);
+  }
+
+  cb(null, true);
+};
+
+// 🔥 CONFIG MULTER
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024 // 2MB
   }
 });
 
-exports.upload = multer({ storage });
+module.exports = { upload };

@@ -1,0 +1,44 @@
+steps:
+  # Build image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/backend', '.']
+
+  # Push ke registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/backend']
+
+  # Deploy ke Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'acaris-service'
+    - '--image'
+    - 'gcr.io/$PROJECT_ID/backend'
+    - '--region'
+    - 'asia-southeast2'
+    - '--platform'
+    - 'managed'
+    - '--allow-unauthenticated'
+
+    # 🔥 ENV
+    - '--set-env-vars=NODE_ENV=production'
+    - '--set-env-vars=PORT=3000'
+    - '--set-env-vars=JWT_SECRET=supersecretkey'
+
+    - '--set-env-vars=DB_HOST=/cloudsql/acaris-app:asia-southeast2:acaris-db'
+    - '--set-env-vars=DB_USER=acaris_user'
+    - '--set-env-vars=DB_PASSWORD=Mars123//'
+    - '--set-env-vars=DB_NAME=acaris_db'
+
+    - '--set-env-vars=EMAIL_USER=marsneedduitbanget@gmail.com'
+    - '--set-env-vars=EMAIL_PASS=duvp lwik phzi xmzf'
+
+    - '--set-env-vars=REDIS_URL=rediss://default:gQAAAAAAAW1HAAIncDJhMjQ5OWE5YzMyOTU0NTc2YTA1Y2Q4ZGNmYWRlZWIwNnAyOTM1MTE@fun-stag-93511.upstash.io:6379'
+
+    - '--set-env-vars=GCS_BUCKET=acaris-storage'
+    - '--add-cloudsql-instances=acaris-app:asia-southeast2:acaris-db'
+
+images:
+  - 'gcr.io/$PROJECT_ID/backend'
