@@ -170,13 +170,80 @@ exports.uploadDocument = async ({ user, body, file }) => {
       if (semesterInt === lastKHSAfter) {
         const newSemester = semesterInt + 1;
 
-        if (newSemester > currentSemester) {
+        if (newSemester <= currentSemester) {
           await profileRepository.updateSemester(user.id, newSemester);
         }
       }
     }
 
     return document;
+
+  } catch (err) {
+    throw err;
+  }
+};
+
+// ================= CHECK COMPLETENESS =================
+exports.checkCompleteness = async (user) => {
+
+  try {
+
+    if (!user || user.role !== 'mahasiswa') {
+      throw { status: 403, message: "Hanya mahasiswa yang dapat mengecek kelengkapan dokumen" };
+    }
+
+    const profile = await profileRepository.getMahasiswaProfile(user.id);
+
+    if (!profile) {
+      throw { status: 404, message: "Profile mahasiswa tidak ditemukan" };
+    }
+
+    const currentSemester = profile.current_semester;
+
+    const allDocs = await documentRepository.getDocumentsByUser(user.id);
+
+    const uploaded = {
+      krs: [],
+      khs: [],
+      transkrip: false
+    };
+
+    for (const doc of allDocs) {
+      if (doc.document_type === 'krs') {
+        uploaded.krs.push(doc.semester);
+      } else if (doc.document_type === 'khs') {
+        uploaded.khs.push(doc.semester);
+      } else if (doc.document_type === 'transkrip') {
+        uploaded.transkrip = true;
+      }
+    }
+
+    // Cek semester mana yang belum upload KRS
+    const missingSemesterKRS = [];
+    for (let s = 1; s <= currentSemester; s++) {
+      if (!uploaded.krs.includes(s)) missingSemesterKRS.push(s);
+    }
+
+    // Cek semester mana yang belum upload KHS (hanya semester < currentSemester)
+    const missingSemesterKHS = [];
+    for (let s = 1; s < currentSemester; s++) {
+      if (!uploaded.khs.includes(s)) missingSemesterKHS.push(s);
+    }
+
+    const isComplete =
+      missingSemesterKRS.length === 0 &&
+      missingSemesterKHS.length === 0 &&
+      uploaded.transkrip;
+
+    return {
+      current_semester: currentSemester,
+      uploaded_krs: uploaded.krs.sort((a, b) => a - b),
+      uploaded_khs: uploaded.khs.sort((a, b) => a - b),
+      uploaded_transkrip: uploaded.transkrip,
+      missing_krs: missingSemesterKRS,
+      missing_khs: missingSemesterKHS,
+      is_complete: isComplete
+    };
 
   } catch (err) {
     throw err;

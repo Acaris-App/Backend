@@ -1,13 +1,18 @@
 // ✅ FIX: path dotenv sebelumnya terbalik — local load production, production load local
 require('dotenv').config({
-  path: process.env.NODE_ENV === 'local'
+  path: process.env.NODE_ENV === 'production'
     ? '.env.production'
     : '.env.local'
 });
 
-// ✅ FIX: Jalankan worker email di proses yang sama agar queue langsung diproses
-// (sebelumnya worker harus dijalankan manual dengan `npm run worker`)
-require('./jobs/email.job');
+// 🚧 DEV MODE: Skip load email job worker jika DISABLE_QUEUE=true
+// Ini mencegah Bull Queue connect ke Upstash dan spam polling
+if (process.env.DISABLE_QUEUE !== 'true') {
+  require('./jobs/email.job');
+} else {
+  console.log('📭 [DEV MODE] Email job worker dinonaktifkan (DISABLE_QUEUE=true)');
+}
+
 const express = require('express');
 const multer = require('multer');
 

@@ -1,5 +1,4 @@
 const db = require('../config/db');
-const fs = require('fs');
 
 // ================= CREATE =================
 exports.createDocument = async (data) => {
@@ -43,21 +42,9 @@ exports.getValidDocuments = async (userId, type) => {
     [userId, type]
   );
 
-  const validDocs = [];
-
-  for (const doc of result.rows) {
-    if (fs.existsSync(doc.file_path)) {
-      validDocs.push(doc);
-    } else {
-      // 🔥 AUTO CLEAN DB
-      await db.query(
-        `DELETE FROM dokumen_mahasiswa WHERE id = $1`,
-        [doc.id]
-      );
-    }
-  }
-
-  return validDocs;
+  // file_path adalah GCS URL (https://...), bukan path lokal
+  // jangan pakai fs.existsSync untuk mengecek keberadaan file
+  return result.rows;
 };
 
 // ================= CHECK DOCUMENT =================

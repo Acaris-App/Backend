@@ -1,20 +1,30 @@
 const Queue = require('bull');
 
-// ✅ FIX: Pakai REDIS_URL dari env (Upstash), bukan hardcode localhost
-// Bull dengan Upstash (TLS) butuh createClient custom pakai ioredis
-const emailQueue = new Queue('email-queue', {
-  createClient: () => {
-    const Redis = require('ioredis');
-    return new Redis(process.env.REDIS_URL, {
-      tls: {},
-      maxRetriesPerRequest: null,
-      enableReadyCheck: false,
-      connectTimeout: 10000,
-      retryStrategy(times) {
-        return Math.min(times * 50, 2000);
-      }
-    });
-  }
-});
+// 🚧 DEV MODE: Jika DISABLE_QUEUE=true, export dummy queue agar tidak connect ke Upstash
+if (process.env.DISABLE_QUEUE === 'true') {
+  const dummyQueue = {
+    add: async (data) => {
+      console.log('📭 [QUEUE DISABLED] Job tidak dikirim ke queue:', data);
+    },
+    process: () => {},
+    on: () => {}
+  };
+  module.exports = dummyQueue;
+} else {
+  const emailQueue = new Queue('email-queue', {
+    createClient: () => {
+      const Redis = require('ioredis');
+      return new Redis(process.env.REDIS_URL, {
+        tls: {},
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
+        connectTimeout: 10000,
+        retryStrategy(times) {
+          return Math.min(times * 50, 2000);
+        }
+      });
+    }
+  });
 
-module.exports = emailQueue;
+  module.exports = emailQueue;
+}
