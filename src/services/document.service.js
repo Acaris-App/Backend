@@ -27,7 +27,19 @@ const uploadToGCS = async (file, filename, userId) => {
   });
 };
 
-// ================= UPLOAD =================
+// ================= HELPER GCS DELETE (rollback) =================
+const deleteFromGCS = async (filename, userId) => {
+  try {
+    const filePath = `${userId}/${filename}`;
+    await bucket.file(filePath).delete();
+    console.log(`[GCS ROLLBACK] File dihapus: ${filePath}`);
+  } catch (err) {
+    // Log saja, jangan throw — jangan sampai rollback error menimpa error aslinya
+    console.error(`[GCS ROLLBACK] Gagal hapus file: ${err.message}`);
+  }
+};
+
+
 exports.uploadDocument = async ({ user, body, file }) => {
 
   try {
@@ -59,7 +71,8 @@ exports.uploadDocument = async ({ user, body, file }) => {
     const currentSemester = profile.current_semester;
 
     // ================= PARSE =================
-    let semesterInt = null;
+    // transkrip tidak butuh semester, gunakan 0 agar tidak violate NOT NULL constraint di DB
+    let semesterInt = 0;
 
     if (document_type !== 'transkrip') {
 
@@ -152,15 +165,23 @@ exports.uploadDocument = async ({ user, body, file }) => {
     }
 
     // ================= UPLOAD GCS =================
+    // Upload ke GCS dulu, simpan filename untuk rollback jika DB gagal
     const fileUrl = await uploadToGCS(file, newFilename, user.id);
 
     // ================= SAVE DB =================
-    const document = await documentRepository.createDocument({
-      user_id: user.id,
-      document_type,
-      semester: semesterInt,
-      file_path: fileUrl
-    });
+    let document;
+    try {
+      document = await documentRepository.createDocument({
+        user_id: user.id,
+        document_type,
+        semester: semesterInt,
+        file_path: fileUrl
+      });
+    } catch (dbErr) {
+      // DB gagal → rollback: hapus file yang sudah terlanjur upload ke GCS
+      await deleteFromGCS(newFilename, user.id);
+      throw dbErr;
+    }
 
     // ================= AUTO SEMESTER =================
     if (document_type === 'khs') {
@@ -230,10 +251,10 @@ exports.checkCompleteness = async (user) => {
       if (!uploaded.khs.includes(s)) missingSemesterKHS.push(s);
     }
 
+    // is_complete = semua KRS dan KHS sudah lengkap (transkrip opsional)
     const isComplete =
       missingSemesterKRS.length === 0 &&
-      missingSemesterKHS.length === 0 &&
-      uploaded.transkrip;
+      missingSemesterKHS.length === 0;
 
     return {
       current_semester: currentSemester,

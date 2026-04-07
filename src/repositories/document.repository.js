@@ -21,8 +21,6 @@ exports.createDocument = async (data) => {
 // ================= DUPLICATE =================
 exports.findByUserTypeSemester = async (userId, type, semester) => {
 
-  if (type === 'transkrip') return null;
-
   const result = await db.query(
     `SELECT * FROM dokumen_mahasiswa
      WHERE user_id = $1 
