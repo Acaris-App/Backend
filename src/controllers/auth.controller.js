@@ -9,7 +9,7 @@ exports.login = async (req, res, next) => {
 
     res.json({
       status: "success",
-      data: result
+      message: result.message
     });
 
   } catch (err) {
@@ -24,7 +24,11 @@ exports.verifyLoginOTP = async (req, res, next) => {
     res.status(200).json({
       status: "success",
       message: "Login berhasil",
-      data: result
+      data: {
+        token: result.token,
+        role: result.role,
+        user: result.user
+      }
     });
 
   } catch (err) {

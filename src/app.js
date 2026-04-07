@@ -1,6 +1,6 @@
 // ✅ FIX: path dotenv sebelumnya terbalik — local load production, production load local
 require('dotenv').config({
-  path: process.env.NODE_ENV === 'production'
+  path: process.env.NODE_ENV === 'local'
     ? '.env.production'
     : '.env.local'
 });

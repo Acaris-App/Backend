@@ -184,12 +184,48 @@ exports.verifyLoginOTP = async ({ email, code }) => {
 
   await otpRepository.markAsUsed(otpData.id);
 
+  // 🔥 AMBIL PROFILE SESUAI ROLE
+  let profileData = {};
+
+  if (user.role === 'mahasiswa') {
+    const mahasiswa = await profileRepository.getMahasiswaProfile(user.id);
+
+    if (mahasiswa) {
+      profileData = {
+        angkatan: mahasiswa.angkatan,
+        ipk: mahasiswa.ipk,
+        semester: mahasiswa.current_semester
+      };
+    }
+  }
+
+  if (user.role === 'dosen') {
+    const dosen = await profileRepository.getDosenProfile(user.id);
+
+    if (dosen) {
+      profileData = {
+        kode_kelas: dosen.kode_kelas
+      };
+    }
+  }
+
   const token = jwt.generateToken({
     id: user.id,
     role: user.role
   });
 
-  return { token };
+  return {
+    token,
+    role: user.role,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      npm_nip: user.npm_nip,
+      profile_picture: user.profile_picture,
+      ...profileData // 🔥 dynamic sesuai role
+    }
+  };
 };
 
 
