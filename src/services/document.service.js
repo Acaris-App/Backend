@@ -270,3 +270,49 @@ exports.checkCompleteness = async (user) => {
     throw err;
   }
 };
+
+// ================= UPDATE DOCUMENT =================
+exports.updateDocument = async ({ user, documentId, file }) => {
+
+  if (!file) {
+    throw { status: 400, message: "File wajib diupload" };
+  }
+
+  if (!user || user.role !== 'mahasiswa') {
+    throw { status: 403, message: "Hanya mahasiswa yang dapat update dokumen" };
+  }
+
+  // Cari dokumen yang mau diupdate, pastikan milik user ini
+  const existing = await documentRepository.findById(documentId, user.id);
+  if (!existing) {
+    throw { status: 404, message: "Dokumen tidak ditemukan" };
+  }
+
+  // Upload file baru ke GCS
+  const safeName = (user.name || 'user')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-');
+
+  const date = new Date().toISOString().split('T')[0];
+  const unique = Date.now();
+
+  let newFilename = '';
+  if (existing.document_type === 'transkrip') {
+    newFilename = `${safeName}-${existing.document_type}-${date}-${unique}.pdf`;
+  } else {
+    newFilename = `${safeName}-${existing.document_type}-semester-${existing.semester}-${date}-${unique}.pdf`;
+  }
+
+  const fileUrl = await uploadToGCS(file, newFilename, user.id);
+
+  // Update path di DB
+  let updated;
+  try {
+    updated = await documentRepository.updateFilePath(documentId, fileUrl);
+  } catch (dbErr) {
+    await deleteFromGCS(newFilename, user.id);
+    throw dbErr;
+  }
+
+  return updated;
+};

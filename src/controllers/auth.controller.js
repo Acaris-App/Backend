@@ -1,25 +1,12 @@
 const authService = require('../services/auth.service');
 
+// ================= LOGIN =================
 exports.login = async (req, res, next) => {
   try {
     const result = await authService.login({
       ...req.body,
       ip: req.ip
     });
-
-    res.json({
-      status: "success",
-      message: result.message
-    });
-
-  } catch (err) {
-    next(err);
-  }
-};
-
-exports.verifyLoginOTP = async (req, res, next) => {
-  try {
-    const result = await authService.verifyLoginOTP(req.body);
 
     res.status(200).json({
       status: "success",
@@ -36,6 +23,7 @@ exports.verifyLoginOTP = async (req, res, next) => {
   }
 };
 
+// ================= REGISTER MAHASISWA =================
 exports.registerMahasiswa = async (req, res, next) => {
   try {
     const result = await authService.registerMahasiswa(req.body);
@@ -50,6 +38,7 @@ exports.registerMahasiswa = async (req, res, next) => {
   }
 };
 
+// ================= REGISTER DOSEN =================
 exports.registerDosen = async (req, res, next) => {
   try {
     const result = await authService.registerDosen(req.body, req.file);
@@ -64,6 +53,7 @@ exports.registerDosen = async (req, res, next) => {
   }
 };
 
+// ================= VERIFY REGISTER OTP =================
 exports.verifyRegisterOTP = async (req, res, next) => {
   try {
     const result = await authService.verifyRegisterOTP(req.body);
@@ -83,6 +73,7 @@ exports.verifyRegisterOTP = async (req, res, next) => {
   }
 };
 
+// ================= RESEND OTP =================
 exports.resendOTP = async (req, res, next) => {
   try {
     const result = await authService.resendOTP(req.body);
@@ -90,6 +81,69 @@ exports.resendOTP = async (req, res, next) => {
     res.status(200).json({
       status: "success",
       message: result.message
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ================= FORGOT PASSWORD =================
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const result = await authService.forgotPassword(req.body);
+
+    res.status(200).json({
+      status: "success",
+      message: result.message
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ================= RESET PASSWORD =================
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const result = await authService.resetPassword(req.body);
+
+    res.status(200).json({
+      status: "success",
+      message: result.message
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ================= CHANGE PASSWORD (login required) =================
+exports.changePassword = async (req, res, next) => {
+  try {
+    const result = await authService.changePassword({
+      userId: req.user.id,
+      ...req.body
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: result.message
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ================= LOGOUT =================
+exports.logout = async (req, res, next) => {
+  try {
+    // JWT stateless — logout cukup hapus token di sisi client
+    // Kalau mau blacklist token, bisa tambahkan Redis di sini nanti
+    res.status(200).json({
+      status: "success",
+      message: "Logout berhasil"
     });
 
   } catch (err) {

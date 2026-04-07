@@ -66,3 +66,25 @@ exports.getLastSemester = async (userId, type) => {
 
   return Math.max(...docs.map(d => d.semester));
 };
+// ================= FIND BY ID =================
+exports.findById = async (documentId, userId) => {
+  const result = await db.query(
+    `SELECT * FROM dokumen_mahasiswa WHERE id = $1 AND user_id = $2`,
+    [documentId, userId]
+  );
+
+  return result.rows[0];
+};
+
+// ================= UPDATE FILE PATH =================
+exports.updateFilePath = async (documentId, filePath) => {
+  const result = await db.query(
+    `UPDATE dokumen_mahasiswa
+     SET file_path = $1, uploaded_at = NOW()
+     WHERE id = $2
+     RETURNING *`,
+    [filePath, documentId]
+  );
+
+  return result.rows[0];
+};

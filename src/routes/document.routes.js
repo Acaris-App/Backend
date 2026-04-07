@@ -6,6 +6,7 @@ const { uploadPDF } = require('../config/multer');
 
 const documentController = require('../controllers/document.controller');
 
+// 📤 Upload dokumen baru
 router.post(
   '/upload',
   authenticate,
@@ -13,10 +14,19 @@ router.post(
   documentController.upload
 );
 
+// 🔄 Update/Replace dokumen yang sudah ada
+router.put(
+  '/update/:document_id',
+  authenticate,
+  uploadPDF.single('file'),
+  documentController.updateDocument
+);
+
+// ✅ Cek kelengkapan dokumen
 router.get(
   '/check',
   authenticate,
-  documentController.checkCompleteness,
+  documentController.checkCompleteness
 );
 
 module.exports = router;

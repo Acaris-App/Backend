@@ -1,8 +1,8 @@
 const documentService = require('../services/document.service');
 
+// ================= UPLOAD =================
 exports.upload = async (req, res, next) => {
   try {
-
     const result = await documentService.uploadDocument({
       user: req.user,
       body: req.body,
@@ -11,6 +11,7 @@ exports.upload = async (req, res, next) => {
 
     res.json({
       status: "success",
+      message: "Dokumen berhasil diupload",
       data: result
     });
 
@@ -19,9 +20,29 @@ exports.upload = async (req, res, next) => {
   }
 };
 
+// ================= UPDATE DOCUMENT =================
+exports.updateDocument = async (req, res, next) => {
+  try {
+    const result = await documentService.updateDocument({
+      user: req.user,
+      documentId: req.params.document_id,
+      file: req.file
+    });
+
+    res.json({
+      status: "success",
+      message: "Dokumen berhasil diperbarui",
+      data: result
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ================= CHECK COMPLETENESS =================
 exports.checkCompleteness = async (req, res, next) => {
   try {
-
     const result = await documentService.checkCompleteness(req.user);
 
     res.json({

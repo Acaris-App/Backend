@@ -35,16 +35,41 @@ const uploadProfilePicture = async (file, nip) => {
   });
 };
 
-// ================= LOGIN =================
+// ================= HELPER: BUILD PROFILE DATA =================
+const buildProfileData = async (user) => {
+  let profileData = {};
+
+  if (user.role === 'mahasiswa') {
+    const mahasiswa = await profileRepository.getMahasiswaProfile(user.id);
+    if (mahasiswa) {
+      profileData = {
+        angkatan: mahasiswa.angkatan,
+        ipk: mahasiswa.ipk,
+        semester: mahasiswa.current_semester
+      };
+    }
+  }
+
+  if (user.role === 'dosen') {
+    const dosen = await profileRepository.getDosenProfile(user.id);
+    if (dosen) {
+      profileData = {
+        kode_kelas: dosen.kode_kelas
+      };
+    }
+  }
+
+  return profileData;
+};
+
+// ================= LOGIN (LANGSUNG TOKEN, TANPA OTP) =================
 exports.login = async ({ email, password, ip }) => {
 
   if (!email || !password) {
     throw { status: 400, message: "Email dan password wajib diisi" };
   }
 
-  // ✅ FIX: hapus duplikasi — checkLoginLimit hanya dipanggil sekali
   const userIP = ip || 'unknown';
-  console.log('Login IP:', userIP);
   await checkLoginLimit(userIP);
 
   const user = await userRepository.findByEmail(email);
@@ -57,17 +82,28 @@ exports.login = async ({ email, password, ip }) => {
     throw { status: 401, message: "Email atau password salah" };
   }
 
-  const code = generateOTP();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  if (!user.is_verified) {
+    throw { status: 403, message: "Akun belum diverifikasi, silakan cek email untuk OTP" };
+  }
 
-  await otpRepository.createOTP(user.id, code, 'login', expiresAt);
+  const profileData = await buildProfileData(user);
 
-  // 🔥 NON-BLOCKING EMAIL (AMAN)
-  sendOTPEmail(user.email, code, 'login')
-    .catch(err => console.error('Email error:', err.message));
+  const token = jwt.generateToken({
+    id: user.id,
+    role: user.role
+  });
 
   return {
-    message: "OTP telah dikirim ke email"
+    token,
+    role: user.role,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      npm_nip: user.npm_nip,
+      profile_picture: user.profile_picture,
+      ...profileData
+    }
   };
 };
 
@@ -80,7 +116,6 @@ exports.registerMahasiswa = async (payload) => {
   try {
     await client.query('BEGIN');
 
-    // Force role mahasiswa
     payload.role = 'mahasiswa';
 
     const { error } = validateRegister(payload);
@@ -145,7 +180,7 @@ exports.registerMahasiswa = async (payload) => {
     await sendOTPEmail(email, code, 'register');
 
     return {
-      message: "Registrasi mahasiswa berhasil, OTP telah dikirim"
+      message: "Registrasi mahasiswa berhasil, OTP telah dikirim ke email"
     };
 
   } catch (err) {
@@ -165,7 +200,6 @@ exports.registerDosen = async (payload, file) => {
   try {
     await client.query('BEGIN');
 
-    // Force role dosen
     payload.role = 'dosen';
 
     const { error } = validateRegister(payload);
@@ -183,7 +217,6 @@ exports.registerDosen = async (payload, file) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Upload profile picture ke GCS jika ada
     let profilePictureUrl = null;
     if (file) {
       profilePictureUrl = await uploadProfilePicture(file, npm_nip);
@@ -198,8 +231,7 @@ exports.registerDosen = async (payload, file) => {
       profile_picture: profilePictureUrl
     });
 
-    // ✅ Dosen profile dibuat tanpa kode_kelas dulu (pending verifikasi OTP)
-    // kode_kelas akan di-generate saat verifyRegisterOTP sukses
+    // kode_kelas di-generate setelah OTP sukses
     await profileRepository.createDosenTx(client, {
       user_id: user.id,
       kode_kelas: null
@@ -226,80 +258,6 @@ exports.registerDosen = async (payload, file) => {
 };
 
 
-// ================= VERIFY LOGIN OTP =================
-exports.verifyLoginOTP = async ({ email, code }) => {
-
-  if (!email || !code) {
-    throw { status: 400, message: "Email dan OTP wajib diisi" };
-  }
-
-  const user = await userRepository.findByEmail(email);
-  if (!user) {
-    throw { status: 404, message: "User tidak ditemukan" };
-  }
-
-  const otpData = await otpRepository.findOTPByUser(
-    Number(user.id),
-    'login'
-  );
-
-  if (!otpData || otpData.expires_at < new Date()) {
-    throw { status: 400, message: "OTP tidak valid atau expired" };
-  }
-
-  const isValid = await compareOTP(code.trim(), otpData.code);
-
-  if (!isValid) {
-    throw { status: 400, message: "OTP tidak valid atau expired" };
-  }
-
-  await otpRepository.markAsUsed(otpData.id);
-
-  // 🔥 AMBIL PROFILE SESUAI ROLE
-  let profileData = {};
-
-  if (user.role === 'mahasiswa') {
-    const mahasiswa = await profileRepository.getMahasiswaProfile(user.id);
-
-    if (mahasiswa) {
-      profileData = {
-        angkatan: mahasiswa.angkatan,
-        ipk: mahasiswa.ipk,
-        semester: mahasiswa.current_semester
-      };
-    }
-  }
-
-  if (user.role === 'dosen') {
-    const dosen = await profileRepository.getDosenProfile(user.id);
-
-    if (dosen) {
-      profileData = {
-        kode_kelas: dosen.kode_kelas
-      };
-    }
-  }
-
-  const token = jwt.generateToken({
-    id: user.id,
-    role: user.role
-  });
-
-  return {
-    token,
-    role: user.role,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      npm_nip: user.npm_nip,
-      profile_picture: user.profile_picture,
-      ...profileData // 🔥 dynamic sesuai role
-    }
-  };
-};
-
-
 // ================= VERIFY REGISTER OTP =================
 exports.verifyRegisterOTP = async ({ email, code }) => {
 
@@ -321,7 +279,6 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
   await otpRepository.markAsUsed(otpData.id);
   await userRepository.verifyUser(user.id);
 
-  // 🔥 AMBIL / GENERATE PROFILE SESUAI ROLE
   let profileData = {};
 
   if (user.role === 'mahasiswa') {
@@ -336,7 +293,7 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
   }
 
   if (user.role === 'dosen') {
-    // ✅ Generate kode_kelas baru di sini (setelah OTP sukses)
+    // Generate kode_kelas setelah OTP sukses
     let kodeKelas;
     let isUnique = false;
     while (!isUnique) {
@@ -381,11 +338,10 @@ exports.resendOTP = async ({ email, type }) => {
     throw { status: 404, message: "User tidak ditemukan" };
   }
 
-  if (!['login', 'register'].includes(type)) {
+  if (!['register', 'reset_password'].includes(type)) {
     throw { status: 400, message: "Type OTP tidak valid" };
   }
 
-  // 🔥 invalidate OTP lama
   await otpRepository.invalidateOTP(user.id, type);
 
   const code = generateOTP();
@@ -398,4 +354,90 @@ exports.resendOTP = async ({ email, type }) => {
   return {
     message: "OTP berhasil dikirim ulang"
   };
+};
+
+
+// ================= FORGOT PASSWORD (kirim OTP reset) =================
+exports.forgotPassword = async ({ email }) => {
+
+  if (!email) {
+    throw { status: 400, message: "Email wajib diisi" };
+  }
+
+  const user = await userRepository.findByEmail(email);
+  if (!user) {
+    // Tetap return sukses agar tidak bocorkan info email terdaftar atau tidak
+    return { message: "Jika email terdaftar, OTP akan dikirim" };
+  }
+
+  await otpRepository.invalidateOTP(user.id, 'reset_password');
+
+  const code = generateOTP();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+  await otpRepository.createOTP(user.id, code, 'reset_password', expiresAt);
+
+  await sendOTPEmail(user.email, code, 'reset_password');
+
+  return { message: "Jika email terdaftar, OTP akan dikirim" };
+};
+
+
+// ================= RESET PASSWORD (verif OTP lalu set password baru) =================
+exports.resetPassword = async ({ email, code, new_password }) => {
+
+  if (!email || !code || !new_password) {
+    throw { status: 400, message: "Email, OTP, dan password baru wajib diisi" };
+  }
+
+  if (new_password.length < 6) {
+    throw { status: 400, message: "Password minimal 6 karakter" };
+  }
+
+  const user = await userRepository.findByEmail(email);
+  if (!user) throw { status: 404, message: "User tidak ditemukan" };
+
+  const otpData = await otpRepository.findOTPByUser(user.id, 'reset_password');
+
+  if (!otpData || otpData.expires_at < new Date()) {
+    throw { status: 400, message: "OTP tidak valid atau expired" };
+  }
+
+  const isValid = await compareOTP(code.trim(), otpData.code);
+  if (!isValid) {
+    throw { status: 400, message: "OTP tidak valid atau expired" };
+  }
+
+  await otpRepository.markAsUsed(otpData.id);
+
+  const hashedPassword = await bcrypt.hash(new_password, 10);
+  await userRepository.updatePassword(user.id, hashedPassword);
+
+  return { message: "Password berhasil direset, silakan login" };
+};
+
+
+// ================= CHANGE PASSWORD (user sudah login) =================
+exports.changePassword = async ({ userId, old_password, new_password }) => {
+
+  if (!old_password || !new_password) {
+    throw { status: 400, message: "Password lama dan baru wajib diisi" };
+  }
+
+  if (new_password.length < 6) {
+    throw { status: 400, message: "Password baru minimal 6 karakter" };
+  }
+
+  const user = await userRepository.findById(userId);
+  if (!user) throw { status: 404, message: "User tidak ditemukan" };
+
+  const isMatch = await bcrypt.compare(old_password, user.password);
+  if (!isMatch) {
+    throw { status: 400, message: "Password lama tidak sesuai" };
+  }
+
+  const hashedPassword = await bcrypt.hash(new_password, 10);
+  await userRepository.updatePassword(userId, hashedPassword);
+
+  return { message: "Password berhasil diubah" };
 };
