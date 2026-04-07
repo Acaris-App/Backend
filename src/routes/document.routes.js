@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 
 const { authenticate } = require('../middlewares/auth.middleware');
-const upload = require('../config/multer');
+const { uploadPDF } = require('../config/multer');
 
 const documentController = require('../controllers/document.controller');
 
 router.post(
   '/upload',
   authenticate,
-  upload.single('file'),
+  uploadPDF.single('file'),
   documentController.upload
 );
 

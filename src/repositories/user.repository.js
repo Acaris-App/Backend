@@ -22,10 +22,10 @@ exports.findByNpm = async (npm_nip) => {
 
 exports.createUserTx = async (client, data) => {
   const result = await client.query(
-    `INSERT INTO users (name, email, password, role, npm_nip)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO users (name, email, password, role, npm_nip, profile_picture)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
-    [data.name, data.email, data.password, data.role, data.npm_nip]
+    [data.name, data.email, data.password, data.role, data.npm_nip, data.profile_picture || null]
   );
 
   return result.rows[0];

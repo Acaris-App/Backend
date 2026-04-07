@@ -6,12 +6,34 @@ const profileRepository = require('../repositories/profile.repository');
 
 const jwt = require('../config/jwt');
 const db = require('../config/db');
+const { bucket } = require('../config/gcs');
 
 const { generateOTP, compareOTP } = require('../utils/otp');
 const { sendOTPEmail } = require('../utils/email');
 
 const { validateRegister } = require('../validators/auth.validator');
 const { checkLoginLimit } = require('./rateLimit.service');
+
+// ================= HELPER GCS PROFILE PICTURE =================
+const uploadProfilePicture = async (file, nip) => {
+  const ext = file.mimetype.split('/')[1];
+  const filename = `profile-pictures/${nip}-${Date.now()}.${ext}`;
+  const blob = bucket.file(filename);
+
+  const blobStream = blob.createWriteStream({
+    resumable: false,
+    contentType: file.mimetype
+  });
+
+  return new Promise((resolve, reject) => {
+    blobStream.on('finish', () => {
+      const url = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+      resolve(url);
+    });
+    blobStream.on('error', reject);
+    blobStream.end(file.buffer);
+  });
+};
 
 // ================= LOGIN =================
 exports.login = async ({ email, password, ip }) => {
@@ -50,13 +72,16 @@ exports.login = async ({ email, password, ip }) => {
 };
 
 
-// ================= REGISTER =================
-exports.register = async (payload) => {
+// ================= REGISTER MAHASISWA =================
+exports.registerMahasiswa = async (payload) => {
 
   const client = await db.connect();
 
   try {
     await client.query('BEGIN');
+
+    // Force role mahasiswa
+    payload.role = 'mahasiswa';
 
     const { error } = validateRegister(payload);
     if (error) {
@@ -67,7 +92,6 @@ exports.register = async (payload) => {
       name,
       email,
       password,
-      role,
       npm_nip,
       angkatan,
       kode_kelas,
@@ -75,22 +99,19 @@ exports.register = async (payload) => {
       current_semester
     } = payload;
 
-    // 🔥 VALIDASI TAMBAHAN
-    if (role === 'mahasiswa') {
-      if (!ipk || ipk < 0 || ipk > 4) {
-        throw { status: 400, message: "IPK tidak valid" };
-      }
+    if (!ipk || ipk < 0 || ipk > 4) {
+      throw { status: 400, message: "IPK tidak valid" };
+    }
 
-      if (!current_semester || current_semester < 1) {
-        throw { status: 400, message: "Semester tidak valid" };
-      }
+    if (!current_semester || current_semester < 1) {
+      throw { status: 400, message: "Semester tidak valid" };
     }
 
     const existingEmail = await userRepository.findByEmail(email);
     if (existingEmail) throw { status: 400, message: "Email sudah digunakan" };
 
     const existingNPM = await userRepository.findByNpm(npm_nip);
-    if (existingNPM) throw { status: 400, message: "NPM/NIP sudah digunakan" };
+    if (existingNPM) throw { status: 400, message: "NPM sudah digunakan" };
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -98,44 +119,25 @@ exports.register = async (payload) => {
       name,
       email,
       password: hashedPassword,
-      role,
+      role: 'mahasiswa',
       npm_nip
     });
 
-    // ================= MAHASISWA =================
-    if (role === 'mahasiswa') {
-
-      const dosen = await profileRepository.findDosenByKode(kode_kelas);
-
-      if (!dosen) {
-        throw { status: 400, message: "Kode kelas tidak valid" };
-      }
-
-      await profileRepository.createMahasiswaTx(client, {
-        user_id: user.id,
-        angkatan,
-        ipk,
-        current_semester,
-        dosen_pa_id: dosen.user_id
-      });
+    const dosen = await profileRepository.findDosenByKode(kode_kelas);
+    if (!dosen) {
+      throw { status: 400, message: "Kode kelas tidak valid" };
     }
 
-    // ================= DOSEN =================
-    if (role === 'dosen') {
+    await profileRepository.createMahasiswaTx(client, {
+      user_id: user.id,
+      angkatan,
+      ipk,
+      current_semester,
+      dosen_pa_id: dosen.user_id
+    });
 
-      const kodeKelasGenerated =
-        'DSN-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-
-      await profileRepository.createDosenTx(client, {
-        user_id: user.id,
-        kode_kelas: kodeKelasGenerated
-      });
-    }
-
-    // OTP
     const code = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-
     await otpRepository.createOTPTx(client, user.id, code, 'register', expiresAt);
 
     await client.query('COMMIT');
@@ -143,7 +145,84 @@ exports.register = async (payload) => {
     await sendOTPEmail(email, code, 'register');
 
     return {
-      message: "Registrasi berhasil, OTP telah dikirim"
+      message: "Registrasi mahasiswa berhasil, OTP telah dikirim"
+    };
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
+
+// ================= REGISTER DOSEN =================
+exports.registerDosen = async (payload, file) => {
+
+  const client = await db.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // Force role dosen
+    payload.role = 'dosen';
+
+    const { error } = validateRegister(payload);
+    if (error) {
+      throw { status: 400, message: error.details[0].message };
+    }
+
+    const { name, email, password, npm_nip } = payload;
+
+    const existingEmail = await userRepository.findByEmail(email);
+    if (existingEmail) throw { status: 400, message: "Email sudah digunakan" };
+
+    const existingNIP = await userRepository.findByNpm(npm_nip);
+    if (existingNIP) throw { status: 400, message: "NIP sudah digunakan" };
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Upload profile picture ke GCS jika ada
+    let profilePictureUrl = null;
+    if (file) {
+      profilePictureUrl = await uploadProfilePicture(file, npm_nip);
+    }
+
+    const user = await userRepository.createUserTx(client, {
+      name,
+      email,
+      password: hashedPassword,
+      role: 'dosen',
+      npm_nip,
+      profile_picture: profilePictureUrl
+    });
+
+    // Generate kode kelas unik
+    let kodeKelas;
+    let isUnique = false;
+    while (!isUnique) {
+      kodeKelas = 'DSN-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+      const existing = await profileRepository.findDosenByKode(kodeKelas);
+      if (!existing) isUnique = true;
+    }
+
+    await profileRepository.createDosenTx(client, {
+      user_id: user.id,
+      kode_kelas: kodeKelas
+    });
+
+    const code = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    await otpRepository.createOTPTx(client, user.id, code, 'register', expiresAt);
+
+    await client.query('COMMIT');
+
+    await sendOTPEmail(email, code, 'register');
+
+    return {
+      message: "Registrasi dosen berhasil, OTP telah dikirim",
+      kode_kelas: kodeKelas
     };
 
   } catch (err) {

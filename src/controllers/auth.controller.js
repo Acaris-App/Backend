@@ -36,13 +36,30 @@ exports.verifyLoginOTP = async (req, res, next) => {
   }
 };
 
-exports.register = async (req, res, next) => {
+exports.registerMahasiswa = async (req, res, next) => {
   try {
-    const result = await authService.register(req.body);
+    const result = await authService.registerMahasiswa(req.body);
 
     res.status(201).json({
       status: "success",
       message: result.message
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.registerDosen = async (req, res, next) => {
+  try {
+    const result = await authService.registerDosen(req.body, req.file);
+
+    res.status(201).json({
+      status: "success",
+      message: result.message,
+      data: {
+        kode_kelas: result.kode_kelas
+      }
     });
 
   } catch (err) {

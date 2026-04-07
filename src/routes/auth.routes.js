@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const authController = require('../controllers/auth.controller');
+const { uploadImage } = require('../config/multer');
 
-// ✅ FIX: Aktifkan rate limiter berbasis Redis (aman untuk multi-instance Cloud Run)
+// ✅ Rate limiters berbasis Redis
 const { loginLimiter, otpLimiter, resendLimiter } = require('../middlewares/rateLimit.middleware');
 
 
@@ -12,8 +13,11 @@ const { loginLimiter, otpLimiter, resendLimiter } = require('../middlewares/rate
 // 🔐 Login
 router.post('/login', loginLimiter, authController.login);
 
-// 📝 Register
-router.post('/register', authController.register);
+// 📝 Register Mahasiswa (form-data biasa, tanpa file)
+router.post('/register/mahasiswa', authController.registerMahasiswa);
+
+// 📝 Register Dosen (form-data + profile picture opsional)
+router.post('/register/dosen', uploadImage.single('profile_picture'), authController.registerDosen);
 
 // 🔑 Verify OTP Login
 router.post('/verify-login-otp', otpLimiter, authController.verifyLoginOTP);
