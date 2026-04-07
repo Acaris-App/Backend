@@ -198,18 +198,11 @@ exports.registerDosen = async (payload, file) => {
       profile_picture: profilePictureUrl
     });
 
-    // Generate kode kelas unik
-    let kodeKelas;
-    let isUnique = false;
-    while (!isUnique) {
-      kodeKelas = 'DSN-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-      const existing = await profileRepository.findDosenByKode(kodeKelas);
-      if (!existing) isUnique = true;
-    }
-
+    // ✅ Dosen profile dibuat tanpa kode_kelas dulu (pending verifikasi OTP)
+    // kode_kelas akan di-generate saat verifyRegisterOTP sukses
     await profileRepository.createDosenTx(client, {
       user_id: user.id,
-      kode_kelas: kodeKelas
+      kode_kelas: null
     });
 
     const code = generateOTP();
@@ -221,8 +214,7 @@ exports.registerDosen = async (payload, file) => {
     await sendOTPEmail(email, code, 'register');
 
     return {
-      message: "Registrasi dosen berhasil, OTP telah dikirim",
-      kode_kelas: kodeKelas
+      message: "Registrasi dosen berhasil, OTP telah dikirim ke email"
     };
 
   } catch (err) {
@@ -329,8 +321,54 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
   await otpRepository.markAsUsed(otpData.id);
   await userRepository.verifyUser(user.id);
 
+  // 🔥 AMBIL / GENERATE PROFILE SESUAI ROLE
+  let profileData = {};
+
+  if (user.role === 'mahasiswa') {
+    const mahasiswa = await profileRepository.getMahasiswaProfile(user.id);
+    if (mahasiswa) {
+      profileData = {
+        angkatan: mahasiswa.angkatan,
+        ipk: mahasiswa.ipk,
+        semester: mahasiswa.current_semester
+      };
+    }
+  }
+
+  if (user.role === 'dosen') {
+    // ✅ Generate kode_kelas baru di sini (setelah OTP sukses)
+    let kodeKelas;
+    let isUnique = false;
+    while (!isUnique) {
+      kodeKelas = 'DSN-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+      const existing = await profileRepository.findDosenByKode(kodeKelas);
+      if (!existing) isUnique = true;
+    }
+
+    await profileRepository.updateDosenKodeKelas(user.id, kodeKelas);
+
+    profileData = {
+      kode_kelas: kodeKelas
+    };
+  }
+
+  const token = jwt.generateToken({
+    id: user.id,
+    role: user.role
+  });
+
   return {
-    message: "Akun berhasil diverifikasi"
+    message: "Akun berhasil diverifikasi",
+    token,
+    role: user.role,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      npm_nip: user.npm_nip,
+      profile_picture: user.profile_picture,
+      ...profileData
+    }
   };
 };
 

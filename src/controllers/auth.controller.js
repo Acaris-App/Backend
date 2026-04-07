@@ -56,10 +56,7 @@ exports.registerDosen = async (req, res, next) => {
 
     res.status(201).json({
       status: "success",
-      message: result.message,
-      data: {
-        kode_kelas: result.kode_kelas
-      }
+      message: result.message
     });
 
   } catch (err) {
@@ -73,7 +70,12 @@ exports.verifyRegisterOTP = async (req, res, next) => {
 
     res.status(200).json({
       status: "success",
-      message: result.message
+      message: result.message,
+      data: {
+        token: result.token,
+        role: result.role,
+        user: result.user
+      }
     });
 
   } catch (err) {

@@ -52,6 +52,13 @@ exports.createDosenTx = async (client, data) => {
   );
 };
 
+exports.updateDosenKodeKelas = async (userId, kodeKelas) => {
+  await db.query(
+    `UPDATE dosen_pa SET kode_kelas = $1 WHERE user_id = $2`,
+    [kodeKelas, userId]
+  );
+};
+
 exports.updateSemester = async (userId, semester) => {
   await db.query(
     `UPDATE mahasiswa 
