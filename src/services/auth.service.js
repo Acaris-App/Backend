@@ -62,6 +62,31 @@ const buildProfileData = async (user) => {
   return profileData;
 };
 
+// ================= VALIDATE KODE KELAS =================
+exports.validateKodeKelas = async ({ kode_kelas }) => {
+
+  if (!kode_kelas || typeof kode_kelas !== 'string' || !kode_kelas.trim()) {
+    throw { status: 400, message: "kode_kelas wajib diisi" };
+  }
+
+  const dosen = await profileRepository.findDosenByKode(kode_kelas.trim());
+
+  if (!dosen) {
+    throw { status: 404, message: "Kode kelas tidak ditemukan atau tidak valid" };
+  }
+
+  const dosenUser = await userRepository.findById(dosen.user_id);
+
+  return {
+    message: "Kode kelas valid",
+    data: {
+      kode_kelas: kode_kelas.trim(),
+      dosen_pa: dosenUser ? dosenUser.name : null
+    }
+  };
+};
+
+
 // ================= LOGIN (LANGSUNG TOKEN, TANPA OTP) =================
 exports.login = async ({ email, password, ip }) => {
 

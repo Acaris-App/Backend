@@ -13,6 +13,9 @@ const { loginLimiter, otpLimiter, resendLimiter } = require('../middlewares/rate
 // 🔐 Login — langsung return token (tanpa OTP)
 router.post('/login', loginLimiter, authController.login);
 
+// ✅ Validasi kode kelas — step 1 sebelum isi data diri (multi-step register Android)
+router.post('/validate-kode-kelas', authController.validateKodeKelas);
+
 // 📝 Register Mahasiswa
 router.post('/register/mahasiswa', authController.registerMahasiswa);
 

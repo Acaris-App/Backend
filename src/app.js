@@ -17,6 +17,7 @@ const express = require('express');
 const multer = require('multer');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ================= MIDDLEWARE =================
 app.use(express.json());
