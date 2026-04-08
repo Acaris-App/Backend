@@ -312,6 +312,38 @@ exports.checkCompleteness = async (user) => {
   }
 };
 
+// ================= DELETE DOCUMENT =================
+exports.deleteDocument = async ({ user, documentId }) => {
+
+  if (!user || user.role !== 'mahasiswa') {
+    throw { status: 403, message: "Hanya mahasiswa yang dapat menghapus dokumen" };
+  }
+
+  // Pastikan dokumen ada dan milik user ini
+  const existing = await documentRepository.findById(documentId, user.id);
+  if (!existing) {
+    throw { status: 404, message: "Dokumen tidak ditemukan" };
+  }
+
+  // Hapus dari DB dulu
+  await documentRepository.deleteDocument(documentId, user.id);
+
+  // Hapus file dari GCS — ekstrak object path dari full URL
+  // Format URL: https://storage.googleapis.com/<bucket>/<userId>/<filename>
+  try {
+    const url = new URL(existing.file_path);
+    // pathname = /<bucket>/<userId>/<filename> → buang leading slash + nama bucket
+    const objectPath = url.pathname.split('/').slice(2).join('/');
+    await bucket.file(objectPath).delete();
+    console.log(`[GCS DELETE] File dihapus: ${objectPath}`);
+  } catch (err) {
+    // DB sudah terhapus — log GCS error tapi jangan gagalkan response
+    console.error(`[GCS DELETE] Gagal hapus file dari GCS: ${err.message}`);
+  }
+
+  return { message: "Dokumen berhasil dihapus" };
+};
+
 // ================= UPDATE DOCUMENT =================
 exports.updateDocument = async ({ user, documentId, file }) => {
 

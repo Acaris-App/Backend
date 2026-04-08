@@ -58,6 +58,24 @@ exports.updateDocument = async (req, res, next) => {
   }
 };
 
+// ================= DELETE DOCUMENT =================
+exports.deleteDocument = async (req, res, next) => {
+  try {
+    const result = await documentService.deleteDocument({
+      user: req.user,
+      documentId: req.params.document_id
+    });
+
+    res.json({
+      status: "success",
+      message: result.message
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
 // ================= CHECK COMPLETENESS =================
 exports.checkCompleteness = async (req, res, next) => {
   try {

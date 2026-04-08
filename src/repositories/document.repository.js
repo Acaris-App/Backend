@@ -105,6 +105,18 @@ exports.findById = async (documentId, userId) => {
   return result.rows[0];
 };
 
+// ================= DELETE =================
+exports.deleteDocument = async (documentId, userId) => {
+  const result = await db.query(
+    `DELETE FROM dokumen_mahasiswa
+     WHERE id = $1 AND user_id = $2
+     RETURNING *`,
+    [documentId, userId]
+  );
+
+  return result.rows[0];
+};
+
 // ================= UPDATE FILE PATH =================
 exports.updateFilePath = async (documentId, filePath) => {
   const result = await db.query(

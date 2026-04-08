@@ -29,6 +29,13 @@ router.put(
   documentController.updateDocument
 );
 
+// 🗑️ Hapus dokumen
+router.delete(
+  '/delete/:document_id',
+  authenticate,
+  documentController.deleteDocument
+);
+
 // ✅ Cek kelengkapan dokumen
 router.get(
   '/check',
