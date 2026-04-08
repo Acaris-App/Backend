@@ -136,7 +136,7 @@ exports.login = async ({ email, password, ip }) => {
 
 
 // ================= REGISTER MAHASISWA =================
-exports.registerMahasiswa = async (payload) => {
+exports.registerMahasiswa = async (payload, file) => {
 
   const client = await db.connect();
 
@@ -177,12 +177,18 @@ exports.registerMahasiswa = async (payload) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    let profilePictureUrl = null;
+    if (file) {
+      profilePictureUrl = await uploadProfilePicture(file, npm_nip);
+    }
+
     const user = await userRepository.createUserTx(client, {
       name,
       email,
       password: hashedPassword,
       role: 'mahasiswa',
-      npm_nip
+      npm_nip,
+      profile_picture: profilePictureUrl
     });
 
     const dosen = await profileRepository.findDosenByKode(kode_kelas);

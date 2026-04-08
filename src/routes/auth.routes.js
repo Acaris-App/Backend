@@ -16,8 +16,8 @@ router.post('/login', loginLimiter, authController.login);
 // ✅ Validasi kode kelas — step 1 sebelum isi data diri (multi-step register Android)
 router.post('/validate-kode-kelas', authController.validateKodeKelas);
 
-// 📝 Register Mahasiswa
-router.post('/register/mahasiswa', authController.registerMahasiswa);
+// 📝 Register Mahasiswa (profile picture opsional, multipart/form-data)
+router.post('/register/mahasiswa', uploadImage.single('profile_picture'), authController.registerMahasiswa);
 
 // 📝 Register Dosen (profile picture opsional)
 router.post('/register/dosen', uploadImage.single('profile_picture'), authController.registerDosen);
