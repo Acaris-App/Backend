@@ -155,11 +155,14 @@ exports.changePassword = async (req, res, next) => {
 // ================= LOGOUT =================
 exports.logout = async (req, res, next) => {
   try {
-    // JWT stateless — logout cukup hapus token di sisi client
-    // Kalau mau blacklist token, bisa tambahkan Redis di sini nanti
+    const result = await authService.logout({
+      token: req.token,       // token mentah dari middleware
+      exp: req.user.exp       // expiry dari decoded JWT
+    });
+
     res.status(200).json({
       status: "success",
-      message: "Logout berhasil"
+      message: result.message
     });
 
   } catch (err) {

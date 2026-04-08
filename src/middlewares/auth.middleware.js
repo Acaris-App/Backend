@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
+const redis = require('../config/redis');
 
-exports.authenticate = (req, res, next) => {
+exports.authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -22,7 +23,17 @@ exports.authenticate = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // 🔴 Cek apakah token sudah di-blacklist (user sudah logout)
+    const isBlacklisted = await redis.get(`blacklist:${token}`);
+    if (isBlacklisted) {
+      return res.status(401).json({
+        status: "error",
+        message: "Token tidak valid atau expired"
+      });
+    }
+
     req.user = decoded;
+    req.token = token; // simpan token mentah untuk kebutuhan logout
 
     next();
 

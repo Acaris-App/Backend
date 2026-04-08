@@ -6,6 +6,13 @@ const { uploadPDF } = require('../config/multer');
 
 const documentController = require('../controllers/document.controller');
 
+// 📋 Ambil semua dokumen milik user (dengan filter opsional)
+router.get(
+  '/list',
+  authenticate,
+  documentController.getDocuments
+);
+
 // 📤 Upload dokumen baru
 router.post(
   '/upload',

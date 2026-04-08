@@ -1,5 +1,34 @@
 const db = require('../config/db');
 
+// ================= LIST DOCUMENTS (untuk tampilan, lengkap dengan filter) =================
+exports.getDocumentsList = async (userId, filters = {}) => {
+  const conditions = ['user_id = $1'];
+  const values = [userId];
+  let idx = 2;
+
+  if (filters.document_type) {
+    conditions.push(`document_type = $${idx++}`);
+    values.push(filters.document_type);
+  }
+
+  if (filters.semester) {
+    conditions.push(`semester = $${idx++}`);
+    values.push(parseInt(filters.semester));
+  }
+
+  const where = conditions.join(' AND ');
+
+  const result = await db.query(
+    `SELECT id, document_type, semester, file_path, uploaded_at
+     FROM dokumen_mahasiswa
+     WHERE ${where}
+     ORDER BY document_type ASC, semester ASC`,
+    values
+  );
+
+  return result.rows;
+};
+
 // ================= CREATE =================
 exports.createDocument = async (data) => {
   const result = await db.query(

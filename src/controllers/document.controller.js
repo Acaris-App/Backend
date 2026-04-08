@@ -1,5 +1,23 @@
 const documentService = require('../services/document.service');
 
+// ================= GET DOCUMENTS =================
+exports.getDocuments = async (req, res, next) => {
+  try {
+    const result = await documentService.getDocuments({
+      user: req.user,
+      query: req.query
+    });
+
+    res.json({
+      status: "success",
+      data: result
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
 // ================= UPLOAD =================
 exports.upload = async (req, res, next) => {
   try {

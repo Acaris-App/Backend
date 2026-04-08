@@ -10,10 +10,10 @@ const { uploadImage } = require('../config/multer');
 // ================= PROFILE =================
 
 // 📋 Get profil sendiri
-router.get('/me', authenticate, userController.getMe);
+router.get('/profile', authenticate, userController.getMe);
 
 // ✏️ Update profil (name + foto)
-router.put('/me', authenticate, uploadImage.single('profile_picture'), userController.updateProfile);
+router.put('/profile', authenticate, uploadImage.single('profile_picture'), userController.updateProfile);
 
 
 // ================= ROLE ACCESS =================

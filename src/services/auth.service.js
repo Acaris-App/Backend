@@ -4,6 +4,8 @@ const userRepository = require('../repositories/user.repository');
 const otpRepository = require('../repositories/otp.repository');
 const profileRepository = require('../repositories/profile.repository');
 
+const redis = require('../config/redis');
+
 const jwt = require('../config/jwt');
 const db = require('../config/db');
 const { bucket } = require('../config/gcs');
@@ -442,7 +444,20 @@ exports.resetPassword = async ({ email, code, new_password }) => {
 };
 
 
-// ================= CHANGE PASSWORD (user sudah login) =================
+// ================= LOGOUT =================
+exports.logout = async ({ token, exp }) => {
+
+  // Hitung sisa TTL token (detik) agar blacklist otomatis bersih saat token expired
+  const now = Math.floor(Date.now() / 1000);
+  const ttl = exp - now;
+
+  if (ttl > 0) {
+    // Simpan token ke Redis dengan TTL = sisa masa aktif token
+    await redis.set(`blacklist:${token}`, '1', 'EX', ttl);
+  }
+
+  return { message: "Logout berhasil" };
+};
 exports.changePassword = async ({ userId, old_password, new_password }) => {
 
   if (!old_password || !new_password) {

@@ -204,6 +204,47 @@ exports.uploadDocument = async ({ user, body, file }) => {
   }
 };
 
+// ================= GET DOCUMENTS =================
+exports.getDocuments = async ({ user, query = {} }) => {
+
+  if (!user || user.role !== 'mahasiswa') {
+    throw { status: 403, message: "Hanya mahasiswa yang dapat melihat dokumen" };
+  }
+
+  const { document_type, semester } = query;
+
+  const allowedTypes = ['krs', 'khs', 'transkrip'];
+  if (document_type && !allowedTypes.includes(document_type)) {
+    throw { status: 400, message: "document_type tidak valid. Gunakan: krs, khs, atau transkrip" };
+  }
+
+  if (semester && isNaN(parseInt(semester))) {
+    throw { status: 400, message: "Semester harus berupa angka" };
+  }
+
+  const docs = await documentRepository.getDocumentsList(user.id, { document_type, semester });
+
+  // Kelompokkan per type untuk memudahkan tampilan di Android
+  const grouped = {
+    krs: [],
+    khs: [],
+    transkrip: null
+  };
+
+  for (const doc of docs) {
+    if (doc.document_type === 'transkrip') {
+      grouped.transkrip = doc;
+    } else {
+      grouped[doc.document_type].push(doc);
+    }
+  }
+
+  return {
+    total: docs.length,
+    documents: grouped
+  };
+};
+
 // ================= CHECK COMPLETENESS =================
 exports.checkCompleteness = async (user) => {
 
