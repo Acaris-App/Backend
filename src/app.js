@@ -28,10 +28,12 @@ const { errorHandler } = require('./middlewares/error.middleware');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const documentRoutes = require('./routes/document.routes');
+const scheduleRoutes = require('./routes/schedule.routes');
 
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/document', documentRoutes);
+app.use('/schedule', scheduleRoutes);
 
 // ================= ERROR HANDLER =================
 app.use(errorHandler);
