@@ -104,6 +104,21 @@ exports.resendOTP = async (req, res, next) => {
   }
 };
 
+// ================= VERIFY RESET OTP =================
+exports.verifyResetOTP = async (req, res, next) => {
+  try {
+    const result = await authService.verifyResetOTP(req.body);
+
+    res.status(200).json({
+      status: "success",
+      message: result.message
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
 // ================= FORGOT PASSWORD =================
 exports.forgotPassword = async (req, res, next) => {
   try {

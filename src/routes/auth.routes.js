@@ -31,6 +31,9 @@ router.post('/resend-otp', resendLimiter, authController.resendOTP);
 // 🔓 Lupa Password — kirim OTP ke email
 router.post('/forgot-password', authController.forgotPassword);
 
+// 🔍 Verifikasi OTP reset password — step 2 (cek OTP valid sebelum input password baru)
+router.post('/verify-reset-otp', otpLimiter, authController.verifyResetOTP);
+
 // 🔒 Reset Password — verif OTP lalu set password baru
 router.post('/reset-password', authController.resetPassword);
 

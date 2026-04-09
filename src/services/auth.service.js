@@ -416,6 +416,32 @@ exports.forgotPassword = async ({ email }) => {
 };
 
 
+// ================= VERIFY RESET OTP (step 2 — cek OTP saja, TIDAK markAsUsed) =================
+exports.verifyResetOTP = async ({ email, code }) => {
+
+  if (!email || !code) {
+    throw { status: 400, message: "Email dan kode OTP wajib diisi" };
+  }
+
+  const user = await userRepository.findByEmail(email);
+  if (!user) throw { status: 404, message: "User tidak ditemukan" };
+
+  const otpData = await otpRepository.findOTPByUser(user.id, 'reset_password');
+
+  if (!otpData || otpData.expires_at < new Date()) {
+    throw { status: 400, message: "OTP tidak valid atau expired" };
+  }
+
+  const isValid = await compareOTP(code.trim(), otpData.code);
+  if (!isValid) {
+    throw { status: 400, message: "OTP tidak valid atau expired" };
+  }
+
+  // ⚠️ Sengaja TIDAK markAsUsed di sini — OTP masih dibutuhkan di /reset-password (step 3)
+  return { message: "OTP valid, silakan masukkan password baru" };
+};
+
+
 // ================= RESET PASSWORD (verif OTP lalu set password baru) =================
 exports.resetPassword = async ({ email, code, new_password }) => {
 
