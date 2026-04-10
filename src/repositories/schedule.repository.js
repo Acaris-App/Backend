@@ -14,8 +14,9 @@ exports.getSchedulesByDosen = async (dosenId, filters = {}) => {
   }
 
   const result = await db.query(
-    `SELECT s.id, s.tanggal, s.waktu_mulai, s.waktu_selesai,
-            s.kuota, s.kuota_tersisa, s.keterangan, s.status, s.created_at
+    `SELECT s.id, s.dosen_id, s.tanggal, s.waktu_mulai, s.waktu_selesai,
+            s.kuota, s.kuota_tersisa, s.keterangan, s.status,
+            s.created_at, s.updated_at
      FROM jadwal_bimbingan s
      WHERE ${conditions.join(' AND ')}
      ORDER BY s.tanggal ASC, s.waktu_mulai ASC`,
@@ -43,9 +44,14 @@ exports.getAvailableSchedules = async (dosenId, filters = {}) => {
   }
 
   const result = await db.query(
-    `SELECT s.id, s.tanggal, s.waktu_mulai, s.waktu_selesai,
-            s.kuota, s.kuota_tersisa, s.keterangan, s.status
+    `SELECT s.id, s.dosen_id, s.tanggal, s.waktu_mulai, s.waktu_selesai,
+            s.kuota, s.kuota_tersisa, s.keterangan, s.status,
+            s.created_at, s.updated_at,
+            u.name AS nama_dosen,
+            u.npm_nip AS nip_dosen,
+            u.profile_picture AS foto_dosen
      FROM jadwal_bimbingan s
+     JOIN users u ON s.dosen_id = u.id
      WHERE ${conditions.join(' AND ')}
      ORDER BY s.tanggal ASC, s.waktu_mulai ASC`,
     values
@@ -57,8 +63,13 @@ exports.getAvailableSchedules = async (dosenId, filters = {}) => {
 exports.findById = async (scheduleId) => {
   const result = await db.query(
     `SELECT s.id, s.dosen_id, s.tanggal, s.waktu_mulai, s.waktu_selesai,
-            s.kuota, s.kuota_tersisa, s.keterangan, s.status, s.created_at
+            s.kuota, s.kuota_tersisa, s.keterangan, s.status,
+            s.created_at, s.updated_at,
+            u.name AS nama_dosen,
+            u.npm_nip AS nip_dosen,
+            u.profile_picture AS foto_dosen
      FROM jadwal_bimbingan s
+     JOIN users u ON s.dosen_id = u.id
      WHERE s.id = $1`,
     [scheduleId]
   );
@@ -233,10 +244,11 @@ exports.getBookingsByDosen = async (dosenId, scheduleId = null) => {
   }
 
   const result = await db.query(
-    `SELECT b.id AS booking_id, b.status AS booking_status, b.catatan,
+    `SELECT b.id AS booking_id, b.mahasiswa_id, b.status AS booking_status, b.catatan,
             b.created_at AS booked_at,
-            u.name AS mahasiswa_name, u.npm_nip,
-            j.id AS jadwal_id, j.tanggal, j.waktu_mulai, j.waktu_selesai
+            u.name AS mahasiswa_name, u.npm_nip, u.profile_picture AS foto_mahasiswa,
+            j.id AS jadwal_id, j.tanggal, j.waktu_mulai, j.waktu_selesai,
+            j.kuota, j.kuota_tersisa, j.keterangan AS keterangan_jadwal, j.status AS status_jadwal
      FROM booking_bimbingan b
      JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
      JOIN users u ON b.mahasiswa_id = u.id
@@ -253,7 +265,8 @@ exports.getBookingsByMahasiswa = async (mahasiswaId) => {
     `SELECT b.id AS booking_id, b.status AS booking_status, b.catatan,
             b.created_at AS booked_at,
             j.id AS jadwal_id, j.tanggal, j.waktu_mulai, j.waktu_selesai,
-            u.name AS dosen_name
+            j.kuota, j.kuota_tersisa, j.keterangan AS keterangan_jadwal, j.status AS status_jadwal,
+            u.name AS nama_dosen, u.npm_nip AS nip_dosen, u.profile_picture AS foto_dosen
      FROM booking_bimbingan b
      JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
      JOIN users u ON j.dosen_id = u.id

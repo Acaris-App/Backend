@@ -2,9 +2,14 @@ const db = require('../config/db');
 
 exports.getMahasiswaProfile = async (userId) => {
   const result = await db.query(`
-    SELECT angkatan, ipk, current_semester, dosen_pa_id
-    FROM mahasiswa
-    WHERE user_id = $1
+    SELECT m.angkatan, m.ipk, m.current_semester, m.dosen_pa_id,
+           u.name AS nama_dosen_pa,
+           u.npm_nip AS nip_dosen_pa,
+           u.profile_picture AS foto_dosen_pa
+    FROM mahasiswa m
+    LEFT JOIN dosen_pa dp ON m.dosen_pa_id = dp.user_id
+    LEFT JOIN users u ON dp.user_id = u.id
+    WHERE m.user_id = $1
   `, [userId]);
 
   return result.rows[0];

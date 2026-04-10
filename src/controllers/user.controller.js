@@ -47,9 +47,13 @@ exports.getMe = async (req, res, next) => {
       const profile = await profileRepository.getMahasiswaProfile(id);
 
       if (profile) {
-        responseData.angkatan        = profile.angkatan;
-        responseData.ipk             = profile.ipk;
+        responseData.angkatan         = profile.angkatan;
+        responseData.ipk              = profile.ipk;
         responseData.current_semester = profile.current_semester;
+        responseData.dosen_pa_id      = profile.dosen_pa_id;
+        responseData.nama_dosen_pa    = profile.nama_dosen_pa    || null;
+        responseData.nip_dosen_pa     = profile.nip_dosen_pa     || null;
+        responseData.foto_dosen_pa    = profile.foto_dosen_pa    || null;
       }
 
       // Dokumen KRS & KHS dikelompokkan per semester
