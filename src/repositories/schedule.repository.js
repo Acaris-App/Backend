@@ -104,9 +104,9 @@ exports.updateSchedule = async (scheduleId, data) => {
      SET tanggal         = $1,
          waktu_mulai     = $2,
          waktu_selesai   = $3,
-         kuota           = $4,
-         kuota_tersisa   = $4 - $5,
-         status          = CASE WHEN ($4 - $5) <= 0 THEN 'penuh' ELSE 'tersedia' END,
+         kuota           = $4::integer,
+         kuota_tersisa   = $4::integer - $5::integer,
+         status          = CASE WHEN ($4::integer - $5::integer) <= 0 THEN 'penuh' ELSE 'tersedia' END,
          keterangan      = $6,
          updated_at      = NOW()
      WHERE id = $7
