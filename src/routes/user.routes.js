@@ -9,11 +9,14 @@ const { uploadImage } = require('../config/multer');
 
 // ================= PROFILE =================
 
-// 📋 Get profil sendiri
+// 1️⃣ Get profil lengkap (semua role, mahasiswa include documents)
 router.get('/profile', authenticate, userController.getMe);
 
-// ✏️ Update profil (name + foto)
-router.put('/profile', authenticate, uploadImage.single('profile_picture'), userController.updateProfile);
+// 2️⃣ Update data diri — teks saja, JSON (semua role)
+router.put('/profile', authenticate, userController.updateProfileText);
+
+// 3️⃣ Update foto profil — multipart/form-data (semua role)
+router.post('/profile/photo', authenticate, uploadImage.single('profile_picture'), userController.updateProfilePhoto);
 
 
 // ================= ROLE ACCESS =================

@@ -56,6 +56,30 @@ exports.updatePassword = async (userId, hashedPassword) => {
   );
 };
 
+exports.updateProfileText = async (userId, data) => {
+  const result = await db.query(
+    `UPDATE users
+     SET name = $1
+     WHERE id = $2
+     RETURNING id, name, email, npm_nip, profile_picture, role`,
+    [data.name, userId]
+  );
+
+  return result.rows[0];
+};
+
+exports.updateProfilePhoto = async (userId, profilePictureUrl) => {
+  const result = await db.query(
+    `UPDATE users
+     SET profile_picture = $1
+     WHERE id = $2
+     RETURNING id, name, email, npm_nip, profile_picture, role`,
+    [profilePictureUrl, userId]
+  );
+
+  return result.rows[0];
+};
+
 exports.updateProfile = async (userId, data) => {
   const result = await db.query(
     `UPDATE users
