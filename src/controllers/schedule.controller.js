@@ -108,3 +108,24 @@ exports.getBookings = async (req, res, next) => {
     res.json({ status: "success", data: result });
   } catch (err) { next(err); }
 };
+
+// ================= BATALKAN BOOKING =================
+exports.cancelBooking = async (req, res, next) => {
+  try {
+    const result = await scheduleService.cancelBooking({
+      user: req.user,
+      bookingId: req.params.booking_id
+    });
+
+    res.json({ status: "success", message: result.message });
+  } catch (err) { next(err); }
+};
+
+// ================= GET BOOKING MILIK MAHASISWA =================
+exports.getMyBookings = async (req, res, next) => {
+  try {
+    const result = await scheduleService.getMyBookings({ user: req.user });
+
+    res.json({ status: "success", data: result });
+  } catch (err) { next(err); }
+};

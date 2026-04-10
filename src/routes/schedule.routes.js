@@ -35,6 +35,12 @@ router.get('/available', authenticate, authorize('mahasiswa'), scheduleControlle
 // 📌 Booking jadwal bimbingan
 router.post('/book', authenticate, authorize('mahasiswa'), scheduleController.bookSchedule);
 
+// 📋 Riwayat booking milik mahasiswa
+router.get('/my-bookings', authenticate, authorize('mahasiswa'), scheduleController.getMyBookings);
+
+// ❌ Batalkan booking (mahasiswa batalkan miliknya, dosen batalkan di jadwalnya)
+router.patch('/bookings/:booking_id/cancel', authenticate, authorize('mahasiswa', 'dosen'), scheduleController.cancelBooking);
+
 
 // ================= SHARED (Dosen & Mahasiswa) =================
 

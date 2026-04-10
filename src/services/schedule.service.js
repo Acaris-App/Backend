@@ -1,16 +1,8 @@
 const scheduleRepository = require('../repositories/schedule.repository');
 const profileRepository = require('../repositories/profile.repository');
 
-// ================= HELPER: PASTIKAN DOSEN PUNYA PROFIL =================
-const getDosenProfile = async (userId) => {
-  const profile = await profileRepository.getDosenProfile(userId);
-  if (!profile) throw { status: 404, message: "Profil dosen tidak ditemukan" };
-  return profile;
-};
-
-// ================= GET JADWAL (Dosen — untuk kalender kelola jadwal) =================
+// ================= GET JADWAL (Dosen) =================
 exports.getMySchedules = async ({ user, query }) => {
-
   if (!user || user.role !== 'dosen') {
     throw { status: 403, message: "Hanya dosen yang dapat mengakses jadwal ini" };
   }
@@ -23,14 +15,12 @@ exports.getMySchedules = async ({ user, query }) => {
   return { total: schedules.length, schedules };
 };
 
-// ================= GET JADWAL TERSEDIA (Mahasiswa — untuk kalender booking) =================
+// ================= GET JADWAL TERSEDIA (Mahasiswa) =================
 exports.getAvailableSchedules = async ({ user, query }) => {
-
   if (!user || user.role !== 'mahasiswa') {
     throw { status: 403, message: "Hanya mahasiswa yang dapat mengakses endpoint ini" };
   }
 
-  // Mahasiswa hanya bisa lihat jadwal dosen PA-nya sendiri
   const profile = await profileRepository.getMahasiswaProfile(user.id);
   if (!profile) throw { status: 404, message: "Profil mahasiswa tidak ditemukan" };
 
@@ -44,16 +34,13 @@ exports.getAvailableSchedules = async ({ user, query }) => {
 
 // ================= GET DETAIL JADWAL =================
 exports.getScheduleDetail = async ({ user, scheduleId }) => {
-
   const schedule = await scheduleRepository.findById(scheduleId);
   if (!schedule) throw { status: 404, message: "Jadwal tidak ditemukan" };
 
-  // Dosen hanya bisa lihat jadwal miliknya
   if (user.role === 'dosen' && schedule.dosen_id !== user.id) {
     throw { status: 403, message: "Akses ditolak" };
   }
 
-  // Mahasiswa hanya bisa lihat jadwal dosen PA-nya
   if (user.role === 'mahasiswa') {
     const profile = await profileRepository.getMahasiswaProfile(user.id);
     if (!profile || profile.dosen_pa_id !== schedule.dosen_id) {
@@ -64,9 +51,8 @@ exports.getScheduleDetail = async ({ user, scheduleId }) => {
   return schedule;
 };
 
-// ================= TAMBAH JADWAL (Dosen) =================
+// ================= TAMBAH JADWAL =================
 exports.createSchedule = async ({ user, body }) => {
-
   if (!user || user.role !== 'dosen') {
     throw { status: 403, message: "Hanya dosen yang dapat membuat jadwal" };
   }
@@ -90,7 +76,7 @@ exports.createSchedule = async ({ user, body }) => {
     throw { status: 400, message: "Kuota minimal 1" };
   }
 
-  const schedule = await scheduleRepository.createSchedule({
+  return await scheduleRepository.createSchedule({
     dosen_id: user.id,
     tanggal,
     waktu_mulai,
@@ -98,13 +84,10 @@ exports.createSchedule = async ({ user, body }) => {
     kuota: kuotaInt,
     keterangan
   });
-
-  return schedule;
 };
 
-// ================= EDIT JADWAL (Dosen) =================
+// ================= ✅ EDIT JADWAL (pakai countActiveBookings sebagai sumber kebenaran) =================
 exports.updateSchedule = async ({ user, scheduleId, body }) => {
-
   if (!user || user.role !== 'dosen') {
     throw { status: 403, message: "Hanya dosen yang dapat mengubah jadwal" };
   }
@@ -114,10 +97,6 @@ exports.updateSchedule = async ({ user, scheduleId, body }) => {
 
   if (existing.dosen_id !== user.id) {
     throw { status: 403, message: "Akses ditolak — bukan jadwal Anda" };
-  }
-
-  if (existing.status === 'penuh') {
-    throw { status: 400, message: "Jadwal yang sudah penuh tidak dapat diedit" };
   }
 
   const { tanggal, waktu_mulai, waktu_selesai, kuota, keterangan } = body;
@@ -131,29 +110,29 @@ exports.updateSchedule = async ({ user, scheduleId, body }) => {
     throw { status: 400, message: "Kuota minimal 1" };
   }
 
-  // Kuota baru tidak boleh lebih kecil dari yang sudah terpakai
-  const sudahTerpakai = existing.kuota - existing.kuota_tersisa;
-  if (kuotaInt < sudahTerpakai) {
+  // ✅ Hitung booking aktif langsung dari DB — bukan dari kuota - kuota_tersisa
+  const bookingAktif = await scheduleRepository.countActiveBookings(scheduleId);
+
+  if (kuotaInt < bookingAktif) {
     throw {
       status: 400,
-      message: `Kuota tidak boleh kurang dari jumlah booking yang sudah ada (${sudahTerpakai})`
+      message: `Kuota tidak boleh kurang dari jumlah mahasiswa yang sudah booking (${bookingAktif})`
     };
   }
 
-  const updated = await scheduleRepository.updateSchedule(scheduleId, {
+  // ✅ Kirim bookingAktif ke repository agar kuota_tersisa dihitung ulang dengan benar
+  return await scheduleRepository.updateSchedule(scheduleId, {
     tanggal,
     waktu_mulai,
     waktu_selesai,
     kuota: kuotaInt,
+    bookingAktif,
     keterangan
   });
-
-  return updated;
 };
 
-// ================= HAPUS JADWAL (Dosen) =================
+// ================= ✅ HAPUS JADWAL (cek dari DB, hapus booking dulu via transaksi) =================
 exports.deleteSchedule = async ({ user, scheduleId }) => {
-
   if (!user || user.role !== 'dosen') {
     throw { status: 403, message: "Hanya dosen yang dapat menghapus jadwal" };
   }
@@ -165,23 +144,24 @@ exports.deleteSchedule = async ({ user, scheduleId }) => {
     throw { status: 403, message: "Akses ditolak — bukan jadwal Anda" };
   }
 
-  // Tidak boleh hapus jadwal yang sudah ada booking aktif
-  const sudahTerpakai = existing.kuota - existing.kuota_tersisa;
-  if (sudahTerpakai > 0) {
+  // ✅ Hitung dari DB langsung — tidak percaya kolom kuota_tersisa
+  const bookingAktif = await scheduleRepository.countActiveBookings(scheduleId);
+
+  if (bookingAktif > 0) {
     throw {
       status: 400,
-      message: `Jadwal tidak dapat dihapus karena sudah ada ${sudahTerpakai} mahasiswa yang booking`
+      message: `Jadwal tidak dapat dihapus karena sudah ada ${bookingAktif} mahasiswa yang booking`
     };
   }
 
-  await scheduleRepository.deleteSchedule(scheduleId);
+  // ✅ Hapus dalam transaksi: booking dulu baru jadwal (avoid FK violation)
+  await scheduleRepository.deleteScheduleWithBookings(scheduleId);
 
   return { message: "Jadwal berhasil dihapus" };
 };
 
 // ================= BOOKING JADWAL (Mahasiswa) =================
 exports.bookSchedule = async ({ user, body }) => {
-
   if (!user || user.role !== 'mahasiswa') {
     throw { status: 403, message: "Hanya mahasiswa yang dapat booking jadwal" };
   }
@@ -195,7 +175,6 @@ exports.bookSchedule = async ({ user, body }) => {
   const schedule = await scheduleRepository.findById(jadwal_id);
   if (!schedule) throw { status: 404, message: "Jadwal tidak ditemukan" };
 
-  // Pastikan hanya bisa booking jadwal dosen PA sendiri
   const profile = await profileRepository.getMahasiswaProfile(user.id);
   if (!profile || profile.dosen_pa_id !== schedule.dosen_id) {
     throw { status: 403, message: "Anda hanya dapat booking jadwal dosen PA Anda" };
@@ -205,43 +184,68 @@ exports.bookSchedule = async ({ user, body }) => {
     throw { status: 400, message: "Jadwal sudah penuh atau tidak tersedia" };
   }
 
-  // Cek kuota real-time
   if (schedule.kuota_tersisa <= 0) {
     throw { status: 400, message: "Kuota jadwal sudah penuh" };
   }
 
-  // Cek duplikat booking
   const duplikat = await scheduleRepository.findBookingByUserAndSchedule(user.id, jadwal_id);
   if (duplikat) {
     throw { status: 400, message: "Anda sudah melakukan booking untuk jadwal ini" };
   }
 
-  // Buat booking
+  // ✅ Status langsung 'terkonfirmasi'
   const booking = await scheduleRepository.createBooking({
     mahasiswa_id: user.id,
     jadwal_id,
     catatan
   });
 
-  // Kurangi kuota (atomic — WHERE kuota_tersisa > 0 sebagai safety net)
   const updatedSchedule = await scheduleRepository.decrementKuota(jadwal_id);
   if (!updatedSchedule) {
     throw { status: 400, message: "Kuota jadwal sudah penuh" };
   }
 
   return {
-    booking_id: booking.id,
-    jadwal_id: schedule.id,
-    tanggal: schedule.tanggal,
-    waktu_mulai: schedule.waktu_mulai,
+    booking_id:   booking.id,
+    jadwal_id:    schedule.id,
+    tanggal:      schedule.tanggal,
+    waktu_mulai:  schedule.waktu_mulai,
     waktu_selesai: schedule.waktu_selesai,
-    sisa_kuota: updatedSchedule.kuota_tersisa
+    status:       booking.status,
+    sisa_kuota:   updatedSchedule.kuota_tersisa
   };
 };
 
-// ================= GET DAFTAR BOOKING (Dosen — pantau mahasiswa yang booking) =================
-exports.getBookings = async ({ user, query }) => {
+// ================= ✅ BATALKAN BOOKING — kuota dikembalikan =================
+exports.cancelBooking = async ({ user, bookingId }) => {
 
+  const booking = await scheduleRepository.findBookingById(bookingId);
+  if (!booking) throw { status: 404, message: "Booking tidak ditemukan" };
+
+  // Mahasiswa hanya bisa batalkan booking miliknya sendiri
+  if (user.role === 'mahasiswa' && booking.mahasiswa_id !== user.id) {
+    throw { status: 403, message: "Akses ditolak" };
+  }
+
+  // Dosen hanya bisa batalkan booking di jadwalnya sendiri
+  if (user.role === 'dosen' && booking.dosen_id !== user.id) {
+    throw { status: 403, message: "Akses ditolak" };
+  }
+
+  if (booking.status === 'dibatalkan') {
+    throw { status: 400, message: "Booking sudah dibatalkan sebelumnya" };
+  }
+
+  await scheduleRepository.updateBookingStatus(bookingId, 'dibatalkan');
+
+  // ✅ Kembalikan kuota_tersisa + set status jadwal kembali 'tersedia'
+  await scheduleRepository.incrementKuota(booking.jadwal_id);
+
+  return { message: "Booking berhasil dibatalkan, kuota jadwal telah dikembalikan" };
+};
+
+// ================= GET DAFTAR BOOKING (Dosen) =================
+exports.getBookings = async ({ user, query }) => {
   if (!user || user.role !== 'dosen') {
     throw { status: 403, message: "Hanya dosen yang dapat melihat daftar booking" };
   }
@@ -250,6 +254,17 @@ exports.getBookings = async ({ user, query }) => {
     user.id,
     query.jadwal_id || null
   );
+
+  return { total: bookings.length, bookings };
+};
+
+// ================= ✅ GET BOOKING MILIK MAHASISWA =================
+exports.getMyBookings = async ({ user }) => {
+  if (!user || user.role !== 'mahasiswa') {
+    throw { status: 403, message: "Hanya mahasiswa yang dapat mengakses ini" };
+  }
+
+  const bookings = await scheduleRepository.getBookingsByMahasiswa(user.id);
 
   return { total: bookings.length, bookings };
 };
