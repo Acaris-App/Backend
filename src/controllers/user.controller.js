@@ -24,72 +24,74 @@ const uploadProfilePicture = async (file, npm_nip) => {
   });
 };
 
+// ================= HELPER: BUILD FULL PROFILE RESPONSE =================
+// Dipakai oleh GET, PUT, dan POST photo — satu sumber kebenaran untuk struktur response
+const buildProfileResponse = async (userId, role) => {
+  const user = await userRepository.findById(userId);
+  if (!user) throw { status: 404, message: "User tidak ditemukan" };
+
+  const responseData = {
+    id:              user.id,
+    name:            user.name,
+    email:           user.email,
+    npm_nip:         user.npm_nip,
+    role:            user.role,
+    profile_picture: user.profile_picture || null
+  };
+
+  if (role === 'mahasiswa') {
+    const profile = await profileRepository.getMahasiswaProfile(userId);
+
+    if (profile) {
+      responseData.angkatan         = profile.angkatan;
+      responseData.ipk              = profile.ipk;
+      responseData.current_semester = profile.current_semester;
+      responseData.dosen_pa_id      = profile.dosen_pa_id;
+      responseData.nama_dosen_pa    = profile.nama_dosen_pa  || null;
+      responseData.nip_dosen_pa     = profile.nip_dosen_pa   || null;
+      responseData.foto_dosen_pa    = profile.foto_dosen_pa  || null;
+    }
+
+    const allDocs = await documentRepository.getDocumentsList(userId);
+    const documents = { krs: [], khs: [], transkrip: null };
+
+    for (const doc of allDocs) {
+      if (doc.document_type === 'transkrip') {
+        documents.transkrip = {
+          id:          doc.id,
+          file_path:   doc.file_path,
+          uploaded_at: doc.uploaded_at
+        };
+      } else {
+        documents[doc.document_type].push({
+          id:          doc.id,
+          semester:    doc.semester,
+          file_path:   doc.file_path,
+          uploaded_at: doc.uploaded_at
+        });
+      }
+    }
+
+    responseData.documents = documents;
+  }
+
+  if (role === 'dosen') {
+    const profile = await profileRepository.getDosenProfile(userId);
+    if (profile) {
+      responseData.kode_kelas = profile.kode_kelas;
+    }
+  }
+
+  return responseData;
+};
+
 // ================= 1. GET PROFILE (semua role) =================
 exports.getMe = async (req, res, next) => {
   try {
     const { id, role } = req.user;
-
-    const user = await userRepository.findById(id);
-    if (!user) return res.status(404).json({ status: "error", message: "User tidak ditemukan" });
-
-    // Data dasar semua role
-    const responseData = {
-      id:              user.id,
-      name:            user.name,
-      email:           user.email,
-      npm_nip:         user.npm_nip,
-      role:            user.role,
-      profile_picture: user.profile_picture || null
-    };
-
-    // Tambah data profil khusus per role
-    if (role === 'mahasiswa') {
-      const profile = await profileRepository.getMahasiswaProfile(id);
-
-      if (profile) {
-        responseData.angkatan         = profile.angkatan;
-        responseData.ipk              = profile.ipk;
-        responseData.current_semester = profile.current_semester;
-        responseData.dosen_pa_id      = profile.dosen_pa_id;
-        responseData.nama_dosen_pa    = profile.nama_dosen_pa    || null;
-        responseData.nip_dosen_pa     = profile.nip_dosen_pa     || null;
-        responseData.foto_dosen_pa    = profile.foto_dosen_pa    || null;
-      }
-
-      // Dokumen KRS & KHS dikelompokkan per semester
-      const allDocs = await documentRepository.getDocumentsList(id);
-
-      const documents = { krs: [], khs: [], transkrip: null };
-
-      for (const doc of allDocs) {
-        if (doc.document_type === 'transkrip') {
-          documents.transkrip = {
-            id:          doc.id,
-            file_path:   doc.file_path,
-            uploaded_at: doc.uploaded_at
-          };
-        } else {
-          documents[doc.document_type].push({
-            id:          doc.id,
-            semester:    doc.semester,
-            file_path:   doc.file_path,
-            uploaded_at: doc.uploaded_at
-          });
-        }
-      }
-
-      responseData.documents = documents;
-    }
-
-    if (role === 'dosen') {
-      const profile = await profileRepository.getDosenProfile(id);
-      if (profile) {
-        responseData.kode_kelas = profile.kode_kelas;
-      }
-    }
+    const responseData = await buildProfileResponse(id, role);
 
     res.json({ status: "success", data: responseData });
-
   } catch (err) {
     next(err);
   }
@@ -98,33 +100,23 @@ exports.getMe = async (req, res, next) => {
 // ================= 2. UPDATE DATA DIRI — teks saja (semua role) =================
 exports.updateProfileText = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const { id, role } = req.user;
     const { name } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ status: "error", message: "name wajib diisi" });
     }
 
-    const currentUser = await userRepository.findById(userId);
-    if (!currentUser) {
-      return res.status(404).json({ status: "error", message: "User tidak ditemukan" });
-    }
+    await userRepository.updateProfileText(id, { name: name.trim() });
 
-    const updated = await userRepository.updateProfileText(userId, { name: name.trim() });
+    // Kembalikan response lengkap identik dengan GET /user/profile
+    const responseData = await buildProfileResponse(id, role);
 
     res.json({
       status: "success",
       message: "Data diri berhasil diperbarui",
-      data: {
-        id:              updated.id,
-        name:            updated.name,
-        email:           updated.email,
-        npm_nip:         updated.npm_nip,
-        role:            updated.role,
-        profile_picture: updated.profile_picture || null
-      }
+      data: responseData
     });
-
   } catch (err) {
     next(err);
   }
@@ -133,31 +125,29 @@ exports.updateProfileText = async (req, res, next) => {
 // ================= 3. UPDATE FOTO PROFIL — multipart (semua role) =================
 exports.updateProfilePhoto = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const { id, role } = req.user;
     const file = req.file;
 
     if (!file) {
       return res.status(400).json({ status: "error", message: "File foto wajib diupload" });
     }
 
-    const currentUser = await userRepository.findById(userId);
+    const currentUser = await userRepository.findById(id);
     if (!currentUser) {
       return res.status(404).json({ status: "error", message: "User tidak ditemukan" });
     }
 
     const profilePictureUrl = await uploadProfilePicture(file, currentUser.npm_nip);
+    await userRepository.updateProfilePhoto(id, profilePictureUrl);
 
-    const updated = await userRepository.updateProfilePhoto(userId, profilePictureUrl);
+    // Kembalikan response lengkap identik dengan GET /user/profile
+    const responseData = await buildProfileResponse(id, role);
 
     res.json({
       status: "success",
       message: "Foto profil berhasil diperbarui",
-      data: {
-        id:              updated.id,
-        profile_picture: updated.profile_picture  // ← URL baru langsung dikembalikan
-      }
+      data: responseData
     });
-
   } catch (err) {
     next(err);
   }
