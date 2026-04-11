@@ -38,6 +38,7 @@ const uploadProfilePicture = async (file, nip) => {
 };
 
 // ================= HELPER: BUILD PROFILE DATA =================
+// Field name harus identik dengan GET /user/profile agar Android tidak perlu handle dua struktur berbeda
 const buildProfileData = async (user) => {
   let profileData = {};
 
@@ -45,9 +46,13 @@ const buildProfileData = async (user) => {
     const mahasiswa = await profileRepository.getMahasiswaProfile(user.id);
     if (mahasiswa) {
       profileData = {
-        angkatan: mahasiswa.angkatan,
-        ipk: mahasiswa.ipk,
-        semester: mahasiswa.current_semester
+        angkatan:         mahasiswa.angkatan,
+        ipk:              mahasiswa.ipk,
+        current_semester: mahasiswa.current_semester,  // ← konsisten dengan GET /user/profile
+        dosen_pa_id:      mahasiswa.dosen_pa_id,
+        nama_dosen_pa:    mahasiswa.nama_dosen_pa  || null,
+        nip_dosen_pa:     mahasiswa.nip_dosen_pa   || null,
+        foto_dosen_pa:    mahasiswa.foto_dosen_pa  || null
       };
     }
   }
@@ -312,21 +317,11 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
   await otpRepository.markAsUsed(otpData.id);
   await userRepository.verifyUser(user.id);
 
-  let profileData = {};
+  // Pakai helper yang sama dengan login — tidak ada duplikasi, field selalu konsisten
+  const profileData = await buildProfileData(user);
 
-  if (user.role === 'mahasiswa') {
-    const mahasiswa = await profileRepository.getMahasiswaProfile(user.id);
-    if (mahasiswa) {
-      profileData = {
-        angkatan: mahasiswa.angkatan,
-        ipk: mahasiswa.ipk,
-        semester: mahasiswa.current_semester
-      };
-    }
-  }
-
+  // Khusus dosen: generate kode_kelas setelah OTP sukses
   if (user.role === 'dosen') {
-    // Generate kode_kelas setelah OTP sukses
     let kodeKelas;
     let isUnique = false;
     while (!isUnique) {
@@ -334,12 +329,8 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
       const existing = await profileRepository.findDosenByKode(kodeKelas);
       if (!existing) isUnique = true;
     }
-
     await profileRepository.updateDosenKodeKelas(user.id, kodeKelas);
-
-    profileData = {
-      kode_kelas: kodeKelas
-    };
+    profileData.kode_kelas = kodeKelas;
   }
 
   const token = jwt.generateToken({
