@@ -113,37 +113,20 @@ exports.uploadDocument = async ({ user, body, file }) => {
     }
 
     // ================= VALIDASI URUTAN =================
-    const lastKRS = await documentRepository.getLastSemester(user.id, 'krs');
-    const lastKHS = await documentRepository.getLastSemester(user.id, 'khs');
+    // Aturan baru: untuk upload file semester N (KRS atau KHS),
+    // semester N-1 harus sudah punya minimal 1 file (bebas KRS atau KHS).
+    // Semester 1 selalu boleh diupload tanpa syarat.
 
-    if (document_type === 'krs') {
-      if (semesterInt !== lastKRS + 1) {
-        throw {
-          status: 400,
-          message: `KRS harus berurutan. Terakhir: ${lastKRS}, berikutnya: ${lastKRS + 1}`
-        };
-      }
-    }
-
-    if (document_type === 'khs') {
-
-      if (semesterInt !== lastKHS + 1) {
-        throw {
-          status: 400,
-          message: `KHS harus berurutan. Terakhir: ${lastKHS}, berikutnya: ${lastKHS + 1}`
-        };
-      }
-
-      const krs = await documentRepository.findByUserTypeSemester(
+    if (document_type !== 'transkrip' && semesterInt > 1) {
+      const prevSemesterHasFile = await documentRepository.hasAnyDocumentForSemester(
         user.id,
-        'krs',
-        semesterInt
+        semesterInt - 1
       );
 
-      if (!krs) {
+      if (!prevSemesterHasFile) {
         throw {
           status: 400,
-          message: `Tidak boleh upload KHS semester ${semesterInt} karena KRS belum diupload`
+          message: `Semester ${semesterInt - 1} belum memiliki dokumen. Upload minimal 1 file (KRS atau KHS) untuk semester ${semesterInt - 1} terlebih dahulu`
         };
       }
     }
@@ -181,20 +164,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
       // DB gagal → rollback: hapus file yang sudah terlanjur upload ke GCS
       await deleteFromGCS(newFilename, user.id);
       throw dbErr;
-    }
-
-    // ================= AUTO SEMESTER =================
-    if (document_type === 'khs') {
-
-      const lastKHSAfter = await documentRepository.getLastSemester(user.id, 'khs');
-
-      if (semesterInt === lastKHSAfter) {
-        const newSemester = semesterInt + 1;
-
-        if (newSemester <= currentSemester) {
-          await profileRepository.updateSemester(user.id, newSemester);
-        }
-      }
     }
 
     return document;

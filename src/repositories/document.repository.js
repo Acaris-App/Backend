@@ -86,6 +86,19 @@ exports.getDocumentsByUser = async (userId) => {
   return result.rows;
 };
 
+// ================= CEK MINIMAL 1 FILE DI SEMESTER TERTENTU (KRS atau KHS) =================
+exports.hasAnyDocumentForSemester = async (userId, semester) => {
+  const result = await db.query(
+    `SELECT 1 FROM dokumen_mahasiswa
+     WHERE user_id = $1
+       AND semester = $2
+       AND document_type IN ('krs', 'khs')
+     LIMIT 1`,
+    [userId, semester]
+  );
+  return result.rows.length > 0;
+};
+
 // ================= LAST SEMESTER =================
 exports.getLastSemester = async (userId, type) => {
 
