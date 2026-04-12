@@ -64,6 +64,35 @@ exports.updateDosenKodeKelas = async (userId, kodeKelas) => {
   );
 };
 
+exports.updateMahasiswaProfile = async (userId, data) => {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+
+  if (data.angkatan !== undefined) {
+    fields.push(`angkatan = $${idx++}`);
+    values.push(data.angkatan);
+  }
+  if (data.ipk !== undefined) {
+    fields.push(`ipk = $${idx++}`);
+    values.push(data.ipk);
+  }
+  if (data.current_semester !== undefined) {
+    fields.push(`current_semester = $${idx++}`);
+    values.push(data.current_semester);
+  }
+
+  if (fields.length === 0) return;
+
+  fields.push(`updated_at = NOW()`);
+  values.push(userId);
+
+  await db.query(
+    `UPDATE mahasiswa SET ${fields.join(', ')} WHERE user_id = $${idx}`,
+    values
+  );
+};
+
 exports.updateSemester = async (userId, semester) => {
   await db.query(
     `UPDATE mahasiswa 

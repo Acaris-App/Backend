@@ -101,13 +101,56 @@ exports.getMe = async (req, res, next) => {
 exports.updateProfileText = async (req, res, next) => {
   try {
     const { id, role } = req.user;
-    const { name } = req.body;
+    const { name, angkatan, ipk, current_semester } = req.body;
 
-    if (!name || !name.trim()) {
-      return res.status(400).json({ status: "error", message: "name wajib diisi" });
+    // Minimal harus ada satu field yang dikirim
+    const hasUserField     = name !== undefined;
+    const hasMahasiswaField = angkatan !== undefined || ipk !== undefined || current_semester !== undefined;
+
+    if (!hasUserField && !hasMahasiswaField) {
+      return res.status(400).json({ status: "error", message: "Tidak ada data yang dikirim" });
     }
 
-    await userRepository.updateProfileText(id, { name: name.trim() });
+    // Validasi name kalau dikirim
+    if (hasUserField && (!name || !name.trim())) {
+      return res.status(400).json({ status: "error", message: "name tidak boleh kosong" });
+    }
+
+    // Update tabel users (name) jika dikirim
+    if (hasUserField) {
+      await userRepository.updateProfileText(id, { name: name.trim() });
+    }
+
+    // Update tabel mahasiswa jika role mahasiswa dan ada field terkait
+    if (role === 'mahasiswa' && hasMahasiswaField) {
+
+      if (ipk !== undefined) {
+        const ipkNum = parseFloat(ipk);
+        if (isNaN(ipkNum) || ipkNum < 0 || ipkNum > 4) {
+          return res.status(400).json({ status: "error", message: "IPK harus antara 0 dan 4" });
+        }
+      }
+
+      if (current_semester !== undefined) {
+        const semNum = parseInt(current_semester);
+        if (isNaN(semNum) || semNum < 1) {
+          return res.status(400).json({ status: "error", message: "Semester minimal 1" });
+        }
+      }
+
+      if (angkatan !== undefined) {
+        const angkatanNum = parseInt(angkatan);
+        if (isNaN(angkatanNum) || angkatanNum < 2000) {
+          return res.status(400).json({ status: "error", message: "Angkatan tidak valid" });
+        }
+      }
+
+      await profileRepository.updateMahasiswaProfile(id, {
+        angkatan:         angkatan         !== undefined ? parseInt(angkatan)          : undefined,
+        ipk:              ipk              !== undefined ? parseFloat(ipk)             : undefined,
+        current_semester: current_semester !== undefined ? parseInt(current_semester)  : undefined
+      });
+    }
 
     // Kembalikan response lengkap identik dengan GET /user/profile
     const responseData = await buildProfileResponse(id, role);
