@@ -175,10 +175,22 @@ exports.registerMahasiswa = async (payload, file) => {
     }
 
     const existingEmail = await userRepository.findByEmail(email);
-    if (existingEmail) throw { status: 400, message: "Email sudah digunakan" };
+    if (existingEmail) {
+      if (existingEmail.is_verified) {
+        throw { status: 400, message: "Email sudah digunakan" };
+      }
+      // Belum verified → hapus data lama agar bisa register ulang
+      await userRepository.deleteUnverifiedUser(existingEmail.id);
+    }
 
     const existingNPM = await userRepository.findByNpm(npm_nip);
-    if (existingNPM) throw { status: 400, message: "NPM sudah digunakan" };
+    if (existingNPM) {
+      if (existingNPM.is_verified) {
+        throw { status: 400, message: "NPM sudah digunakan" };
+      }
+      // Belum verified → hapus data lama (kalau belum dihapus oleh cek email di atas)
+      await userRepository.deleteUnverifiedUser(existingNPM.id);
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -248,10 +260,20 @@ exports.registerDosen = async (payload, file) => {
     const { name, email, password, npm_nip } = payload;
 
     const existingEmail = await userRepository.findByEmail(email);
-    if (existingEmail) throw { status: 400, message: "Email sudah digunakan" };
+    if (existingEmail) {
+      if (existingEmail.is_verified) {
+        throw { status: 400, message: "Email sudah digunakan" };
+      }
+      await userRepository.deleteUnverifiedUser(existingEmail.id);
+    }
 
     const existingNIP = await userRepository.findByNpm(npm_nip);
-    if (existingNIP) throw { status: 400, message: "NIP sudah digunakan" };
+    if (existingNIP) {
+      if (existingNIP.is_verified) {
+        throw { status: 400, message: "NIP sudah digunakan" };
+      }
+      await userRepository.deleteUnverifiedUser(existingNIP.id);
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 

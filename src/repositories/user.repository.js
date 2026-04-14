@@ -42,6 +42,12 @@ exports.createUserTx = async (client, data) => {
   return result.rows[0];
 };
 
+// Hapus user yang belum verified beserta seluruh data terkaitnya (cascade)
+// Dipanggil saat user mencoba register ulang dengan email/npm yang sama tapi belum OTP
+exports.deleteUnverifiedUser = async (userId) => {
+  await db.query('DELETE FROM users WHERE id = $1 AND is_verified = FALSE', [userId]);
+};
+
 exports.verifyUser = async (userId) => {
   await db.query(
     'UPDATE users SET is_verified = TRUE WHERE id = $1',
