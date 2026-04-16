@@ -101,27 +101,39 @@ exports.getMe = async (req, res, next) => {
 exports.updateProfileText = async (req, res, next) => {
   try {
     const { id, role } = req.user;
-    const { name, angkatan, ipk, current_semester } = req.body;
+    const { name, npm_nip, angkatan, ipk, current_semester } = req.body;
 
-    // Minimal harus ada satu field yang dikirim
-    const hasUserField     = name !== undefined;
+    const hasUserField      = name !== undefined || npm_nip !== undefined;
     const hasMahasiswaField = angkatan !== undefined || ipk !== undefined || current_semester !== undefined;
 
     if (!hasUserField && !hasMahasiswaField) {
       return res.status(400).json({ status: "error", message: "Tidak ada data yang dikirim" });
     }
 
-    // Validasi name kalau dikirim
-    if (hasUserField && (!name || !name.trim())) {
+    if (name !== undefined && (!name || !name.trim())) {
       return res.status(400).json({ status: "error", message: "name tidak boleh kosong" });
     }
 
-    // Update tabel users (name) jika dikirim
-    if (hasUserField) {
-      await userRepository.updateProfileText(id, { name: name.trim() });
+    if (npm_nip !== undefined) {
+      if (!npm_nip || !npm_nip.trim()) {
+        return res.status(400).json({ status: "error", message: "npm_nip tidak boleh kosong" });
+      }
+      // Cek duplikat npm_nip — pastikan tidak dipakai user lain
+      const existing = await userRepository.findByNpm(npm_nip.trim());
+      if (existing && existing.id !== id) {
+        return res.status(400).json({ status: "error", message: "NPM/NIP sudah digunakan" });
+      }
     }
 
-    // Update tabel mahasiswa jika role mahasiswa dan ada field terkait
+    // Update tabel users
+    if (hasUserField) {
+      await userRepository.updateProfileText(id, {
+        name:    name    !== undefined ? name.trim()    : undefined,
+        npm_nip: npm_nip !== undefined ? npm_nip.trim() : undefined
+      });
+    }
+
+    // Update tabel mahasiswa khusus role mahasiswa
     if (role === 'mahasiswa' && hasMahasiswaField) {
 
       if (ipk !== undefined) {
@@ -146,13 +158,12 @@ exports.updateProfileText = async (req, res, next) => {
       }
 
       await profileRepository.updateMahasiswaProfile(id, {
-        angkatan:         angkatan         !== undefined ? parseInt(angkatan)          : undefined,
-        ipk:              ipk              !== undefined ? parseFloat(ipk)             : undefined,
-        current_semester: current_semester !== undefined ? parseInt(current_semester)  : undefined
+        angkatan:         angkatan         !== undefined ? parseInt(angkatan)         : undefined,
+        ipk:              ipk              !== undefined ? parseFloat(ipk)            : undefined,
+        current_semester: current_semester !== undefined ? parseInt(current_semester) : undefined
       });
     }
 
-    // Kembalikan response lengkap identik dengan GET /user/profile
     const responseData = await buildProfileResponse(id, role);
 
     res.json({

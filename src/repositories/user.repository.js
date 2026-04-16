@@ -63,12 +63,27 @@ exports.updatePassword = async (userId, hashedPassword) => {
 };
 
 exports.updateProfileText = async (userId, data) => {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+
+  if (data.name !== undefined) {
+    fields.push(`name = $${idx++}`);
+    values.push(data.name);
+  }
+
+  if (data.npm_nip !== undefined) {
+    fields.push(`npm_nip = $${idx++}`);
+    values.push(data.npm_nip);
+  }
+
+  if (fields.length === 0) return null;
+
+  values.push(userId);
+
   const result = await db.query(
-    `UPDATE users
-     SET name = $1
-     WHERE id = $2
-     RETURNING id, name, email, npm_nip, profile_picture, role`,
-    [data.name, userId]
+    `UPDATE users SET ${fields.join(', ')} WHERE id = $${idx} RETURNING id, name, email, npm_nip, profile_picture, role`,
+    values
   );
 
   return result.rows[0];
