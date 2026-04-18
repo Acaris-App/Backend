@@ -304,11 +304,10 @@ exports.getMonthlySchedulesDosen = async ({ user, query }) => {
 
   const rows = await scheduleRepository.getMonthlyDates(user.id, year, month, false);
 
-  // Retrofit mengexpect List<ScheduleResponse> — return array langsung
   return rows.map(r => ({
     id:              r.id,
     date:            r.tanggal,
-    remaining_quota: parseInt(r.total_kuota_tersisa) || 0
+    remaining_quota: parseInt(r.kuota_tersisa) || 0
   }));
 };
 
@@ -328,7 +327,7 @@ exports.getMonthlySchedulesMahasiswa = async ({ user, query }) => {
   return rows.map(r => ({
     id:              r.id,
     date:            r.tanggal,
-    remaining_quota: parseInt(r.total_kuota_tersisa) || 0
+    remaining_quota: parseInt(r.kuota_tersisa) || 0
   }));
 };
 
