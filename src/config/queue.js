@@ -1,6 +1,5 @@
 const Queue = require('bull');
 
-// 🚧 DEV MODE: Jika DISABLE_QUEUE=true, export dummy queue agar tidak connect ke Upstash
 if (process.env.DISABLE_QUEUE === 'true') {
   const dummyQueue = {
     add: async (data) => {

@@ -2,11 +2,9 @@ const documentRepository = require('../repositories/document.repository');
 const profileRepository = require('../repositories/profile.repository');
 const { bucket } = require('../config/gcs');
 
-// ================= HELPER GCS =================
+// ================= HELPER GCS UPLOAD =================
 const uploadToGCS = async (file, filename, userId) => {
-
-  const filePath = `${userId}/${filename}`; // tetap folder per user
-
+  const filePath = `${userId}/${filename}`;
   const blob = bucket.file(filePath);
 
   const blobStream = blob.createWriteStream({
@@ -15,36 +13,31 @@ const uploadToGCS = async (file, filename, userId) => {
   });
 
   return new Promise((resolve, reject) => {
-
     blobStream.on('finish', () => {
       const url = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
       resolve(url);
     });
-
     blobStream.on('error', reject);
-
     blobStream.end(file.buffer);
   });
 };
 
-// ================= HELPER GCS DELETE (rollback) =================
+// ================= HELPER GCS DELETE =================
 const deleteFromGCS = async (filename, userId) => {
   try {
     const filePath = `${userId}/${filename}`;
     await bucket.file(filePath).delete();
-    console.log(`[GCS ROLLBACK] File dihapus: ${filePath}`);
+    console.log(`[GCS] File dihapus: ${filePath}`);
   } catch (err) {
-    // Log saja, jangan throw — jangan sampai rollback error menimpa error aslinya
-    console.error(`[GCS ROLLBACK] Gagal hapus file: ${err.message}`);
+    console.error(`[GCS] Gagal hapus file: ${err.message}`);
   }
 };
 
-
+// ================= UPLOAD DOCUMENT =================
 exports.uploadDocument = async ({ user, body, file }) => {
 
   try {
 
-    // ================= BASIC =================
     if (!file) {
       throw { status: 400, message: "File wajib diupload" };
     }
@@ -61,7 +54,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
       throw { status: 400, message: "document_type tidak valid" };
     }
 
-    // ================= PROFILE =================
     const profile = await profileRepository.getMahasiswaProfile(user.id);
 
     if (!profile) {
@@ -70,8 +62,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
 
     const currentSemester = profile.current_semester;
 
-    // ================= PARSE =================
-    // transkrip tidak butuh semester, gunakan 0 agar tidak violate NOT NULL constraint di DB
+    // transkrip tidak butuh semester, gunakan 0 agar tidak violate NOT NULL constraint
     let semesterInt = 0;
 
     if (document_type !== 'transkrip') {
@@ -98,7 +89,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
       }
     }
 
-    // ================= DUPLICATE =================
     const existing = await documentRepository.findByUserTypeSemester(
       user.id,
       document_type,
@@ -112,11 +102,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
       };
     }
 
-    // ================= VALIDASI URUTAN =================
-    // Aturan baru: untuk upload file semester N (KRS atau KHS),
-    // semester N-1 harus sudah punya minimal 1 file (bebas KRS atau KHS).
-    // Semester 1 selalu boleh diupload tanpa syarat.
-
+    // Validasi urutan: semester N butuh minimal 1 file di semester N-1
     if (document_type !== 'transkrip' && semesterInt > 1) {
       const prevSemesterHasFile = await documentRepository.hasAnyDocumentForSemester(
         user.id,
@@ -131,7 +117,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
       }
     }
 
-    // ================= NAMA FILE =================
     const safeName = (user.name || 'user')
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-');
@@ -147,11 +132,8 @@ exports.uploadDocument = async ({ user, body, file }) => {
       newFilename = `${safeName}-${document_type}-semester-${semesterInt}-${date}-${unique}.pdf`;
     }
 
-    // ================= UPLOAD GCS =================
-    // Upload ke GCS dulu, simpan filename untuk rollback jika DB gagal
     const fileUrl = await uploadToGCS(file, newFilename, user.id);
 
-    // ================= SAVE DB =================
     let document;
     try {
       document = await documentRepository.createDocument({
@@ -161,7 +143,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
         file_path: fileUrl
       });
     } catch (dbErr) {
-      // DB gagal → rollback: hapus file yang sudah terlanjur upload ke GCS
+      // DB gagal → rollback file dari GCS
       await deleteFromGCS(newFilename, user.id);
       throw dbErr;
     }
@@ -193,7 +175,6 @@ exports.getDocuments = async ({ user, query = {} }) => {
 
   const docs = await documentRepository.getDocumentsList(user.id, { document_type, semester });
 
-  // Kelompokkan per type untuk memudahkan tampilan di Android
   const grouped = {
     krs: [],
     khs: [],
@@ -249,19 +230,16 @@ exports.checkCompleteness = async (user) => {
       }
     }
 
-    // Cek semester mana yang belum upload KRS
     const missingSemesterKRS = [];
     for (let s = 1; s <= currentSemester; s++) {
       if (!uploaded.krs.includes(s)) missingSemesterKRS.push(s);
     }
 
-    // Cek semester mana yang belum upload KHS (hanya semester < currentSemester)
     const missingSemesterKHS = [];
     for (let s = 1; s < currentSemester; s++) {
       if (!uploaded.khs.includes(s)) missingSemesterKHS.push(s);
     }
 
-    // is_complete = semua KRS dan KHS sudah lengkap (transkrip opsional)
     const isComplete =
       missingSemesterKRS.length === 0 &&
       missingSemesterKHS.length === 0;
@@ -288,26 +266,21 @@ exports.deleteDocument = async ({ user, documentId }) => {
     throw { status: 403, message: "Hanya mahasiswa yang dapat menghapus dokumen" };
   }
 
-  // Pastikan dokumen ada dan milik user ini
   const existing = await documentRepository.findById(documentId, user.id);
   if (!existing) {
     throw { status: 404, message: "Dokumen tidak ditemukan" };
   }
 
-  // Hapus dari DB dulu
   await documentRepository.deleteDocument(documentId, user.id);
 
   // Hapus file dari GCS — ekstrak object path dari full URL
-  // Format URL: https://storage.googleapis.com/<bucket>/<userId>/<filename>
   try {
     const url = new URL(existing.file_path);
-    // pathname = /<bucket>/<userId>/<filename> → buang leading slash + nama bucket
     const objectPath = url.pathname.split('/').slice(2).join('/');
     await bucket.file(objectPath).delete();
-    console.log(`[GCS DELETE] File dihapus: ${objectPath}`);
+    console.log(`[GCS] File dihapus: ${objectPath}`);
   } catch (err) {
-    // DB sudah terhapus — log GCS error tapi jangan gagalkan response
-    console.error(`[GCS DELETE] Gagal hapus file dari GCS: ${err.message}`);
+    console.error(`[GCS] Gagal hapus file dari GCS: ${err.message}`);
   }
 
   return { message: "Dokumen berhasil dihapus" };
@@ -324,13 +297,11 @@ exports.updateDocument = async ({ user, documentId, file }) => {
     throw { status: 403, message: "Hanya mahasiswa yang dapat update dokumen" };
   }
 
-  // Cari dokumen yang mau diupdate, pastikan milik user ini
   const existing = await documentRepository.findById(documentId, user.id);
   if (!existing) {
     throw { status: 404, message: "Dokumen tidak ditemukan" };
   }
 
-  // Upload file baru ke GCS
   const safeName = (user.name || 'user')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '-');
@@ -347,7 +318,6 @@ exports.updateDocument = async ({ user, documentId, file }) => {
 
   const fileUrl = await uploadToGCS(file, newFilename, user.id);
 
-  // Update path di DB
   let updated;
   try {
     updated = await documentRepository.updateFilePath(documentId, fileUrl);

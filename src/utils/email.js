@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 5000
 });
 
-// ================= TEMPLATE =================
+// ================= EMAIL TEMPLATE =================
 const generateOTPTemplate = (code) => {
   return `
   <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #d9d9d9; border-radius: 12px; overflow: hidden;">
@@ -49,28 +49,16 @@ const generateOTPTemplate = (code) => {
   `;
 };
 
-// ================= SEND EMAIL =================
-// 🚧 DEV MODE: Email tidak dikirim, OTP ditampilkan di console
-// Untuk production, uncomment blok nodemailer di bawah dan hapus DEV MODE block
-
+// ================= SEND OTP EMAIL =================
 exports.sendOTPEmail = async (to, code, type = 'login') => {
 
-  // ── DEV MODE ──────────────────────────────────────────────────
-  // console.log("==================================================");
-  // console.log(`🔑 OTP [${type.toUpperCase()}]`);
-  // console.log(`   To   : ${to}`);
-  // console.log(`   Code : ${code}`);
-  // console.log("==================================================");
-  // return; // skip pengiriman email
-  // ──────────────────────────────────────────────────────────────
-
-  // ── PRODUCTION (uncomment saat deploy) ────────────────────────
   const subjectMap = {
     login: "OTP Login Acaris",
     register: "OTP Verifikasi Akun",
     reset_password: "OTP Reset Password"
   };
   const subject = subjectMap[type] || "OTP Acaris";
+
   try {
     const info = await transporter.sendMail({
       from: `"Acaris System" <${process.env.EMAIL_USER}>`,
@@ -83,5 +71,4 @@ exports.sendOTPEmail = async (to, code, type = 'login') => {
     console.error("❌ EMAIL ERROR:", err.message);
     throw err;
   }
-  // ──────────────────────────────────────────────────────────────
 };

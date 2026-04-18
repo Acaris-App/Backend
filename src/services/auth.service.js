@@ -5,7 +5,6 @@ const otpRepository = require('../repositories/otp.repository');
 const profileRepository = require('../repositories/profile.repository');
 
 const redis = require('../config/redis');
-
 const jwt = require('../config/jwt');
 const db = require('../config/db');
 const { bucket } = require('../config/gcs');
@@ -38,7 +37,7 @@ const uploadProfilePicture = async (file, nip) => {
 };
 
 // ================= HELPER: BUILD PROFILE DATA =================
-// Field name harus identik dengan GET /user/profile agar Android tidak perlu handle dua struktur berbeda
+// Field name identik dengan GET /user/profile agar response konsisten di semua endpoint auth
 const buildProfileData = async (user) => {
   let profileData = {};
 
@@ -48,7 +47,7 @@ const buildProfileData = async (user) => {
       profileData = {
         angkatan:         mahasiswa.angkatan,
         ipk:              mahasiswa.ipk,
-        current_semester: mahasiswa.current_semester,  // ← konsisten dengan GET /user/profile
+        current_semester: mahasiswa.current_semester,
         dosen_pa_id:      mahasiswa.dosen_pa_id,
         nama_dosen_pa:    mahasiswa.nama_dosen_pa  || null,
         nip_dosen_pa:     mahasiswa.nip_dosen_pa   || null,
@@ -93,8 +92,7 @@ exports.validateKodeKelas = async ({ kode_kelas }) => {
   };
 };
 
-
-// ================= LOGIN (LANGSUNG TOKEN, TANPA OTP) =================
+// ================= LOGIN =================
 exports.login = async ({ email, password, ip }) => {
 
   if (!email || !password) {
@@ -139,7 +137,6 @@ exports.login = async ({ email, password, ip }) => {
   };
 };
 
-
 // ================= REGISTER MAHASISWA =================
 exports.registerMahasiswa = async (payload, file) => {
 
@@ -179,7 +176,6 @@ exports.registerMahasiswa = async (payload, file) => {
       if (existingEmail.is_verified) {
         throw { status: 400, message: "Email sudah digunakan" };
       }
-      // Belum verified → hapus data lama agar bisa register ulang
       await userRepository.deleteUnverifiedUser(existingEmail.id);
     }
 
@@ -188,7 +184,6 @@ exports.registerMahasiswa = async (payload, file) => {
       if (existingNPM.is_verified) {
         throw { status: 400, message: "NPM sudah digunakan" };
       }
-      // Belum verified → hapus data lama (kalau belum dihapus oleh cek email di atas)
       await userRepository.deleteUnverifiedUser(existingNPM.id);
     }
 
@@ -240,7 +235,6 @@ exports.registerMahasiswa = async (payload, file) => {
     client.release();
   }
 };
-
 
 // ================= REGISTER DOSEN =================
 exports.registerDosen = async (payload, file) => {
@@ -317,7 +311,6 @@ exports.registerDosen = async (payload, file) => {
   }
 };
 
-
 // ================= VERIFY REGISTER OTP =================
 exports.verifyRegisterOTP = async ({ email, code }) => {
 
@@ -339,7 +332,6 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
   await otpRepository.markAsUsed(otpData.id);
   await userRepository.verifyUser(user.id);
 
-  // Pakai helper yang sama dengan login — tidak ada duplikasi, field selalu konsisten
   const profileData = await buildProfileData(user);
 
   // Khusus dosen: generate kode_kelas setelah OTP sukses
@@ -375,7 +367,6 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
   };
 };
 
-
 // ================= RESEND OTP =================
 exports.resendOTP = async ({ email, type }) => {
 
@@ -402,8 +393,7 @@ exports.resendOTP = async ({ email, type }) => {
   };
 };
 
-
-// ================= FORGOT PASSWORD (kirim OTP reset) =================
+// ================= FORGOT PASSWORD =================
 exports.forgotPassword = async ({ email }) => {
 
   if (!email) {
@@ -427,8 +417,8 @@ exports.forgotPassword = async ({ email }) => {
   return { message: "OTP berhasil dikirim ke email" };
 };
 
-
-// ================= VERIFY RESET OTP (step 2 — cek OTP saja, TIDAK markAsUsed) =================
+// ================= VERIFY RESET OTP =================
+// Hanya validasi OTP, tidak markAsUsed — OTP masih dibutuhkan di /reset-password
 exports.verifyResetOTP = async ({ email, code }) => {
 
   if (!email || !code) {
@@ -449,12 +439,10 @@ exports.verifyResetOTP = async ({ email, code }) => {
     throw { status: 400, message: "OTP tidak valid atau expired" };
   }
 
-  // ⚠️ Sengaja TIDAK markAsUsed di sini — OTP masih dibutuhkan di /reset-password (step 3)
   return { message: "OTP valid, silakan masukkan password baru" };
 };
 
-
-// ================= RESET PASSWORD (verif OTP lalu set password baru) =================
+// ================= RESET PASSWORD =================
 exports.resetPassword = async ({ email, code, new_password }) => {
 
   if (!email || !code || !new_password) {
@@ -487,21 +475,21 @@ exports.resetPassword = async ({ email, code, new_password }) => {
   return { message: "Password berhasil direset, silakan login" };
 };
 
-
 // ================= LOGOUT =================
+// Token di-blacklist di Redis dengan TTL = sisa masa aktif token
 exports.logout = async ({ token, exp }) => {
 
-  // Hitung sisa TTL token (detik) agar blacklist otomatis bersih saat token expired
   const now = Math.floor(Date.now() / 1000);
   const ttl = exp - now;
 
   if (ttl > 0) {
-    // Simpan token ke Redis dengan TTL = sisa masa aktif token
     await redis.set(`blacklist:${token}`, '1', 'EX', ttl);
   }
 
   return { message: "Logout berhasil" };
 };
+
+// ================= CHANGE PASSWORD =================
 exports.changePassword = async ({ userId, old_password, new_password }) => {
 
   if (!old_password || !new_password) {

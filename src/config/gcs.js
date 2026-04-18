@@ -1,6 +1,5 @@
 const { Storage } = require('@google-cloud/storage');
 
-// 🔥 TANPA key file
 const storage = new Storage();
 
 const bucketName = process.env.GCS_BUCKET;

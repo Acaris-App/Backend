@@ -1,5 +1,6 @@
 const db = require('../config/db');
 
+// ================= GET MAHASISWA PROFILE =================
 exports.getMahasiswaProfile = async (userId) => {
   const result = await db.query(`
     SELECT m.angkatan, m.ipk, m.current_semester, m.dosen_pa_id,
@@ -15,6 +16,7 @@ exports.getMahasiswaProfile = async (userId) => {
   return result.rows[0];
 };
 
+// ================= GET DOSEN PROFILE =================
 exports.getDosenProfile = async (userId) => {
   const result = await db.query(`
     SELECT kode_kelas
@@ -25,6 +27,7 @@ exports.getDosenProfile = async (userId) => {
   return result.rows[0];
 };
 
+// ================= FIND DOSEN BY KODE KELAS =================
 exports.findDosenByKode = async (kode_kelas) => {
   const result = await db.query(
     `SELECT * FROM dosen_pa WHERE kode_kelas = $1`,
@@ -34,6 +37,7 @@ exports.findDosenByKode = async (kode_kelas) => {
   return result.rows[0];
 };
 
+// ================= CREATE MAHASISWA (dalam transaksi) =================
 exports.createMahasiswaTx = async (client, data) => {
   await client.query(
     `INSERT INTO mahasiswa 
@@ -49,6 +53,7 @@ exports.createMahasiswaTx = async (client, data) => {
   );
 };
 
+// ================= CREATE DOSEN (dalam transaksi) =================
 exports.createDosenTx = async (client, data) => {
   await client.query(
     `INSERT INTO dosen_pa (user_id, kode_kelas)
@@ -57,6 +62,7 @@ exports.createDosenTx = async (client, data) => {
   );
 };
 
+// ================= UPDATE KODE KELAS DOSEN =================
 exports.updateDosenKodeKelas = async (userId, kodeKelas) => {
   await db.query(
     `UPDATE dosen_pa SET kode_kelas = $1 WHERE user_id = $2`,
@@ -64,6 +70,7 @@ exports.updateDosenKodeKelas = async (userId, kodeKelas) => {
   );
 };
 
+// ================= UPDATE MAHASISWA PROFILE =================
 exports.updateMahasiswaProfile = async (userId, data) => {
   const fields = [];
   const values = [];
@@ -93,6 +100,7 @@ exports.updateMahasiswaProfile = async (userId, data) => {
   );
 };
 
+// ================= UPDATE SEMESTER =================
 exports.updateSemester = async (userId, semester) => {
   await db.query(
     `UPDATE mahasiswa 

@@ -1,5 +1,3 @@
-// ✅ dotenv sudah di-load oleh app.js sebelum file ini di-require
-// Tapi jika dijalankan standalone (npm run worker), tetap perlu dotenv
 if (!process.env.EMAIL_USER) {
   require('dotenv').config({ path: '.env.local' });
 }

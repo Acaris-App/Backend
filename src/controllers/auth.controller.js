@@ -149,7 +149,7 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
-// ================= CHANGE PASSWORD (login required) =================
+// ================= CHANGE PASSWORD =================
 exports.changePassword = async (req, res, next) => {
   try {
     const result = await authService.changePassword({
@@ -171,8 +171,8 @@ exports.changePassword = async (req, res, next) => {
 exports.logout = async (req, res, next) => {
   try {
     const result = await authService.logout({
-      token: req.token,       // token mentah dari middleware
-      exp: req.user.exp       // expiry dari decoded JWT
+      token: req.token,
+      exp: req.user.exp
     });
 
     res.status(200).json({

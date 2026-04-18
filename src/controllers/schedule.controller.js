@@ -129,3 +129,51 @@ exports.getMyBookings = async (req, res, next) => {
     res.json({ status: "success", data: result });
   } catch (err) { next(err); }
 };
+
+// ================= GET MONTHLY DATES (Dosen) =================
+exports.getMonthlySchedulesDosen = async (req, res, next) => {
+  try {
+    const result = await scheduleService.getMonthlySchedulesDosen({
+      user: req.user,
+      query: req.query
+    });
+
+    res.json({ status: "success", data: result });
+  } catch (err) { next(err); }
+};
+
+// ================= GET MONTHLY DATES (Mahasiswa) =================
+exports.getMonthlySchedulesMahasiswa = async (req, res, next) => {
+  try {
+    const result = await scheduleService.getMonthlySchedulesMahasiswa({
+      user: req.user,
+      query: req.query
+    });
+
+    res.json({ status: "success", data: result });
+  } catch (err) { next(err); }
+};
+
+// ================= GET DAILY SLOTS (Dosen) =================
+exports.getDailySchedulesDosen = async (req, res, next) => {
+  try {
+    const result = await scheduleService.getDailySchedulesDosen({
+      user: req.user,
+      query: req.query
+    });
+
+    res.json({ status: "success", data: result });
+  } catch (err) { next(err); }
+};
+
+// ================= GET DAILY SLOTS (Mahasiswa) =================
+exports.getDailySchedulesMahasiswa = async (req, res, next) => {
+  try {
+    const result = await scheduleService.getDailySchedulesMahasiswa({
+      user: req.user,
+      query: req.query
+    });
+
+    res.json({ status: "success", data: result });
+  } catch (err) { next(err); }
+};

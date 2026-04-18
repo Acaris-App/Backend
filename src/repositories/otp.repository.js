@@ -1,15 +1,13 @@
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
 
+// ================= CREATE OTP =================
 exports.createOTP = async (userId, code, type, expiresAt) => {
-
   const hashedCode = await bcrypt.hash(code, 10);
 
-  // 🔥 invalidate OTP lama
+  // Invalidate OTP lama sebelum buat yang baru
   await db.query(
-    `UPDATE otp_codes 
-     SET is_used = true 
-     WHERE user_id = $1 AND type = $2`,
+    `UPDATE otp_codes SET is_used = true WHERE user_id = $1 AND type = $2`,
     [userId, type]
   );
 
@@ -23,14 +21,12 @@ exports.createOTP = async (userId, code, type, expiresAt) => {
   return result.rows[0];
 };
 
+// ================= CREATE OTP (dalam transaksi) =================
 exports.createOTPTx = async (client, userId, code, type, expiresAt) => {
-
   const hashedCode = await bcrypt.hash(code, 10);
 
   await client.query(
-    `UPDATE otp_codes 
-     SET is_used = true 
-     WHERE user_id = $1 AND type = $2`,
+    `UPDATE otp_codes SET is_used = true WHERE user_id = $1 AND type = $2`,
     [userId, type]
   );
 
@@ -41,6 +37,7 @@ exports.createOTPTx = async (client, userId, code, type, expiresAt) => {
   );
 };
 
+// ================= FIND OTP AKTIF =================
 exports.findOTPByUser = async (userId, type) => {
   const result = await db.query(
     `SELECT * FROM otp_codes
@@ -56,6 +53,7 @@ exports.findOTPByUser = async (userId, type) => {
   return result.rows[0];
 };
 
+// ================= MARK AS USED =================
 exports.markAsUsed = async (id) => {
   await db.query(
     'UPDATE otp_codes SET is_used = TRUE WHERE id = $1',
@@ -63,7 +61,7 @@ exports.markAsUsed = async (id) => {
   );
 };
 
-// ✅ FIX: Fungsi ini dipanggil di resendOTP tapi tidak ada di repository
+// ================= INVALIDATE OTP =================
 exports.invalidateOTP = async (userId, type) => {
   await db.query(
     `UPDATE otp_codes SET is_used = true WHERE user_id = $1 AND type = $2`,

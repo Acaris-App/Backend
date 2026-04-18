@@ -1,8 +1,7 @@
-// ✅ FIX: Pakai Redis bukan in-memory
-// In-memory tidak aman di Cloud Run karena bisa jalan multi-instance —
-// setiap instance punya memory sendiri → rate limit tidak konsisten antar instance
 const redis = require('../config/redis');
 
+// ================= CHECK LOGIN LIMIT =================
+// Pakai Redis agar konsisten di multi-instance Cloud Run
 exports.checkLoginLimit = async (ip) => {
 
   const userIP = ip || 'unknown';
@@ -13,10 +12,8 @@ exports.checkLoginLimit = async (ip) => {
   const now = Date.now();
   const windowStart = now - windowSec * 1000;
 
-  // Hapus attempt yang sudah di luar window
   await redis.zremrangebyscore(key, '-inf', windowStart);
 
-  // Hitung attempt yang masih dalam window
   const attempts = await redis.zcard(key);
 
   if (attempts >= maxAttempts) {
@@ -26,7 +23,6 @@ exports.checkLoginLimit = async (ip) => {
     };
   }
 
-  // Simpan attempt baru (score = timestamp, member = timestamp unik)
   await redis.zadd(key, now, `${now}-${Math.random()}`);
   await redis.expire(key, windowSec);
 };

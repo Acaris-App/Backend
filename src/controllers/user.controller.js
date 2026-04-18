@@ -97,7 +97,7 @@ exports.getMe = async (req, res, next) => {
   }
 };
 
-// ================= 2. UPDATE DATA DIRI — teks saja (semua role) =================
+// ================= 2. UPDATE DATA DIRI (semua role) =================
 exports.updateProfileText = async (req, res, next) => {
   try {
     const { id, role } = req.user;
@@ -118,14 +118,12 @@ exports.updateProfileText = async (req, res, next) => {
       if (!npm_nip || !npm_nip.trim()) {
         return res.status(400).json({ status: "error", message: "npm_nip tidak boleh kosong" });
       }
-      // Cek duplikat npm_nip — pastikan tidak dipakai user lain
       const existing = await userRepository.findByNpm(npm_nip.trim());
       if (existing && existing.id !== id) {
         return res.status(400).json({ status: "error", message: "NPM/NIP sudah digunakan" });
       }
     }
 
-    // Update tabel users
     if (hasUserField) {
       await userRepository.updateProfileText(id, {
         name:    name    !== undefined ? name.trim()    : undefined,
@@ -133,7 +131,6 @@ exports.updateProfileText = async (req, res, next) => {
       });
     }
 
-    // Update tabel mahasiswa khusus role mahasiswa
     if (role === 'mahasiswa' && hasMahasiswaField) {
 
       if (ipk !== undefined) {
@@ -176,7 +173,7 @@ exports.updateProfileText = async (req, res, next) => {
   }
 };
 
-// ================= 3. UPDATE FOTO PROFIL — multipart (semua role) =================
+// ================= 3. UPDATE FOTO PROFIL (semua role) =================
 exports.updateProfilePhoto = async (req, res, next) => {
   try {
     const { id, role } = req.user;
@@ -194,7 +191,6 @@ exports.updateProfilePhoto = async (req, res, next) => {
     const profilePictureUrl = await uploadProfilePicture(file, currentUser.npm_nip);
     await userRepository.updateProfilePhoto(id, profilePictureUrl);
 
-    // Kembalikan response lengkap identik dengan GET /user/profile
     const responseData = await buildProfileResponse(id, role);
 
     res.json({
@@ -207,5 +203,4 @@ exports.updateProfilePhoto = async (req, res, next) => {
   }
 };
 
-// ================= LEGACY: updateProfile (masih dipakai internal, jangan dihapus) =================
 exports.updateProfile = exports.updateProfileText;

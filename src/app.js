@@ -1,12 +1,9 @@
-// ✅ FIX: path dotenv sebelumnya terbalik — local load production, production load local
 require('dotenv').config({
   path: process.env.NODE_ENV === 'production'
     ? '.env.production'
     : '.env.local'
 });
 
-// 🚧 DEV MODE: Skip load email job worker jika DISABLE_QUEUE=true
-// Ini mencegah Bull Queue connect ke Upstash dan spam polling
 if (process.env.DISABLE_QUEUE !== 'true') {
   require('./jobs/email.job');
 } else {
@@ -14,7 +11,6 @@ if (process.env.DISABLE_QUEUE !== 'true') {
 }
 
 const express = require('express');
-const multer = require('multer');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -22,7 +18,6 @@ app.set('trust proxy', 1);
 // ================= MIDDLEWARE =================
 app.use(express.json());
 const { errorHandler } = require('./middlewares/error.middleware');
-
 
 // ================= ROUTES =================
 const authRoutes = require('./routes/auth.routes');

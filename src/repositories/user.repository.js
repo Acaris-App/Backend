@@ -1,5 +1,6 @@
 const db = require('../config/db');
 
+// ================= FIND BY EMAIL =================
 exports.findByEmail = async (email) => {
   const result = await db.query(`
     SELECT id, name, email, password, role, npm_nip, profile_picture, is_verified
@@ -11,6 +12,7 @@ exports.findByEmail = async (email) => {
   return result.rows[0];
 };
 
+// ================= FIND BY ID =================
 exports.findById = async (id) => {
   const result = await db.query(`
     SELECT id, name, email, password, role, npm_nip, profile_picture, is_verified
@@ -22,6 +24,7 @@ exports.findById = async (id) => {
   return result.rows[0];
 };
 
+// ================= FIND BY NPM/NIP =================
 exports.findByNpm = async (npm_nip) => {
   const result = await db.query(
     'SELECT * FROM users WHERE npm_nip = $1',
@@ -31,6 +34,7 @@ exports.findByNpm = async (npm_nip) => {
   return result.rows[0];
 };
 
+// ================= CREATE USER (dalam transaksi) =================
 exports.createUserTx = async (client, data) => {
   const result = await client.query(
     `INSERT INTO users (name, email, password, role, npm_nip, profile_picture)
@@ -42,12 +46,13 @@ exports.createUserTx = async (client, data) => {
   return result.rows[0];
 };
 
-// Hapus user yang belum verified beserta seluruh data terkaitnya (cascade)
-// Dipanggil saat user mencoba register ulang dengan email/npm yang sama tapi belum OTP
+// ================= DELETE UNVERIFIED USER =================
+// Dipanggil saat user mencoba register ulang sebelum OTP diverifikasi
 exports.deleteUnverifiedUser = async (userId) => {
   await db.query('DELETE FROM users WHERE id = $1 AND is_verified = FALSE', [userId]);
 };
 
+// ================= VERIFY USER =================
 exports.verifyUser = async (userId) => {
   await db.query(
     'UPDATE users SET is_verified = TRUE WHERE id = $1',
@@ -55,6 +60,7 @@ exports.verifyUser = async (userId) => {
   );
 };
 
+// ================= UPDATE PASSWORD =================
 exports.updatePassword = async (userId, hashedPassword) => {
   await db.query(
     'UPDATE users SET password = $1 WHERE id = $2',
@@ -62,6 +68,7 @@ exports.updatePassword = async (userId, hashedPassword) => {
   );
 };
 
+// ================= UPDATE PROFILE TEXT =================
 exports.updateProfileText = async (userId, data) => {
   const fields = [];
   const values = [];
@@ -89,6 +96,7 @@ exports.updateProfileText = async (userId, data) => {
   return result.rows[0];
 };
 
+// ================= UPDATE PROFILE PHOTO =================
 exports.updateProfilePhoto = async (userId, profilePictureUrl) => {
   const result = await db.query(
     `UPDATE users
@@ -101,6 +109,7 @@ exports.updateProfilePhoto = async (userId, profilePictureUrl) => {
   return result.rows[0];
 };
 
+// ================= UPDATE PROFILE (name + photo) =================
 exports.updateProfile = async (userId, data) => {
   const result = await db.query(
     `UPDATE users

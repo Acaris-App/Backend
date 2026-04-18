@@ -276,3 +276,77 @@ exports.getBookingsByMahasiswa = async (mahasiswaId) => {
   );
   return result.rows;
 };
+
+// ================= GET MONTHLY DATES (tanggal yang ada jadwalnya) =================
+exports.getMonthlyDates = async (dosenId, year, month, onlyAvailable = false) => {
+  const conditions = [
+    's.dosen_id = $1',
+    `EXTRACT(YEAR FROM s.tanggal) = $2`,
+    `EXTRACT(MONTH FROM s.tanggal) = $3`
+  ];
+  const values = [dosenId, parseInt(year), parseInt(month)];
+
+  if (onlyAvailable) {
+    conditions.push("s.status = 'tersedia'");
+    conditions.push('s.kuota_tersisa > 0');
+    conditions.push('s.tanggal >= CURRENT_DATE');
+  }
+
+  const result = await db.query(
+    `SELECT DISTINCT s.tanggal,
+            COUNT(s.id) AS jumlah_slot,
+            SUM(s.kuota_tersisa) AS total_kuota_tersisa
+     FROM jadwal_bimbingan s
+     WHERE ${conditions.join(' AND ')}
+     GROUP BY s.tanggal
+     ORDER BY s.tanggal ASC`,
+    values
+  );
+  return result.rows;
+};
+
+// ================= GET DAILY SLOTS (semua slot + booking per tanggal) =================
+exports.getDailySlots = async (dosenId, date, includeBookings = false) => {
+  const result = await db.query(
+    `SELECT s.id, s.dosen_id, s.tanggal, s.waktu_mulai, s.waktu_selesai,
+            s.kuota, s.kuota_tersisa, s.keterangan, s.status,
+            s.created_at, s.updated_at,
+            u.name AS nama_dosen,
+            u.npm_nip AS nip_dosen,
+            u.profile_picture AS foto_dosen
+     FROM jadwal_bimbingan s
+     JOIN users u ON s.dosen_id = u.id
+     WHERE s.dosen_id = $1 AND s.tanggal = $2
+     ORDER BY s.waktu_mulai ASC`,
+    [dosenId, date]
+  );
+
+  if (!includeBookings || result.rows.length === 0) {
+    return result.rows;
+  }
+
+  // Ambil semua booking untuk jadwal-jadwal di tanggal ini sekaligus
+  const scheduleIds = result.rows.map(r => r.id);
+  const bookings = await db.query(
+    `SELECT b.id AS booking_id, b.jadwal_id, b.mahasiswa_id,
+            b.status AS booking_status, b.catatan, b.created_at AS booked_at,
+            u.name AS mahasiswa_name, u.npm_nip, u.profile_picture AS foto_mahasiswa
+     FROM booking_bimbingan b
+     JOIN users u ON b.mahasiswa_id = u.id
+     WHERE b.jadwal_id = ANY($1) AND b.status = 'terkonfirmasi'
+     ORDER BY b.created_at ASC`,
+    [scheduleIds]
+  );
+
+  // Gabungkan booking ke masing-masing slot
+  const bookingMap = {};
+  for (const booking of bookings.rows) {
+    if (!bookingMap[booking.jadwal_id]) bookingMap[booking.jadwal_id] = [];
+    bookingMap[booking.jadwal_id].push(booking);
+  }
+
+  return result.rows.map(slot => ({
+    ...slot,
+    bookings: bookingMap[slot.id] || []
+  }));
+};

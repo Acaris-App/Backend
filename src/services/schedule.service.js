@@ -268,3 +268,106 @@ exports.getMyBookings = async ({ user }) => {
 
   return { total: bookings.length, bookings };
 };
+
+// ================= GET MONTHLY DATES (Dosen) =================
+exports.getMonthlySchedulesDosen = async ({ user, query }) => {
+  if (!user || user.role !== 'dosen') {
+    throw { status: 403, message: "Hanya dosen yang dapat mengakses endpoint ini" };
+  }
+
+  const { year, month } = query;
+
+  if (!year || !month) {
+    throw { status: 400, message: "year dan month wajib diisi" };
+  }
+
+  const dates = await scheduleRepository.getMonthlyDates(user.id, year, month, false);
+
+  return {
+    year: parseInt(year),
+    month: parseInt(month),
+    total_tanggal: dates.length,
+    dates
+  };
+};
+
+// ================= GET MONTHLY DATES (Mahasiswa) =================
+exports.getMonthlySchedulesMahasiswa = async ({ user, query }) => {
+  if (!user || user.role !== 'mahasiswa') {
+    throw { status: 403, message: "Hanya mahasiswa yang dapat mengakses endpoint ini" };
+  }
+
+  const { year, month } = query;
+
+  if (!year || !month) {
+    throw { status: 400, message: "year dan month wajib diisi" };
+  }
+
+  const profile = await profileRepository.getMahasiswaProfile(user.id);
+  if (!profile) throw { status: 404, message: "Profil mahasiswa tidak ditemukan" };
+
+  // Mahasiswa hanya lihat tanggal yang masih ada slot tersedia
+  const dates = await scheduleRepository.getMonthlyDates(profile.dosen_pa_id, year, month, true);
+
+  return {
+    year: parseInt(year),
+    month: parseInt(month),
+    total_tanggal: dates.length,
+    dates
+  };
+};
+
+// ================= GET DAILY SLOTS (Dosen) =================
+exports.getDailySchedulesDosen = async ({ user, query }) => {
+  if (!user || user.role !== 'dosen') {
+    throw { status: 403, message: "Hanya dosen yang dapat mengakses endpoint ini" };
+  }
+
+  const { date } = query;
+
+  if (!date) {
+    throw { status: 400, message: "date wajib diisi (format: YYYY-MM-DD)" };
+  }
+
+  if (isNaN(Date.parse(date))) {
+    throw { status: 400, message: "Format date tidak valid (gunakan YYYY-MM-DD)" };
+  }
+
+  // Dosen dapat melihat semua slot + daftar mahasiswa yang booking
+  const slots = await scheduleRepository.getDailySlots(user.id, date, true);
+
+  return {
+    date,
+    total_slot: slots.length,
+    slots
+  };
+};
+
+// ================= GET DAILY SLOTS (Mahasiswa) =================
+exports.getDailySchedulesMahasiswa = async ({ user, query }) => {
+  if (!user || user.role !== 'mahasiswa') {
+    throw { status: 403, message: "Hanya mahasiswa yang dapat mengakses endpoint ini" };
+  }
+
+  const { date } = query;
+
+  if (!date) {
+    throw { status: 400, message: "date wajib diisi (format: YYYY-MM-DD)" };
+  }
+
+  if (isNaN(Date.parse(date))) {
+    throw { status: 400, message: "Format date tidak valid (gunakan YYYY-MM-DD)" };
+  }
+
+  const profile = await profileRepository.getMahasiswaProfile(user.id);
+  if (!profile) throw { status: 404, message: "Profil mahasiswa tidak ditemukan" };
+
+  // Mahasiswa tidak dapat melihat daftar booking mahasiswa lain
+  const slots = await scheduleRepository.getDailySlots(profile.dosen_pa_id, date, false);
+
+  return {
+    date,
+    total_slot: slots.length,
+    slots
+  };
+};

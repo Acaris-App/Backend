@@ -44,7 +44,31 @@ router.patch('/bookings/:booking_id/cancel', authenticate, authorize('mahasiswa'
 
 // ================= SHARED (Dosen & Mahasiswa) =================
 
-// 🔍 Get detail satu jadwal
+// GET /schedule/monthly?year=2026&month=4
+// Dosen: semua tanggal yang ada jadwal + jumlah slot
+// Mahasiswa: hanya tanggal yang masih ada slot tersedia
+router.get('/monthly',
+  authenticate,
+  (req, res, next) => {
+    if (req.user.role === 'dosen') return scheduleController.getMonthlySchedulesDosen(req, res, next);
+    if (req.user.role === 'mahasiswa') return scheduleController.getMonthlySchedulesMahasiswa(req, res, next);
+    res.status(403).json({ status: "error", message: "Akses ditolak" });
+  }
+);
+
+// GET /schedule/daily?date=2026-04-17
+// Dosen: semua slot + daftar mahasiswa yang booking per slot
+// Mahasiswa: semua slot tanpa data booking orang lain
+router.get('/daily',
+  authenticate,
+  (req, res, next) => {
+    if (req.user.role === 'dosen') return scheduleController.getDailySchedulesDosen(req, res, next);
+    if (req.user.role === 'mahasiswa') return scheduleController.getDailySchedulesMahasiswa(req, res, next);
+    res.status(403).json({ status: "error", message: "Akses ditolak" });
+  }
+);
+
+// Get detail satu jadwal
 router.get('/:schedule_id', authenticate, scheduleController.getScheduleDetail);
 
 

@@ -1,6 +1,6 @@
 const db = require('../config/db');
 
-// ================= LIST DOCUMENTS (untuk tampilan, lengkap dengan filter) =================
+// ================= LIST DOCUMENTS (dengan filter opsional) =================
 exports.getDocumentsList = async (userId, filters = {}) => {
   const conditions = ['user_id = $1'];
   const values = [userId];
@@ -47,9 +47,8 @@ exports.createDocument = async (data) => {
   return result.rows[0];
 };
 
-// ================= DUPLICATE =================
+// ================= FIND BY TYPE & SEMESTER =================
 exports.findByUserTypeSemester = async (userId, type, semester) => {
-
   const result = await db.query(
     `SELECT * FROM dokumen_mahasiswa
      WHERE user_id = $1 
@@ -61,7 +60,7 @@ exports.findByUserTypeSemester = async (userId, type, semester) => {
   return result.rows[0];
 };
 
-// ================= VALID DOCS =================
+// ================= GET BY USER & TYPE =================
 exports.getValidDocuments = async (userId, type) => {
   const result = await db.query(
     `SELECT * FROM dokumen_mahasiswa 
@@ -69,12 +68,10 @@ exports.getValidDocuments = async (userId, type) => {
     [userId, type]
   );
 
-  // file_path adalah GCS URL (https://...), bukan path lokal
-  // jangan pakai fs.existsSync untuk mengecek keberadaan file
   return result.rows;
 };
 
-// ================= CHECK DOCUMENT =================
+// ================= GET ALL BY USER =================
 exports.getDocumentsByUser = async (userId) => {
   const result = await db.query(
     `SELECT document_type, semester 
@@ -86,7 +83,7 @@ exports.getDocumentsByUser = async (userId) => {
   return result.rows;
 };
 
-// ================= CEK MINIMAL 1 FILE DI SEMESTER TERTENTU (KRS atau KHS) =================
+// ================= CEK MINIMAL 1 FILE DI SEMESTER TERTENTU =================
 exports.hasAnyDocumentForSemester = async (userId, semester) => {
   const result = await db.query(
     `SELECT 1 FROM dokumen_mahasiswa
@@ -99,15 +96,15 @@ exports.hasAnyDocumentForSemester = async (userId, semester) => {
   return result.rows.length > 0;
 };
 
-// ================= LAST SEMESTER =================
+// ================= LAST SEMESTER BY TYPE =================
 exports.getLastSemester = async (userId, type) => {
-
   const docs = await exports.getValidDocuments(userId, type);
 
   if (!docs.length) return 0;
 
   return Math.max(...docs.map(d => d.semester));
 };
+
 // ================= FIND BY ID =================
 exports.findById = async (documentId, userId) => {
   const result = await db.query(
