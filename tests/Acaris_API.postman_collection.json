@@ -1073,6 +1073,71 @@
           }
         },
         {
+          "name": "[Dosen & Mahasiswa] GET Monthly \u2014 Tanggal yang ada jadwal",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/monthly?year=2026&month=4",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "monthly"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026",
+                  "description": "Tahun (wajib)"
+                },
+                {
+                  "key": "month",
+                  "value": "4",
+                  "description": "Bulan 1-12 (wajib)"
+                }
+              ]
+            },
+            "description": "Ambil daftar tanggal yang ada jadwalnya dalam satu bulan.\n\nDosen: semua tanggal + jumlah slot + total kuota tersisa.\nMahasiswa: hanya tanggal yang masih ada slot tersedia (kuota > 0, tanggal >= hari ini).\n\nResponse: { dates: [{ tanggal, jumlah_slot, total_kuota_tersisa }] }"
+          }
+        },
+        {
+          "name": "[Dosen & Mahasiswa] GET Daily \u2014 Detail slot per tanggal",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/daily?date=2026-04-17",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "daily"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-04-17",
+                  "description": "Format YYYY-MM-DD (wajib)"
+                }
+              ]
+            },
+            "description": "Ambil semua slot jadwal pada tanggal tertentu.\n\nDosen: semua slot + daftar mahasiswa yang booking per slot ({ bookings: [...] }).\nMahasiswa: semua slot milik dosen PA-nya, tanpa data booking orang lain.\n\nResponse: { date, total_slot, slots: [{ id, waktu_mulai, waktu_selesai, kuota, kuota_tersisa, ... }] }"
+          }
+        },
+        {
           "name": "[Shared] Get Detail Jadwal",
           "request": {
             "method": "GET",

@@ -277,7 +277,7 @@ exports.getBookingsByMahasiswa = async (mahasiswaId) => {
   return result.rows;
 };
 
-// ================= GET MONTHLY DATES (tanggal yang ada jadwalnya) =================
+// ================= GET MONTHLY DATES (semua slot dalam sebulan, untuk kalender) =================
 exports.getMonthlyDates = async (dosenId, year, month, onlyAvailable = false) => {
   const conditions = [
     's.dosen_id = $1',
@@ -292,14 +292,12 @@ exports.getMonthlyDates = async (dosenId, year, month, onlyAvailable = false) =>
     conditions.push('s.tanggal >= CURRENT_DATE');
   }
 
+  // Return per-slot (bukan grouped) agar id tersedia untuk Android Retrofit
   const result = await db.query(
-    `SELECT DISTINCT s.tanggal,
-            COUNT(s.id) AS jumlah_slot,
-            SUM(s.kuota_tersisa) AS total_kuota_tersisa
+    `SELECT s.id, s.tanggal, s.kuota_tersisa
      FROM jadwal_bimbingan s
      WHERE ${conditions.join(' AND ')}
-     GROUP BY s.tanggal
-     ORDER BY s.tanggal ASC`,
+     ORDER BY s.tanggal ASC, s.waktu_mulai ASC`,
     values
   );
   return result.rows;
