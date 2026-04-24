@@ -42,6 +42,24 @@ router.get('/my-bookings', authenticate, authorize('mahasiswa'), scheduleControl
 router.patch('/bookings/:booking_id/cancel', authenticate, authorize('mahasiswa', 'dosen'), scheduleController.cancelBooking);
 
 
+// ================= MAHASISWA (prefix /mahasiswa/) =================
+
+// GET /schedule/mahasiswa/monthly?year=2026&month=4
+// Status per slot: "Tersedia", "Penuh", atau "Di-booking"
+router.get('/mahasiswa/monthly', authenticate, authorize('mahasiswa'), scheduleController.getMahasiswaMonthly);
+
+// GET /schedule/mahasiswa/daily?date=2026-04-22
+// Tiap slot ada booking_id dan mahasiswa_agenda jika sudah booking
+router.get('/mahasiswa/daily', authenticate, authorize('mahasiswa'), scheduleController.getMahasiswaDaily);
+
+// POST /schedule/mahasiswa/book — body: { schedule_id, agenda }
+// Validasi: 1 slot per hari per mahasiswa
+router.post('/mahasiswa/book', authenticate, authorize('mahasiswa'), scheduleController.mahasiswaBookSchedule);
+
+// GET /schedule/mahasiswa/bookings/history — jadwal lewat + dibatalkan
+router.get('/mahasiswa/bookings/history', authenticate, authorize('mahasiswa'), scheduleController.getMahasiswaBookingHistory);
+
+
 // ================= SHARED (Dosen & Mahasiswa) =================
 
 // GET /schedule/monthly?year=2026&month=4

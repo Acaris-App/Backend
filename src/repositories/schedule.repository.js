@@ -348,3 +348,79 @@ exports.getDailySlots = async (dosenId, date, includeBookings = false) => {
     bookings: bookingMap[slot.id] || []
   }));
 };
+
+// ================= CEK BOOKING MAHASISWA DI TANGGAL TERTENTU =================
+// Validasi: mahasiswa hanya boleh 1 slot per hari
+exports.findBookingByUserAndDate = async (userId, date) => {
+  const result = await db.query(
+    `SELECT b.id FROM booking_bimbingan b
+     JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+     WHERE b.mahasiswa_id = $1
+       AND j.tanggal = $2
+       AND b.status = 'terkonfirmasi'
+     LIMIT 1`,
+    [userId, date]
+  );
+  return result.rows[0];
+};
+
+// ================= GET DAILY SLOTS MAHASISWA (dengan status booking milik mahasiswa tsb) =================
+exports.getDailySlotsForMahasiswa = async (dosenId, date, mahasiswaId) => {
+  const result = await db.query(
+    `SELECT s.id, s.dosen_id, s.tanggal, s.waktu_mulai, s.waktu_selesai,
+            s.kuota, s.kuota_tersisa, s.keterangan, s.status,
+            u.name AS nama_dosen,
+            u.npm_nip AS nip_dosen,
+            u.profile_picture AS foto_dosen,
+            b.id AS booking_id,
+            b.catatan AS mahasiswa_agenda
+     FROM jadwal_bimbingan s
+     JOIN users u ON s.dosen_id = u.id
+     LEFT JOIN booking_bimbingan b
+       ON b.jadwal_id = s.id
+      AND b.mahasiswa_id = $3
+      AND b.status = 'terkonfirmasi'
+     WHERE s.dosen_id = $1 AND s.tanggal = $2
+     ORDER BY s.waktu_mulai ASC`,
+    [dosenId, date, mahasiswaId]
+  );
+  return result.rows;
+};
+
+// ================= GET MONTHLY MAHASISWA (slot + status booking milik mahasiswa tsb) =================
+exports.getMonthlyForMahasiswa = async (dosenId, year, month, mahasiswaId) => {
+  const result = await db.query(
+    `SELECT s.id, s.tanggal, s.kuota_tersisa, s.status,
+            b.id AS booking_id
+     FROM jadwal_bimbingan s
+     LEFT JOIN booking_bimbingan b
+       ON b.jadwal_id = s.id
+      AND b.mahasiswa_id = $4
+      AND b.status = 'terkonfirmasi'
+     WHERE s.dosen_id = $1
+       AND EXTRACT(YEAR FROM s.tanggal) = $2
+       AND EXTRACT(MONTH FROM s.tanggal) = $3
+     ORDER BY s.tanggal ASC, s.waktu_mulai ASC`,
+    [dosenId, parseInt(year), parseInt(month), mahasiswaId]
+  );
+  return result.rows;
+};
+
+// ================= GET HISTORY BOOKING MAHASISWA (jadwal yang sudah lewat) =================
+exports.getBookingHistoryMahasiswa = async (mahasiswaId) => {
+  const result = await db.query(
+    `SELECT b.id AS booking_id, b.status AS booking_status, b.catatan AS mahasiswa_agenda,
+            b.created_at AS booked_at,
+            j.id AS jadwal_id, j.tanggal, j.waktu_mulai, j.waktu_selesai,
+            j.kuota, j.kuota_tersisa, j.keterangan, j.status AS status_jadwal,
+            u.name AS nama_dosen, u.npm_nip AS nip_dosen, u.profile_picture AS foto_dosen
+     FROM booking_bimbingan b
+     JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+     JOIN users u ON j.dosen_id = u.id
+     WHERE b.mahasiswa_id = $1
+       AND (j.tanggal < CURRENT_DATE OR b.status = 'dibatalkan')
+     ORDER BY j.tanggal DESC, j.waktu_mulai DESC`,
+    [mahasiswaId]
+  );
+  return result.rows;
+};

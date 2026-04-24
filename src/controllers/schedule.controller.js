@@ -109,3 +109,35 @@ exports.getDailySchedulesMahasiswa = async (req, res, next) => {
     res.json({ status: "success", message: "Detail harian berhasil diambil", data: result });
   } catch (err) { next(err); }
 };
+
+// ================= MAHASISWA: GET MONTHLY =================
+exports.getMahasiswaMonthly = async (req, res, next) => {
+  try {
+    const result = await scheduleService.getMahasiswaMonthly({ user: req.user, query: req.query });
+    res.json({ status: "success", message: "Data jadwal bulanan", data: result });
+  } catch (err) { next(err); }
+};
+
+// ================= MAHASISWA: GET DAILY =================
+exports.getMahasiswaDaily = async (req, res, next) => {
+  try {
+    const result = await scheduleService.getMahasiswaDaily({ user: req.user, query: req.query });
+    res.json({ status: "success", message: "Data jadwal harian", data: result });
+  } catch (err) { next(err); }
+};
+
+// ================= MAHASISWA: BOOK JADWAL =================
+exports.mahasiswaBookSchedule = async (req, res, next) => {
+  try {
+    const result = await scheduleService.mahasiswaBookSchedule({ user: req.user, body: req.body });
+    res.status(201).json({ status: "success", message: "Booking berhasil", data: result });
+  } catch (err) { next(err); }
+};
+
+// ================= MAHASISWA: HISTORY BOOKING =================
+exports.getMahasiswaBookingHistory = async (req, res, next) => {
+  try {
+    const result = await scheduleService.getMahasiswaBookingHistory({ user: req.user });
+    res.json({ status: "success", message: "Riwayat booking berhasil diambil", data: result });
+  } catch (err) { next(err); }
+};

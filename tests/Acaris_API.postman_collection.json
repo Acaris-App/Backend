@@ -1073,6 +1073,127 @@
           }
         },
         {
+          "name": "[Mahasiswa] GET Monthly \u2014 Kalender Bulanan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/mahasiswa/monthly?year=2026&month=4",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "mahasiswa",
+                "monthly"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026"
+                },
+                {
+                  "key": "month",
+                  "value": "4"
+                }
+              ]
+            },
+            "description": "Kalender bulanan mahasiswa. Status per slot: 'Tersedia', 'Penuh', atau 'Di-booking' (jika mahasiswa ini sudah booking slot tersebut). Dosen PA dideteksi otomatis dari token."
+          }
+        },
+        {
+          "name": "[Mahasiswa] GET Daily \u2014 Detail Harian",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/mahasiswa/daily?date=2026-04-22",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "mahasiswa",
+                "daily"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-04-22"
+                }
+              ]
+            },
+            "description": "Detail slot per hari. Tiap slot ada booking_id dan mahasiswa_agenda jika mahasiswa sudah booking. Slot yang belum di-booking: booking_id=null, mahasiswa_agenda=null."
+          }
+        },
+        {
+          "name": "[Mahasiswa] POST Book \u2014 Submit Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schedule_id\": 1,\n  \"agenda\": \"Bahas Bab 1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/schedule/mahasiswa/book",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "mahasiswa",
+                "book"
+              ]
+            },
+            "description": "Submit booking. Backend validasi: hanya 1 slot per hari, hanya jadwal dosen PA sendiri, kuota tersedia. Field: schedule_id (wajib), agenda (opsional)."
+          }
+        },
+        {
+          "name": "[Mahasiswa] GET History \u2014 Riwayat Booking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/mahasiswa/bookings/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "mahasiswa",
+                "bookings",
+                "history"
+              ]
+            },
+            "description": "Riwayat booking: jadwal yang sudah lewat (tanggal < hari ini) atau dibatalkan. Format sama dengan daily, status: 'selesai' atau 'dibatalkan'."
+          }
+        },
+        {
           "name": "[Dosen & Mahasiswa] GET Monthly \u2014 Tanggal yang ada jadwal",
           "request": {
             "method": "GET",
