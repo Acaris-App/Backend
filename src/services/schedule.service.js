@@ -386,11 +386,10 @@ exports.getMahasiswaMonthly = async ({ user, query }) => {
   );
 
   return rows.map(r => ({
-    id:     r.id,
-    date:   r.tanggal,
-    status: r.booking_id
-      ? 'Di-booking'
-      : r.status === 'tersedia' ? 'Tersedia' : 'Penuh'
+    id:              r.id,
+    date:            r.tanggal,
+    remaining_quota: r.kuota_tersisa,
+    booking_id:      r.booking_id || null
   }));
 };
 
@@ -421,9 +420,7 @@ exports.getMahasiswaDaily = async ({ user, query }) => {
     end_time:        slot.waktu_selesai,
     quota:           slot.kuota,
     remaining_quota: slot.kuota_tersisa,
-    status:          slot.booking_id
-      ? 'booked'
-      : slot.status === 'tersedia' ? 'Tersedia' : 'Penuh',
+    status:          slot.status === 'tersedia' ? 'Tersedia' : 'Penuh',
     keterangan:      slot.keterangan || null,
     booking_id:      slot.booking_id || null,
     mahasiswa_agenda: slot.mahasiswa_agenda || null
