@@ -406,7 +406,7 @@ exports.getMonthlyForMahasiswa = async (dosenId, year, month, mahasiswaId) => {
   return result.rows;
 };
 
-// ================= GET HISTORY BOOKING MAHASISWA (semua booking: aktif & selesai) =================
+// ================= GET HISTORY BOOKING MAHASISWA (jadwal yang sudah lewat) =================
 exports.getBookingHistoryMahasiswa = async (mahasiswaId) => {
   const result = await db.query(
     `SELECT b.id AS booking_id, b.status AS booking_status, b.catatan AS mahasiswa_agenda,

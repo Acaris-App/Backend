@@ -512,7 +512,11 @@ exports.getMahasiswaBookingHistory = async ({ user }) => {
     end_time:        row.waktu_selesai,
     quota:           row.kuota,
     remaining_quota: row.kuota_tersisa,
-    status:          row.booking_status === 'dibatalkan' ? 'dibatalkan' : 'selesai',
+    status:          row.booking_status === 'dibatalkan'
+      ? 'dibatalkan'
+      : new Date(row.tanggal) < new Date().setHours(0, 0, 0, 0)
+        ? 'selesai'
+        : 'Dipesan',
     keterangan:      row.keterangan || null,
     booking_id:      row.booking_id,
     mahasiswa_agenda: row.mahasiswa_agenda || null

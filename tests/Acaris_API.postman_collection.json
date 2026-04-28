@@ -1288,6 +1288,135 @@
           }
         }
       ]
+    },
+    {
+      "name": "Dosen \u2014 Monitoring Mahasiswa",
+      "item": [
+        {
+          "name": "GET Daftar Mahasiswa Bimbingan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dosen/mahasiswa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dosen",
+                "mahasiswa"
+              ]
+            },
+            "description": "Ambil daftar mahasiswa PA dosen yang login. ID dosen diambil dari Bearer Token."
+          }
+        },
+        {
+          "name": "GET Detail & Dokumen Mahasiswa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dosen/mahasiswa/:mahasiswaId/detail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dosen",
+                "mahasiswa",
+                ":mahasiswaId",
+                "detail"
+              ],
+              "variable": [
+                {
+                  "key": "mahasiswaId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Profil lengkap + semua dokumen (KRS, KHS, Transkrip) mahasiswa. IPK dikembalikan sebagai String. Hanya bisa akses mahasiswa bimbingan sendiri."
+          }
+        },
+        {
+          "name": "GET Riwayat Bimbingan Mahasiswa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dosen/mahasiswa/:mahasiswaId/history-bimbingan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dosen",
+                "mahasiswa",
+                ":mahasiswaId",
+                "history-bimbingan"
+              ],
+              "variable": [
+                {
+                  "key": "mahasiswaId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Semua riwayat booking bimbingan mahasiswa tersebut. Status: 'selesai' (lewat), 'menunggu' (upcoming), 'dibatalkan'."
+          }
+        },
+        {
+          "name": "PATCH Isi Keterangan Dosen",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"keterangan\": \"Lanjut kerjakan Bab 4\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dosen/bimbingan/:bookingId/keterangan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dosen",
+                "bimbingan",
+                ":bookingId",
+                "keterangan"
+              ],
+              "variable": [
+                {
+                  "key": "bookingId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Dosen isi feedback/catatan setelah sesi bimbingan. Hanya bisa update booking di jadwal miliknya sendiri."
+          }
+        }
+      ]
     }
   ]
 }
