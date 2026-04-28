@@ -38,7 +38,7 @@ exports.getRiwayatBimbingan = async (mahasiswaId, dosenId) => {
             j.tanggal, j.waktu_mulai, j.waktu_selesai,
             b.catatan AS agenda,
             b.status AS booking_status,
-            b.keterangan
+            j.keterangan
      FROM booking_bimbingan b
      JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
      WHERE b.mahasiswa_id = $1
@@ -52,13 +52,13 @@ exports.getRiwayatBimbingan = async (mahasiswaId, dosenId) => {
 // ================= UPDATE KETERANGAN DOSEN =================
 exports.updateKeteranganDosen = async (bookingId, dosenId, keterangan) => {
   const result = await db.query(
-    `UPDATE booking_bimbingan b
-     SET keterangan= $1
-     FROM jadwal_bimbingan j
-     WHERE b.jadwal_id = j.id
-       AND b.id = $2
-       AND j.dosen_id = $3
-     RETURNING b.*`,
+    `UPDATE jadwal_bimbingan
+     SET keterangan = $1
+     WHERE id = (
+       SELECT b.jadwal_id FROM booking_bimbingan b WHERE b.id = $2
+     )
+     AND dosen_id = $3
+     RETURNING *`,
     [keterangan, bookingId, dosenId]
   );
   return result.rows[0];
