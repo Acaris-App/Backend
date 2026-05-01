@@ -33,10 +33,17 @@ const uploadToGCS = async (file, adminId) => {
 };
 
 // ================= HELPER GCS DELETE =================
-const deleteFromGCS = async (fileUrl) => {
+const deleteFromGCS = async (fileRef) => {
   try {
-    const url = new URL(fileUrl);
-    const objectPath = url.pathname.split('/').slice(2).join('/');
+    let objectPath;
+    if (fileRef.startsWith('https://')) {
+      // format baru: full URL
+      const url = new URL(fileRef);
+      objectPath = url.pathname.split('/').slice(2).join('/');
+    } else {
+      // format lama: path relatif (misal knowledge-base/xxx.pdf)
+      objectPath = fileRef.startsWith('/') ? fileRef.slice(1) : fileRef;
+    }
     await bucket.file(objectPath).delete();
   } catch (err) {
     console.error(`[GCS] Gagal hapus file: ${err.message}`);
@@ -168,7 +175,10 @@ exports.deleteKnowledgeBase = async ({ user, id }) => {
   if (!existing) throw { status: 404, message: "Knowledge base tidak ditemukan" };
 
   await adminRepository.deleteKnowledgeBase(id);
-  await deleteFromGCS(existing.file_url);
+
+  // support kolom lama (file_path) maupun kolom baru (file_url)
+  const fileRef = existing.file_url || existing.file_path;
+  if (fileRef) await deleteFromGCS(fileRef);
 
   return { message: "Dokumen berhasil dihapus" };
 };

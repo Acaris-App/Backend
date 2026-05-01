@@ -2,7 +2,7 @@
   "info": {
     "name": "Acaris API",
     "_postman_id": "acaris-backend-collection",
-    "description": "Postman Collection untuk Acaris Backend API \u2014 Auth, Document, User",
+    "description": "Postman Collection untuk Acaris Backend API — Auth, Document, User",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -45,7 +45,7 @@
                 "validate-kode-kelas"
               ]
             },
-            "description": "Step 1 multi-step register Android \u2014 validasi kode kelas sebelum user isi data diri. Mengembalikan nama dosen PA jika kode valid."
+            "description": "Step 1 multi-step register Android — validasi kode kelas sebelum user isi data diri. Mengembalikan nama dosen PA jika kode valid."
           }
         },
         {
@@ -100,7 +100,7 @@
                   "key": "profile_picture",
                   "type": "file",
                   "src": "",
-                  "description": "Opsional \u2014 file gambar (JPG, PNG, WEBP)"
+                  "description": "Opsional — file gambar (JPG, PNG, WEBP)"
                 }
               ]
             },
@@ -150,7 +150,7 @@
                   "key": "profile_picture",
                   "type": "file",
                   "src": "",
-                  "description": "Opsional \u2014 file gambar (jpg/png)"
+                  "description": "Opsional — file gambar (jpg/png)"
                 }
               ]
             },
@@ -234,7 +234,7 @@
                 "login"
               ]
             },
-            "description": "Login langsung \u2014 mengembalikan token JWT tanpa OTP."
+            "description": "Login langsung — mengembalikan token JWT tanpa OTP."
           },
           "event": [
             {
@@ -330,7 +330,7 @@
                 "verify-reset-otp"
               ]
             },
-            "description": "Step 2 flow lupa password \u2014 validasi OTP tanpa menghabiskannya. OTP tetap aktif untuk dipakai di /reset-password (step 3)."
+            "description": "Step 2 flow lupa password — validasi OTP tanpa menghabiskannya. OTP tetap aktif untuk dipakai di /reset-password (step 3)."
           }
         },
         {
@@ -411,7 +411,7 @@
                 "logout"
               ]
             },
-            "description": "Logout \u2014 JWT stateless, hapus token di sisi client."
+            "description": "Logout — JWT stateless, hapus token di sisi client."
           }
         }
       ]
@@ -674,7 +674,7 @@
                   "key": "profile_picture",
                   "type": "file",
                   "src": "",
-                  "description": "File gambar (JPG, PNG, WEBP) \u2014 max 2MB"
+                  "description": "File gambar (JPG, PNG, WEBP) — max 2MB"
                 }
               ]
             },
@@ -689,7 +689,7 @@
                 "photo"
               ]
             },
-            "description": "Upload foto profil baru. multipart/form-data, field: profile_picture.\nResponse mengembalikan profile_picture URL terbaru \u2014 langsung pakai untuk refresh foto di Android."
+            "description": "Upload foto profil baru. multipart/form-data, field: profile_picture.\nResponse mengembalikan profile_picture URL terbaru — langsung pakai untuk refresh foto di Android."
           }
         },
         {
@@ -812,12 +812,12 @@
                 {
                   "key": "month",
                   "value": "4",
-                  "description": "Opsional \u2014 filter bulan (1-12)"
+                  "description": "Opsional — filter bulan (1-12)"
                 },
                 {
                   "key": "year",
                   "value": "2026",
-                  "description": "Opsional \u2014 filter tahun"
+                  "description": "Opsional — filter tahun"
                 }
               ]
             },
@@ -943,7 +943,7 @@
                 {
                   "key": "jadwal_id",
                   "value": "1",
-                  "description": "Opsional \u2014 filter per jadwal",
+                  "description": "Opsional — filter per jadwal",
                   "disabled": true
                 }
               ]
@@ -1073,7 +1073,7 @@
           }
         },
         {
-          "name": "[Mahasiswa] GET Monthly \u2014 Kalender Bulanan",
+          "name": "[Mahasiswa] GET Monthly — Kalender Bulanan",
           "request": {
             "method": "GET",
             "header": [
@@ -1107,7 +1107,7 @@
           }
         },
         {
-          "name": "[Mahasiswa] GET Daily \u2014 Detail Harian",
+          "name": "[Mahasiswa] GET Daily — Detail Harian",
           "request": {
             "method": "GET",
             "header": [
@@ -1137,7 +1137,7 @@
           }
         },
         {
-          "name": "[Mahasiswa] POST Book \u2014 Submit Booking",
+          "name": "[Mahasiswa] POST Book — Submit Booking",
           "request": {
             "method": "POST",
             "header": [
@@ -1169,7 +1169,7 @@
           }
         },
         {
-          "name": "[Mahasiswa] GET History \u2014 Riwayat Booking",
+          "name": "[Mahasiswa] GET History — Riwayat Booking",
           "request": {
             "method": "GET",
             "header": [
@@ -1194,7 +1194,7 @@
           }
         },
         {
-          "name": "[Dosen & Mahasiswa] GET Monthly \u2014 Tanggal yang ada jadwal",
+          "name": "[Dosen & Mahasiswa] GET Monthly — Tanggal yang ada jadwal",
           "request": {
             "method": "GET",
             "header": [
@@ -1229,7 +1229,7 @@
           }
         },
         {
-          "name": "[Dosen & Mahasiswa] GET Daily \u2014 Detail slot per tanggal",
+          "name": "[Dosen & Mahasiswa] GET Daily — Detail slot per tanggal",
           "request": {
             "method": "GET",
             "header": [
@@ -1290,7 +1290,7 @@
       ]
     },
     {
-      "name": "Dosen \u2014 Monitoring Mahasiswa",
+      "name": "Dosen — Monitoring Mahasiswa",
       "item": [
         {
           "name": "GET Daftar Mahasiswa Bimbingan",
@@ -1443,13 +1443,19 @@
               "query": [
                 {
                   "key": "category",
-                  "value": "jadwal",
-                  "description": "Opsional: jadwal | kurikulum | peraturan_akademik | kkni | peraturan_rektor",
+                  "value": "Jadwal",
+                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "pedoman",
+                  "description": "Opsional: cari berdasarkan judul dokumen",
                   "disabled": true
                 }
               ]
             },
-            "description": "Ambil semua knowledge base. Filter opsional by category."
+            "description": "Ambil semua dokumen knowledge base. Filter opsional by category dan search (judul)."
           }
         },
         {
@@ -1466,16 +1472,22 @@
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "category",
-                  "value": "jadwal",
+                  "key": "title",
+                  "value": "Pedoman Akademik Unila 2026",
                   "type": "text",
-                  "description": "jadwal | kurikulum | peraturan_akademik | kkni | peraturan_rektor"
+                  "description": "Judul dokumen (wajib)"
+                },
+                {
+                  "key": "category",
+                  "value": "Peraturan Akademik",
+                  "type": "text",
+                  "description": "Wajib: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI"
                 },
                 {
                   "key": "file",
                   "type": "file",
                   "src": "",
-                  "description": "File PDF"
+                  "description": "File PDF (wajib, maks 50MB)"
                 }
               ]
             },
@@ -1489,7 +1501,7 @@
                 "knowledge-base"
               ]
             },
-            "description": "Upload dokumen knowledge base baru. multipart/form-data."
+            "description": "Upload dokumen PDF baru ke knowledge base. Content-Type: multipart/form-data.\n\nField wajib: title, category, file\nKategori valid: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI"
           }
         },
         {
@@ -1506,16 +1518,22 @@
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "category",
-                  "value": "kurikulum",
+                  "key": "title",
+                  "value": "Pedoman Akademik Unila 2026 (Revisi)",
                   "type": "text",
-                  "description": "Opsional"
+                  "description": "Opsional: ubah judul dokumen"
+                },
+                {
+                  "key": "category",
+                  "value": "Peraturan Akademik",
+                  "type": "text",
+                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI"
                 },
                 {
                   "key": "file",
                   "type": "file",
                   "src": "",
-                  "description": "Opsional \u2014 jika dikirim, timpa file lama di GCS"
+                  "description": "Opsional — jika dikirim, file lama di GCS akan ditimpa"
                 }
               ]
             },
@@ -1535,7 +1553,8 @@
                   "value": "1"
                 }
               ]
-            }
+            },
+            "description": "Update metadata dokumen (title/category) dan/atau ganti file PDF. Semua field opsional."
           }
         },
         {
@@ -1565,7 +1584,7 @@
                 }
               ]
             },
-            "description": "Hapus knowledge base + file dari GCS."
+            "description": "Hapus dokumen dari database dan otomatis hapus file dari GCS."
           }
         },
         {

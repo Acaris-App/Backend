@@ -23,7 +23,8 @@ exports.getAllKnowledgeBase = async (filters = {}) => {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const result = await db.query(
-    `SELECT kb.id, kb.title, kb.file_name, kb.file_url, kb.category, kb.uploaded_at
+    `SELECT kb.id, kb.title, kb.file_name, kb.file_url, kb.category,
+            kb.uploaded_at
      FROM knowledge_base kb
      ${where}
      ORDER BY kb.uploaded_at DESC`,
@@ -44,8 +45,10 @@ exports.findKnowledgeBaseById = async (id) => {
 // ================= CREATE KNOWLEDGE BASE =================
 exports.createKnowledgeBase = async (data) => {
   const result = await db.query(
-    `INSERT INTO knowledge_base (admin_id, title, file_name, file_url, category, uploaded_at)
-     VALUES ($1, $2, $3, $4, $5, NOW())
+    `INSERT INTO knowledge_base
+       (admin_id, title, file_name, file_url, category, uploaded_at,
+        file_path, created_at)
+     VALUES ($1, $2, $3, $4, $5, NOW(), $4, NOW())
      RETURNING *`,
     [data.admin_id, data.title, data.file_name, data.file_url, data.category]
   );
@@ -72,6 +75,9 @@ exports.updateKnowledgeBase = async (id, data) => {
   }
   if (data.file_url !== undefined) {
     fields.push(`file_url = $${idx++}`);
+    values.push(data.file_url);
+    // sinkronkan kolom lama
+    fields.push(`file_path = $${idx++}`);
     values.push(data.file_url);
   }
 
