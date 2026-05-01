@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { authenticate } = require('../middlewares/auth.middleware');
 const { authorize } = require('../middlewares/role.middleware');
-const { uploadPDF } = require('../config/multer');
+const { uploadPDF, uploadPDFLarge } = require('../config/multer');
 const adminController = require('../controllers/admin.controller');
 
 const adminOnly = [authenticate, authorize('admin')];
@@ -15,11 +15,11 @@ const adminOnly = [authenticate, authorize('admin')];
 // GET /admin/knowledge-base?category=jadwal
 router.get('/knowledge-base', ...adminOnly, adminController.getAllKnowledgeBase);
 
-// POST /admin/knowledge-base (multipart: file PDF + category)
-router.post('/knowledge-base', ...adminOnly, uploadPDF.single('file'), adminController.createKnowledgeBase);
+// POST /admin/knowledge-base (multipart: file PDF + category, maks 50MB)
+router.post('/knowledge-base', ...adminOnly, uploadPDFLarge.single('file'), adminController.createKnowledgeBase);
 
 // PUT /admin/knowledge-base/:id (file opsional — jika dikirim, timpa file lama)
-router.put('/knowledge-base/:id', ...adminOnly, uploadPDF.single('file'), adminController.updateKnowledgeBase);
+router.put('/knowledge-base/:id', ...adminOnly, uploadPDFLarge.single('file'), adminController.updateKnowledgeBase);
 
 // DELETE /admin/knowledge-base/:id
 router.delete('/knowledge-base/:id', ...adminOnly, adminController.deleteKnowledgeBase);

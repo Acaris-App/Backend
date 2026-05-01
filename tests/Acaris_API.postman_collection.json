@@ -1422,7 +1422,7 @@
       "name": "Admin",
       "item": [
         {
-          "name": "PBI-12 | GET Knowledge Base",
+          "name": "GET Knowledge Base",
           "request": {
             "method": "GET",
             "header": [
@@ -1453,7 +1453,7 @@
           }
         },
         {
-          "name": "PBI-12 | POST Upload Knowledge Base",
+          "name": "POST Upload Knowledge Base",
           "request": {
             "method": "POST",
             "header": [
@@ -1493,7 +1493,7 @@
           }
         },
         {
-          "name": "PBI-12 | PUT Update Knowledge Base",
+          "name": "PUT Update Knowledge Base",
           "request": {
             "method": "PUT",
             "header": [
@@ -1539,7 +1539,7 @@
           }
         },
         {
-          "name": "PBI-12 | DELETE Knowledge Base",
+          "name": "DELETE Knowledge Base",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1569,7 +1569,7 @@
           }
         },
         {
-          "name": "PBI-24 | GET Semua Pengguna",
+          "name": "GET Semua Pengguna",
           "request": {
             "method": "GET",
             "header": [
@@ -1612,7 +1612,7 @@
           }
         },
         {
-          "name": "PBI-24 | PATCH Update Status Akun",
+          "name": "PATCH Update Status Akun",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1651,7 +1651,7 @@
           }
         },
         {
-          "name": "PBI-24 | DELETE Hapus Akun",
+          "name": "DELETE Hapus Akun",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1681,7 +1681,7 @@
           }
         },
         {
-          "name": "PBI-25 | GET Semua Dokumen Mahasiswa",
+          "name": "GET Semua Dokumen Mahasiswa",
           "request": {
             "method": "GET",
             "header": [
@@ -1723,7 +1723,7 @@
           }
         },
         {
-          "name": "PBI-25 | GET Statistik Dokumen",
+          "name": "GET Statistik Dokumen",
           "request": {
             "method": "GET",
             "header": [

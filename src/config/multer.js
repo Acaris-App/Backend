@@ -23,24 +23,34 @@ const imageFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-// ================= UPLOAD PDF (dokumen) =================
+// ================= UPLOAD PDF — dokumen mahasiswa (maks 2MB) =================
 const uploadPDF = multer({
   storage,
   fileFilter: pdfFilter,
   limits: {
-    fileSize: 2 * 1024 * 1024, // 2MB
+    fileSize: 2 * 1024 * 1024,
     files: 1
   }
 });
 
-// ================= UPLOAD IMAGE (profile picture) =================
+// ================= UPLOAD PDF — knowledge base admin (maks 50MB) =================
+const uploadPDFLarge = multer({
+  storage,
+  fileFilter: pdfFilter,
+  limits: {
+    fileSize: 50 * 1024 * 1024,
+    files: 1
+  }
+});
+
+// ================= UPLOAD IMAGE — profile picture (maks 2MB) =================
 const uploadImage = multer({
   storage,
   fileFilter: imageFilter,
   limits: {
-    fileSize: 2 * 1024 * 1024, // 2MB
+    fileSize: 2 * 1024 * 1024,
     files: 1
   }
 });
 
-module.exports = { uploadPDF, uploadImage };
+module.exports = { uploadPDF, uploadPDFLarge, uploadImage };
