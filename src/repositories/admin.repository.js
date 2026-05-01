@@ -24,7 +24,7 @@ exports.getAllKnowledgeBase = async (filters = {}) => {
 
   const result = await db.query(
     `SELECT kb.id, kb.title, kb.file_name, kb.file_url, kb.category,
-            kb.uploaded_at
+            kb.uploaded_at, kb.updated_at
      FROM knowledge_base kb
      ${where}
      ORDER BY kb.uploaded_at DESC`,
@@ -46,9 +46,9 @@ exports.findKnowledgeBaseById = async (id) => {
 exports.createKnowledgeBase = async (data) => {
   const result = await db.query(
     `INSERT INTO knowledge_base
-       (admin_id, title, file_name, file_url, category, uploaded_at,
+       (admin_id, title, file_name, file_url, category, uploaded_at, updated_at,
         file_path, created_at)
-     VALUES ($1, $2, $3, $4, $5, NOW(), $4, NOW())
+     VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $4, NOW())
      RETURNING *`,
     [data.admin_id, data.title, data.file_name, data.file_url, data.category]
   );
@@ -80,6 +80,9 @@ exports.updateKnowledgeBase = async (id, data) => {
     fields.push(`file_path = $${idx++}`);
     values.push(data.file_url);
   }
+
+  // selalu update updated_at
+  fields.push(`updated_at = NOW()`);
 
   if (fields.length === 0) return null;
 

@@ -75,7 +75,8 @@ exports.getAllKnowledgeBase = async ({ user, query }) => {
     file_name:   r.file_name,
     file_url:    r.file_url,
     category:    r.category,
-    uploaded_at: r.uploaded_at
+    uploaded_at: r.uploaded_at,
+    updated_at:  r.updated_at
   }));
 };
 
@@ -119,7 +120,8 @@ exports.createKnowledgeBase = async ({ user, body, file }) => {
     file_name:   row.file_name,
     file_url:    row.file_url,
     category:    row.category,
-    uploaded_at: row.uploaded_at
+    uploaded_at: row.uploaded_at,
+    updated_at:  row.updated_at
   };
 };
 
@@ -161,7 +163,8 @@ exports.updateKnowledgeBase = async ({ user, id, body, file }) => {
     file_name:   updated.file_name,
     file_url:    updated.file_url,
     category:    updated.category,
-    uploaded_at: updated.uploaded_at
+    uploaded_at: updated.uploaded_at,
+    updated_at:  updated.updated_at
   };
 };
 

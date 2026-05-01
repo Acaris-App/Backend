@@ -8,7 +8,7 @@ exports.getAllKnowledgeBase = async (req, res, next) => {
   try {
     const data = await adminService.getAllKnowledgeBase({ user: req.user, query: req.query });
     res.status(200).json({
-      success: true,
+      status: "success",
       message: "Berhasil mengambil data knowledge base",
       data
     });
@@ -19,7 +19,7 @@ exports.createKnowledgeBase = async (req, res, next) => {
   try {
     const data = await adminService.createKnowledgeBase({ user: req.user, body: req.body, file: req.file });
     res.status(201).json({
-      success: true,
+      status: "success",
       message: "Dokumen berhasil diunggah dan sedang diproses AI",
       data
     });
@@ -30,7 +30,7 @@ exports.updateKnowledgeBase = async (req, res, next) => {
   try {
     const data = await adminService.updateKnowledgeBase({ user: req.user, id: req.params.id, body: req.body, file: req.file });
     res.status(200).json({
-      success: true,
+      status: "success",
       message: "Data dokumen berhasil diperbarui",
       data
     });
@@ -41,7 +41,7 @@ exports.deleteKnowledgeBase = async (req, res, next) => {
   try {
     await adminService.deleteKnowledgeBase({ user: req.user, id: req.params.id });
     res.status(200).json({
-      success: true,
+      status: "success",
       message: "Dokumen berhasil dihapus",
       data: null
     });

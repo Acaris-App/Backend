@@ -1455,7 +1455,7 @@
                 }
               ]
             },
-            "description": "Ambil semua dokumen knowledge base. Filter opsional by category dan search (judul)."
+            "description": "Ambil semua dokumen knowledge base.\n\nFilter opsional:\n- ?category=Jadwal\n- ?search=pedoman\n\nResponse fields per item:\nid, title, file_name, file_url, category, uploaded_at, updated_at"
           }
         },
         {
@@ -1501,7 +1501,7 @@
                 "knowledge-base"
               ]
             },
-            "description": "Upload dokumen PDF baru ke knowledge base. Content-Type: multipart/form-data.\n\nField wajib: title, category, file\nKategori valid: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI"
+            "description": "Upload dokumen PDF baru. Content-Type: multipart/form-data.\n\nField wajib: title, category, file\nKategori valid: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI\n\nResponse: id, title, file_name, file_url, category, uploaded_at, updated_at"
           }
         },
         {
@@ -1554,7 +1554,7 @@
                 }
               ]
             },
-            "description": "Update metadata dokumen (title/category) dan/atau ganti file PDF. Semua field opsional."
+            "description": "Update metadata (title/category) dan/atau ganti file PDF.\nSemua field opsional. updated_at otomatis diperbarui.\n\nResponse: id, title, file_name, file_url, category, uploaded_at, updated_at"
           }
         },
         {
