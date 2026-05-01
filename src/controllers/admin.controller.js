@@ -6,29 +6,45 @@ const adminService = require('../services/admin.service');
 
 exports.getAllKnowledgeBase = async (req, res, next) => {
   try {
-    const result = await adminService.getAllKnowledgeBase({ user: req.user, query: req.query });
-    res.json({ status: "success", message: "Data knowledge base berhasil diambil", data: result });
+    const data = await adminService.getAllKnowledgeBase({ user: req.user, query: req.query });
+    res.status(200).json({
+      success: true,
+      message: "Berhasil mengambil data knowledge base",
+      data
+    });
   } catch (err) { next(err); }
 };
 
 exports.createKnowledgeBase = async (req, res, next) => {
   try {
-    const result = await adminService.createKnowledgeBase({ user: req.user, body: req.body, file: req.file });
-    res.status(201).json({ status: "success", message: "Knowledge base berhasil ditambahkan", data: result });
+    const data = await adminService.createKnowledgeBase({ user: req.user, body: req.body, file: req.file });
+    res.status(201).json({
+      success: true,
+      message: "Dokumen berhasil diunggah dan sedang diproses AI",
+      data
+    });
   } catch (err) { next(err); }
 };
 
 exports.updateKnowledgeBase = async (req, res, next) => {
   try {
-    const result = await adminService.updateKnowledgeBase({ user: req.user, id: req.params.id, body: req.body, file: req.file });
-    res.json({ status: "success", message: "Knowledge base berhasil diperbarui", data: result });
+    const data = await adminService.updateKnowledgeBase({ user: req.user, id: req.params.id, body: req.body, file: req.file });
+    res.status(200).json({
+      success: true,
+      message: "Data dokumen berhasil diperbarui",
+      data
+    });
   } catch (err) { next(err); }
 };
 
 exports.deleteKnowledgeBase = async (req, res, next) => {
   try {
-    const result = await adminService.deleteKnowledgeBase({ user: req.user, id: req.params.id });
-    res.json({ status: "success", message: result.message, data: null });
+    await adminService.deleteKnowledgeBase({ user: req.user, id: req.params.id });
+    res.status(200).json({
+      success: true,
+      message: "Dokumen berhasil dihapus",
+      data: null
+    });
   } catch (err) { next(err); }
 };
 

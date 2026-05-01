@@ -11,19 +11,22 @@ exports.getAllKnowledgeBase = async (filters = {}) => {
   let idx = 1;
 
   if (filters.category) {
-    conditions.push(`category = $${idx++}`);
+    conditions.push(`kb.category = $${idx++}`);
     values.push(filters.category);
+  }
+
+  if (filters.search) {
+    conditions.push(`kb.title ILIKE $${idx++}`);
+    values.push(`%${filters.search}%`);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const result = await db.query(
-    `SELECT kb.id, kb.category, kb.file_path, kb.created_at,
-            u.name AS admin_name
+    `SELECT kb.id, kb.title, kb.file_name, kb.file_url, kb.category, kb.uploaded_at
      FROM knowledge_base kb
-     JOIN users u ON kb.admin_id = u.id
      ${where}
-     ORDER BY kb.created_at DESC`,
+     ORDER BY kb.uploaded_at DESC`,
     values
   );
   return result.rows;
@@ -41,10 +44,10 @@ exports.findKnowledgeBaseById = async (id) => {
 // ================= CREATE KNOWLEDGE BASE =================
 exports.createKnowledgeBase = async (data) => {
   const result = await db.query(
-    `INSERT INTO knowledge_base (admin_id, category, file_path)
-     VALUES ($1, $2, $3)
+    `INSERT INTO knowledge_base (admin_id, title, file_name, file_url, category, uploaded_at)
+     VALUES ($1, $2, $3, $4, $5, NOW())
      RETURNING *`,
-    [data.admin_id, data.category, data.file_path]
+    [data.admin_id, data.title, data.file_name, data.file_url, data.category]
   );
   return result.rows[0];
 };
@@ -55,13 +58,21 @@ exports.updateKnowledgeBase = async (id, data) => {
   const values = [];
   let idx = 1;
 
+  if (data.title !== undefined) {
+    fields.push(`title = $${idx++}`);
+    values.push(data.title);
+  }
   if (data.category !== undefined) {
     fields.push(`category = $${idx++}`);
     values.push(data.category);
   }
-  if (data.file_path !== undefined) {
-    fields.push(`file_path = $${idx++}`);
-    values.push(data.file_path);
+  if (data.file_name !== undefined) {
+    fields.push(`file_name = $${idx++}`);
+    values.push(data.file_name);
+  }
+  if (data.file_url !== undefined) {
+    fields.push(`file_url = $${idx++}`);
+    values.push(data.file_url);
   }
 
   if (fields.length === 0) return null;

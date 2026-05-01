@@ -1,12 +1,18 @@
 const adminRepository = require('../repositories/admin.repository');
 const { bucket } = require('../config/gcs');
 
-const VALID_CATEGORIES = ['jadwal', 'kurikulum', 'peraturan_akademik', 'kkni', 'peraturan_rektor'];
+const VALID_CATEGORIES = [
+  'Peraturan Akademik',
+  'Jadwal',
+  'Kurikulum',
+  'Peraturan Rektor',
+  'KKNI'
+];
 
 // ================= HELPER GCS UPLOAD =================
 const uploadToGCS = async (file, adminId) => {
-  const ext = file.mimetype.split('/')[1];
-  const filename = `knowledge-base/${adminId}-${Date.now()}.${ext}`;
+  const originalName = file.originalname.replace(/\s+/g, '_');
+  const filename = `knowledge-base/${adminId}-${Date.now()}-${originalName}`;
   const blob = bucket.file(filename);
 
   const blobStream = blob.createWriteStream({
@@ -16,7 +22,10 @@ const uploadToGCS = async (file, adminId) => {
 
   return new Promise((resolve, reject) => {
     blobStream.on('finish', () => {
-      resolve(`https://storage.googleapis.com/${bucket.name}/${filename}`);
+      resolve({
+        file_name: originalName,
+        file_url: `https://storage.googleapis.com/${bucket.name}/${filename}`
+      });
     });
     blobStream.on('error', reject);
     blobStream.end(file.buffer);
@@ -24,9 +33,9 @@ const uploadToGCS = async (file, adminId) => {
 };
 
 // ================= HELPER GCS DELETE =================
-const deleteFromGCS = async (filePath) => {
+const deleteFromGCS = async (fileUrl) => {
   try {
-    const url = new URL(filePath);
+    const url = new URL(fileUrl);
     const objectPath = url.pathname.split('/').slice(2).join('/');
     await bucket.file(objectPath).delete();
   } catch (err) {
@@ -45,20 +54,21 @@ exports.getAllKnowledgeBase = async ({ user, query }) => {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
   }
 
-  const { category } = query;
+  const { category, search } = query;
 
   if (category && !VALID_CATEGORIES.includes(category)) {
     throw { status: 400, message: `Category tidak valid. Pilihan: ${VALID_CATEGORIES.join(', ')}` };
   }
 
-  const rows = await adminRepository.getAllKnowledgeBase({ category });
+  const rows = await adminRepository.getAllKnowledgeBase({ category, search });
 
   return rows.map(r => ({
     id:          r.id,
+    title:       r.title,
+    file_name:   r.file_name,
+    file_url:    r.file_url,
     category:    r.category,
-    file_path:   r.file_path,
-    admin_name:  r.admin_name,
-    created_at:  r.created_at
+    uploaded_at: r.uploaded_at
   }));
 };
 
@@ -68,7 +78,11 @@ exports.createKnowledgeBase = async ({ user, body, file }) => {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
   }
 
-  const { category } = body;
+  const { title, category } = body;
+
+  if (!title) {
+    throw { status: 400, message: "title wajib diisi" };
+  }
 
   if (!category) {
     throw { status: 400, message: "category wajib diisi" };
@@ -82,15 +96,24 @@ exports.createKnowledgeBase = async ({ user, body, file }) => {
     throw { status: 400, message: "File wajib diupload" };
   }
 
-  const file_path = await uploadToGCS(file, user.id);
+  const { file_name, file_url } = await uploadToGCS(file, user.id);
 
   const row = await adminRepository.createKnowledgeBase({
     admin_id: user.id,
-    category,
-    file_path
+    title,
+    file_name,
+    file_url,
+    category
   });
 
-  return row;
+  return {
+    id:          row.id,
+    title:       row.title,
+    file_name:   row.file_name,
+    file_url:    row.file_url,
+    category:    row.category,
+    uploaded_at: row.uploaded_at
+  };
 };
 
 // ================= UPDATE =================
@@ -102,23 +125,37 @@ exports.updateKnowledgeBase = async ({ user, id, body, file }) => {
   const existing = await adminRepository.findKnowledgeBaseById(id);
   if (!existing) throw { status: 404, message: "Knowledge base tidak ditemukan" };
 
-  const { category } = body;
+  const { title, category } = body;
 
   if (category && !VALID_CATEGORIES.includes(category)) {
     throw { status: 400, message: `Category tidak valid. Pilihan: ${VALID_CATEGORIES.join(', ')}` };
   }
 
-  let file_path = existing.file_path;
+  let file_name = existing.file_name;
+  let file_url  = existing.file_url;
 
   if (file) {
-    // Upload file baru, hapus file lama dari GCS
-    file_path = await uploadToGCS(file, user.id);
-    await deleteFromGCS(existing.file_path);
+    const uploaded = await uploadToGCS(file, user.id);
+    file_name = uploaded.file_name;
+    file_url  = uploaded.file_url;
+    await deleteFromGCS(existing.file_url);
   }
 
-  const updated = await adminRepository.updateKnowledgeBase(id, { category, file_path });
+  const updated = await adminRepository.updateKnowledgeBase(id, {
+    title,
+    category,
+    file_name,
+    file_url
+  });
 
-  return updated;
+  return {
+    id:          updated.id,
+    title:       updated.title,
+    file_name:   updated.file_name,
+    file_url:    updated.file_url,
+    category:    updated.category,
+    uploaded_at: updated.uploaded_at
+  };
 };
 
 // ================= DELETE =================
@@ -131,9 +168,9 @@ exports.deleteKnowledgeBase = async ({ user, id }) => {
   if (!existing) throw { status: 404, message: "Knowledge base tidak ditemukan" };
 
   await adminRepository.deleteKnowledgeBase(id);
-  await deleteFromGCS(existing.file_path);
+  await deleteFromGCS(existing.file_url);
 
-  return { message: "Knowledge base berhasil dihapus" };
+  return { message: "Dokumen berhasil dihapus" };
 };
 
 
