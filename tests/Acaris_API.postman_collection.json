@@ -1417,6 +1417,336 @@
           }
         }
       ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "PBI-12 | GET Knowledge Base",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/knowledge-base",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "knowledge-base"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "jadwal",
+                  "description": "Opsional: jadwal | kurikulum | peraturan_akademik | kkni | peraturan_rektor",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Ambil semua knowledge base. Filter opsional by category."
+          }
+        },
+        {
+          "name": "PBI-12 | POST Upload Knowledge Base",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "category",
+                  "value": "jadwal",
+                  "type": "text",
+                  "description": "jadwal | kurikulum | peraturan_akademik | kkni | peraturan_rektor"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "File PDF"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/knowledge-base",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "knowledge-base"
+              ]
+            },
+            "description": "Upload dokumen knowledge base baru. multipart/form-data."
+          }
+        },
+        {
+          "name": "PBI-12 | PUT Update Knowledge Base",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "category",
+                  "value": "kurikulum",
+                  "type": "text",
+                  "description": "Opsional"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Opsional \u2014 jika dikirim, timpa file lama di GCS"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/knowledge-base/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "knowledge-base",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "PBI-12 | DELETE Knowledge Base",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/knowledge-base/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "knowledge-base",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Hapus knowledge base + file dari GCS."
+          }
+        },
+        {
+          "name": "PBI-24 | GET Semua Pengguna",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "mahasiswa",
+                  "description": "mahasiswa | dosen | admin",
+                  "disabled": true
+                },
+                {
+                  "key": "is_verified",
+                  "value": "false",
+                  "description": "true | false",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "budi",
+                  "description": "Cari by nama, email, atau npm_nip",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List semua pengguna. Filter: role, is_verified, search."
+          }
+        },
+        {
+          "name": "PBI-24 | PATCH Update Status Akun",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_verified\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Aktifkan (true) atau nonaktifkan (false) akun pengguna."
+          }
+        },
+        {
+          "name": "PBI-24 | DELETE Hapus Akun",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Hapus akun pengguna. Tidak bisa hapus akun admin lain atau diri sendiri."
+          }
+        },
+        {
+          "name": "PBI-25 | GET Semua Dokumen Mahasiswa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "documents"
+              ],
+              "query": [
+                {
+                  "key": "document_type",
+                  "value": "krs",
+                  "description": "krs | khs | transkrip",
+                  "disabled": true
+                },
+                {
+                  "key": "semester",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "user_id",
+                  "value": "5",
+                  "description": "Filter by mahasiswa",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Monitor semua dokumen yang diupload mahasiswa. Filter opsional by type, semester, user_id."
+          }
+        },
+        {
+          "name": "PBI-25 | GET Statistik Dokumen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/documents/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "documents",
+                "stats"
+              ]
+            },
+            "description": "Ringkasan statistik: total mahasiswa yang upload, total KRS, KHS, dan Transkrip."
+          }
+        }
+      ]
     }
   ]
 }

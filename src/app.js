@@ -29,12 +29,14 @@ const userRoutes = require('./routes/user.routes');
 const documentRoutes = require('./routes/document.routes');
 const scheduleRoutes = require('./routes/schedule.routes');
 const dosenRoutes = require('./routes/dosen.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/document', documentRoutes);
 app.use('/schedule', scheduleRoutes);
 app.use('/dosen', dosenRoutes);
+app.use('/admin', adminRoutes);
 
 // ================= ERROR HANDLER =================
 app.use(errorHandler);
