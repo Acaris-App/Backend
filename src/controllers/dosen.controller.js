@@ -6,7 +6,7 @@ exports.getMahasiswaBimbingan = async (req, res, next) => {
     const result = await dosenService.getMahasiswaBimbingan({ user: req.user });
 
     res.json({
-      success: true,
+      status: "success",
       message: "Berhasil mengambil daftar mahasiswa bimbingan",
       data: result
     });
@@ -22,7 +22,7 @@ exports.getMahasiswaDetail = async (req, res, next) => {
     });
 
     res.json({
-      success: true,
+      status: "success",
       message: "Berhasil mengambil detail mahasiswa",
       data: result
     });
@@ -38,7 +38,7 @@ exports.getRiwayatBimbingan = async (req, res, next) => {
     });
 
     res.json({
-      success: true,
+      status: "success",
       message: "Berhasil mengambil riwayat bimbingan mahasiswa",
       data: result
     });
@@ -55,7 +55,7 @@ exports.updateKeteranganDosen = async (req, res, next) => {
     });
 
     res.json({
-      success: true,
+      status: "success",
       message: result.message,
       data: null
     });

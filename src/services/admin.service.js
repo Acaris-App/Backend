@@ -76,7 +76,7 @@ exports.getAllKnowledgeBase = async ({ user, query }) => {
     file_url:    r.file_url,
     category:    r.category,
     uploaded_at: r.uploaded_at,
-    updated_at:  r.updated_at
+    updated_at:  r.updated_at || null
   }));
 };
 
@@ -121,7 +121,7 @@ exports.createKnowledgeBase = async ({ user, body, file }) => {
     file_url:    row.file_url,
     category:    row.category,
     uploaded_at: row.uploaded_at,
-    updated_at:  row.updated_at
+    updated_at:  row.updated_at || null
   };
 };
 
@@ -164,7 +164,7 @@ exports.updateKnowledgeBase = async ({ user, id, body, file }) => {
     file_url:    updated.file_url,
     category:    updated.category,
     uploaded_at: updated.uploaded_at,
-    updated_at:  updated.updated_at
+    updated_at:  updated.updated_at || null
   };
 };
 
@@ -191,34 +191,130 @@ exports.deleteKnowledgeBase = async ({ user, id }) => {
 // PBI-24: KELOLA AKUN PENGGUNA
 // ================================================================
 
+// ================= HELPER: FORMAT USER RESPONSE =================
+const formatUser = (r) => ({
+  id:                  r.id,
+  name:                r.name,
+  email:               r.email,
+  role:                r.role,
+  identifier:          r.npm_nip,
+  status:              r.is_verified ? 'active' : 'inactive',
+  profile_picture_url: r.profile_picture || null,
+  angkatan:            r.angkatan || null,
+  current_semester:    r.current_semester || null,
+  dosen_pa:            r.dosen_pa_name || null,
+  kode_kelas:          r.kode_kelas || null,
+  total_bimbingan:     r.total_bimbingan !== undefined ? parseInt(r.total_bimbingan) : null,
+  total_mahasiswa:     r.role === 'dosen' ? parseInt(r.total_mahasiswa) : null
+});
+
 // ================= GET ALL USERS =================
 exports.getAllUsers = async ({ user, query }) => {
   if (!user || user.role !== 'admin') {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
   }
 
-  const { role, is_verified, search } = query;
+  const { role, search, sort_by, page = 1, limit = 20 } = query;
 
-  const filters = {};
-  if (role) filters.role = role;
-  if (is_verified !== undefined) filters.is_verified = is_verified === 'true';
-  if (search) filters.search = search;
+  const validRoles = ['mahasiswa', 'dosen', 'admin'];
+  if (!role) throw { status: 400, message: "role wajib diisi (mahasiswa, dosen, admin)" };
+  if (!validRoles.includes(role)) throw { status: 400, message: "role tidak valid" };
 
-  const rows = await adminRepository.getAllUsers(filters);
+  const validSorts = ['name_asc', 'name_desc', 'identifier_asc', 'identifier_desc',
+    'angkatan_asc', 'angkatan_desc', 'semester_asc', 'semester_desc'];
+  if (sort_by && !validSorts.includes(sort_by)) {
+    throw { status: 400, message: `sort_by tidak valid. Pilihan: ${validSorts.join(', ')}` };
+  }
 
-  return rows.map(r => ({
-    id:              r.id,
-    name:            r.name,
-    email:           r.email,
-    npm_nip:         r.npm_nip,
-    role:            r.role,
-    profile_picture: r.profile_picture || null,
-    is_verified:     r.is_verified,
-    created_at:      r.created_at
-  }));
+  const pageInt  = Math.max(1, parseInt(page)  || 1);
+  const limitInt = Math.min(100, Math.max(1, parseInt(limit) || 20));
+
+  const { rows, totalItems } = await adminRepository.getAllUsers({
+    role, search, sort_by, page: pageInt, limit: limitInt
+  });
+
+  const totalPages = Math.ceil(totalItems / limitInt);
+
+  return {
+    meta: {
+      current_page: pageInt,
+      total_pages:  totalPages,
+      total_items:  totalItems,
+      limit:        limitInt
+    },
+    data: rows.map(formatUser)
+  };
 };
 
-// ================= UPDATE STATUS AKUN =================
+// ================= TAMBAH ADMIN =================
+exports.createAdmin = async ({ user, body }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
+  }
+
+  const { name, email, password } = body;
+
+  if (!name || !email || !password) {
+    throw { status: 400, message: "name, email, dan password wajib diisi" };
+  }
+
+  const bcrypt = require('bcrypt');
+
+  const existing = await adminRepository.findUserByEmail(email);
+  if (existing) throw { status: 400, message: "Email sudah digunakan" };
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const created = await adminRepository.createAdmin({
+    name: name.trim(),
+    email: email.trim(),
+    password: hashedPassword
+  });
+
+  const full = await adminRepository.findUserById(created.id);
+  return formatUser(full);
+};
+
+// ================= EDIT USER =================
+exports.updateUser = async ({ user, userId, body }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
+  }
+
+  const { name, email, identifier } = body;
+
+  if (!name && !email && !identifier) {
+    throw { status: 400, message: "Tidak ada data yang dikirim" };
+  }
+
+  const target = await adminRepository.findUserById(userId);
+  if (!target) throw { status: 404, message: "User tidak ditemukan" };
+
+  if (email) {
+    const existing = await adminRepository.findUserByEmail(email);
+    if (existing && existing.id !== parseInt(userId)) {
+      throw { status: 400, message: "Email sudah digunakan" };
+    }
+  }
+
+  if (identifier) {
+    const existing = await adminRepository.findUserByNpm(identifier);
+    if (existing && existing.id !== parseInt(userId)) {
+      throw { status: 400, message: "Identifier sudah digunakan" };
+    }
+  }
+
+  await adminRepository.updateUser(userId, {
+    name:    name    ? name.trim()    : undefined,
+    email:   email   ? email.trim()   : undefined,
+    npm_nip: identifier ? identifier.trim() : undefined
+  });
+
+  const updated = await adminRepository.findUserById(userId);
+  return formatUser(updated);
+};
+
+// ================= UPDATE STATUS =================
 exports.updateUserStatus = async ({ user, userId, body }) => {
   if (!user || user.role !== 'admin') {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
@@ -228,21 +324,20 @@ exports.updateUserStatus = async ({ user, userId, body }) => {
     throw { status: 400, message: "Admin tidak dapat mengubah status akunnya sendiri" };
   }
 
-  const { is_verified } = body;
+  const { is_active } = body;
 
-  if (is_verified === undefined) {
-    throw { status: 400, message: "is_verified wajib diisi (true/false)" };
+  if (is_active === undefined) {
+    throw { status: 400, message: "is_active wajib diisi (true/false)" };
   }
 
   const target = await adminRepository.findUserById(userId);
   if (!target) throw { status: 404, message: "User tidak ditemukan" };
 
-  const updated = await adminRepository.updateUserStatus(userId, is_verified);
-
-  return updated;
+  // is_active true → is_verified true (active), false → is_verified false (inactive)
+  await adminRepository.updateUserStatus(userId, Boolean(is_active));
 };
 
-// ================= DELETE AKUN =================
+// ================= DELETE USER =================
 exports.deleteUser = async ({ user, userId }) => {
   if (!user || user.role !== 'admin') {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
@@ -259,9 +354,7 @@ exports.deleteUser = async ({ user, userId }) => {
     throw { status: 400, message: "Tidak dapat menghapus akun admin lain" };
   }
 
-  const deleted = await adminRepository.deleteUser(userId);
-
-  return { message: `Akun ${deleted.name} berhasil dihapus` };
+  await adminRepository.deleteUser(userId);
 };
 
 

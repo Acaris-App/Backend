@@ -56,21 +56,40 @@ exports.deleteKnowledgeBase = async (req, res, next) => {
 exports.getAllUsers = async (req, res, next) => {
   try {
     const result = await adminService.getAllUsers({ user: req.user, query: req.query });
-    res.json({ status: "success", message: "Data pengguna berhasil diambil", data: result });
+    res.json({
+      status: "success",
+      message: "Berhasil mengambil data pengguna",
+      meta: result.meta,
+      data: result.data
+    });
+  } catch (err) { next(err); }
+};
+
+exports.createAdmin = async (req, res, next) => {
+  try {
+    const result = await adminService.createAdmin({ user: req.user, body: req.body });
+    res.status(201).json({ status: "success", message: "Admin berhasil ditambahkan", data: result });
+  } catch (err) { next(err); }
+};
+
+exports.updateUser = async (req, res, next) => {
+  try {
+    const result = await adminService.updateUser({ user: req.user, userId: req.params.id, body: req.body });
+    res.json({ status: "success", message: "Data pengguna berhasil diperbarui", data: result });
   } catch (err) { next(err); }
 };
 
 exports.updateUserStatus = async (req, res, next) => {
   try {
-    const result = await adminService.updateUserStatus({ user: req.user, userId: req.params.userId, body: req.body });
-    res.json({ status: "success", message: "Status akun berhasil diperbarui", data: result });
+    await adminService.updateUserStatus({ user: req.user, userId: req.params.id, body: req.body });
+    res.json({ status: "success", message: "Status pengguna berhasil diubah", data: null });
   } catch (err) { next(err); }
 };
 
 exports.deleteUser = async (req, res, next) => {
   try {
-    const result = await adminService.deleteUser({ user: req.user, userId: req.params.userId });
-    res.json({ status: "success", message: result.message, data: null });
+    await adminService.deleteUser({ user: req.user, userId: req.params.id });
+    res.json({ status: "success", message: "Pengguna berhasil dihapus secara permanen", data: null });
   } catch (err) { next(err); }
 };
 

@@ -46,9 +46,9 @@ exports.findKnowledgeBaseById = async (id) => {
 exports.createKnowledgeBase = async (data) => {
   const result = await db.query(
     `INSERT INTO knowledge_base
-       (admin_id, title, file_name, file_url, category, uploaded_at, updated_at,
+       (admin_id, title, file_name, file_url, category, uploaded_at,
         file_path, created_at)
-     VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $4, NOW())
+     VALUES ($1, $2, $3, $4, $5, NOW(), $4, NOW())
      RETURNING *`,
     [data.admin_id, data.title, data.file_name, data.file_url, data.category]
   );
@@ -109,61 +109,167 @@ exports.deleteKnowledgeBase = async (id) => {
 // PBI-24: KELOLA AKUN PENGGUNA
 // ================================================================
 
-// ================= GET ALL USERS =================
+// ================= GET ALL USERS (paginasi + filter + sort) =================
 exports.getAllUsers = async (filters = {}) => {
+  const { role, search, sort_by, page = 1, limit = 20 } = filters;
+
   const conditions = [];
   const values = [];
   let idx = 1;
 
-  if (filters.role) {
-    conditions.push(`role = $${idx++}`);
-    values.push(filters.role);
+  if (role) {
+    conditions.push(`u.role = $${idx++}`);
+    values.push(role);
   }
 
-  if (filters.is_verified !== undefined) {
-    conditions.push(`is_verified = $${idx++}`);
-    values.push(filters.is_verified);
-  }
-
-  if (filters.search) {
-    conditions.push(`(name ILIKE $${idx} OR email ILIKE $${idx} OR npm_nip ILIKE $${idx})`);
-    values.push(`%${filters.search}%`);
+  if (search) {
+    conditions.push(`(u.name ILIKE $${idx} OR u.email ILIKE $${idx} OR u.npm_nip ILIKE $${idx})`);
+    values.push(`%${search}%`);
     idx++;
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const result = await db.query(
-    `SELECT id, name, email, npm_nip, role, profile_picture, is_verified, created_at
-     FROM users
-     ${where}
-     ORDER BY created_at DESC`,
+  const orderMap = {
+    name_asc:        'u.name ASC',
+    name_desc:       'u.name DESC',
+    identifier_asc:  'u.npm_nip ASC',
+    identifier_desc: 'u.npm_nip DESC',
+    angkatan_asc:    'm.angkatan ASC',
+    angkatan_desc:   'm.angkatan DESC',
+    semester_asc:    'm.current_semester ASC',
+    semester_desc:   'm.current_semester DESC'
+  };
+  const order = orderMap[sort_by] || 'u.name ASC';
+
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  // Hitung total
+  const countResult = await db.query(
+    `SELECT COUNT(*) AS total
+     FROM users u
+     LEFT JOIN mahasiswa m ON m.user_id = u.id
+     ${where}`,
     values
   );
-  return result.rows;
+  const totalItems = parseInt(countResult.rows[0].total);
+
+  // Data dengan JOIN lengkap
+  const dataResult = await db.query(
+    `SELECT
+       u.id, u.name, u.email, u.role, u.npm_nip, u.profile_picture,
+       u.is_verified,
+       m.angkatan, m.current_semester, m.dosen_pa_id,
+       pa.name AS dosen_pa_name,
+       dp.kode_kelas,
+       (SELECT COUNT(*) FROM booking_bimbingan b
+        JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+        WHERE (u.role = 'mahasiswa' AND b.mahasiswa_id = u.id)
+           OR (u.role = 'dosen'     AND j.dosen_id    = u.id)) AS total_bimbingan,
+       (SELECT COUNT(*) FROM mahasiswa mb WHERE mb.dosen_pa_id = u.id) AS total_mahasiswa
+     FROM users u
+     LEFT JOIN mahasiswa m ON m.user_id = u.id
+     LEFT JOIN users pa    ON pa.id = m.dosen_pa_id
+     LEFT JOIN dosen_pa dp ON dp.user_id = u.id
+     ${where}
+     ORDER BY ${order}
+     LIMIT $${idx++} OFFSET $${idx++}`,
+    [...values, parseInt(limit), offset]
+  );
+
+  return { rows: dataResult.rows, totalItems };
 };
 
-// ================= GET USER BY ID =================
+// ================= GET USER BY ID (dengan JOIN profil) =================
 exports.findUserById = async (userId) => {
   const result = await db.query(
-    `SELECT id, name, email, npm_nip, role, profile_picture, is_verified, created_at
-     FROM users WHERE id = $1`,
+    `SELECT
+       u.id, u.name, u.email, u.role, u.npm_nip, u.profile_picture, u.is_verified,
+       m.angkatan, m.current_semester, m.dosen_pa_id,
+       pa.name AS dosen_pa_name,
+       dp.kode_kelas,
+       (SELECT COUNT(*) FROM booking_bimbingan b
+        JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+        WHERE (u.role = 'mahasiswa' AND b.mahasiswa_id = u.id)
+           OR (u.role = 'dosen'     AND j.dosen_id    = u.id)) AS total_bimbingan,
+       (SELECT COUNT(*) FROM mahasiswa mb WHERE mb.dosen_pa_id = u.id) AS total_mahasiswa
+     FROM users u
+     LEFT JOIN mahasiswa m ON m.user_id = u.id
+     LEFT JOIN users pa    ON pa.id = m.dosen_pa_id
+     LEFT JOIN dosen_pa dp ON dp.user_id = u.id
+     WHERE u.id = $1`,
     [userId]
   );
   return result.rows[0];
 };
 
-// ================= UPDATE STATUS AKUN =================
-exports.updateUserStatus = async (userId, is_verified) => {
+// ================= FIND BY EMAIL =================
+exports.findUserByEmail = async (email) => {
   const result = await db.query(
-    `UPDATE users SET is_verified = $1 WHERE id = $2
-     RETURNING id, name, email, npm_nip, role, is_verified`,
-    [is_verified, userId]
+    `SELECT id, role FROM users WHERE email = $1 LIMIT 1`,
+    [email]
   );
   return result.rows[0];
 };
 
-// ================= DELETE AKUN =================
+// ================= FIND BY NPM/NIP =================
+exports.findUserByNpm = async (npm_nip) => {
+  const result = await db.query(
+    `SELECT id, role FROM users WHERE npm_nip = $1 LIMIT 1`,
+    [npm_nip]
+  );
+  return result.rows[0];
+};
+
+// ================= CREATE ADMIN =================
+exports.createAdmin = async (data) => {
+  const result = await db.query(
+    `INSERT INTO users (name, email, password, role, npm_nip, is_verified)
+     VALUES ($1, $2, $3, 'admin', 'ADMIN', TRUE)
+     RETURNING *`,
+    [data.name, data.email, data.password]
+  );
+  return result.rows[0];
+};
+
+// ================= UPDATE USER =================
+exports.updateUser = async (userId, data) => {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+
+  if (data.name !== undefined) {
+    fields.push(`name = $${idx++}`);
+    values.push(data.name);
+  }
+  if (data.email !== undefined) {
+    fields.push(`email = $${idx++}`);
+    values.push(data.email);
+  }
+  if (data.npm_nip !== undefined) {
+    fields.push(`npm_nip = $${idx++}`);
+    values.push(data.npm_nip);
+  }
+
+  if (fields.length === 0) return null;
+
+  values.push(userId);
+
+  await db.query(
+    `UPDATE users SET ${fields.join(', ')} WHERE id = $${idx}`,
+    values
+  );
+};
+
+// ================= UPDATE STATUS (is_verified sebagai active/inactive) =================
+exports.updateUserStatus = async (userId, is_verified) => {
+  await db.query(
+    `UPDATE users SET is_verified = $1 WHERE id = $2`,
+    [is_verified, userId]
+  );
+};
+
+// ================= DELETE USER =================
 exports.deleteUser = async (userId) => {
   const result = await db.query(
     `DELETE FROM users WHERE id = $1 RETURNING id, name, email, role`,

@@ -29,14 +29,20 @@ router.delete('/knowledge-base/:id', ...adminOnly, adminController.deleteKnowled
 // PBI-24: KELOLA AKUN PENGGUNA
 // ================================================================
 
-// GET /admin/users?role=mahasiswa&is_verified=false&search=budi
+// GET /admin/users?role=mahasiswa&search=budi&sort_by=name_asc&page=1&limit=20
 router.get('/users', ...adminOnly, adminController.getAllUsers);
 
-// PATCH /admin/users/:userId/status — aktifkan atau nonaktifkan akun
-router.patch('/users/:userId/status', ...adminOnly, adminController.updateUserStatus);
+// POST /admin/users/admin — tambah akun admin baru
+router.post('/users/admin', ...adminOnly, adminController.createAdmin);
 
-// DELETE /admin/users/:userId
-router.delete('/users/:userId', ...adminOnly, adminController.deleteUser);
+// PUT /admin/users/:id — edit nama, email, identifier
+router.put('/users/:id', ...adminOnly, adminController.updateUser);
+
+// PATCH /admin/users/:id/status — aktifkan (true) atau nonaktifkan (false)
+router.patch('/users/:id/status', ...adminOnly, adminController.updateUserStatus);
+
+// DELETE /admin/users/:id
+router.delete('/users/:id', ...adminOnly, adminController.deleteUser);
 
 
 // ================================================================
