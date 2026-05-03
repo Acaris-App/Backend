@@ -223,11 +223,14 @@ exports.findUserByNpm = async (npm_nip) => {
 
 // ================= CREATE ADMIN =================
 exports.createAdmin = async (data) => {
+  // Generate npm_nip unik: ADM-<timestamp> agar tidak duplicate (UNIQUE constraint)
+  const uniqueIdentifier = `ADM-${Date.now()}`;
+
   const result = await db.query(
     `INSERT INTO users (name, email, password, role, npm_nip, is_verified)
-     VALUES ($1, $2, $3, 'admin', 'ADMIN', TRUE)
+     VALUES ($1, $2, $3, 'admin', $4, TRUE)
      RETURNING *`,
-    [data.name, data.email, data.password]
+    [data.name, data.email, data.password, uniqueIdentifier]
   );
   return result.rows[0];
 };
