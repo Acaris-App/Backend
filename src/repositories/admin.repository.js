@@ -123,7 +123,7 @@ exports.getAllUsers = async (filters = {}) => {
   }
 
   if (search) {
-    conditions.push(`(u.name ILIKE $${idx} OR u.email ILIKE $${idx} OR u.npm_nip ILIKE $${idx})`);
+    conditions.push(`(u.name ILIKE $${idx} OR u.email ILIKE $${idx} OR u.npm_nip ILIKE $${idx} OR pa_search.name ILIKE $${idx})`);
     values.push(`%${search}%`);
     idx++;
   }
@@ -148,7 +148,8 @@ exports.getAllUsers = async (filters = {}) => {
   const countResult = await db.query(
     `SELECT COUNT(*) AS total
      FROM users u
-     LEFT JOIN mahasiswa m ON m.user_id = u.id
+     LEFT JOIN mahasiswa m        ON m.user_id = u.id
+     LEFT JOIN users pa_search    ON pa_search.id = m.dosen_pa_id
      ${where}`,
     values
   );
@@ -162,7 +163,7 @@ exports.getAllUsers = async (filters = {}) => {
        m.angkatan, m.current_semester, m.dosen_pa_id,
        m.ipk,
        pa.name AS dosen_pa_name,
-       dp_mhs.kode_kelas,
+       COALESCE(dp.kode_kelas, dp_mhs.kode_kelas) AS kode_kelas,
        (SELECT COUNT(*) FROM booking_bimbingan b
         JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
         WHERE (u.role = 'mahasiswa' AND b.mahasiswa_id = u.id)
@@ -171,6 +172,7 @@ exports.getAllUsers = async (filters = {}) => {
      FROM users u
      LEFT JOIN mahasiswa m        ON m.user_id = u.id
      LEFT JOIN users pa           ON pa.id = m.dosen_pa_id
+     LEFT JOIN users pa_search    ON pa_search.id = m.dosen_pa_id
      LEFT JOIN dosen_pa dp        ON dp.user_id = u.id
      LEFT JOIN dosen_pa dp_mhs    ON dp_mhs.user_id = m.dosen_pa_id
      ${where}
