@@ -8,7 +8,7 @@ exports.errorHandler = (err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         status: "error",
-        message: "Ukuran file maksimal 2MB"
+        message: "Ukuran file melebihi batas yang diizinkan"
       });
     }
   }

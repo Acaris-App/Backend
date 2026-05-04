@@ -1,9 +1,5 @@
 const db = require('../config/db');
 
-// ================================================================
-// PBI-12: KNOWLEDGE BASE
-// ================================================================
-
 // ================= GET ALL KNOWLEDGE BASE =================
 exports.getAllKnowledgeBase = async (filters = {}) => {
   const conditions = [];
@@ -76,15 +72,14 @@ exports.updateKnowledgeBase = async (id, data) => {
   if (data.file_url !== undefined) {
     fields.push(`file_url = $${idx++}`);
     values.push(data.file_url);
-    // sinkronkan kolom lama
     fields.push(`file_path = $${idx++}`);
     values.push(data.file_url);
   }
 
-  // selalu update updated_at
-  fields.push(`updated_at = NOW()`);
-
   if (fields.length === 0) return null;
+
+  // selalu perbarui updated_at
+  fields.push(`updated_at = NOW()`);
 
   values.push(id);
 
@@ -103,11 +98,6 @@ exports.deleteKnowledgeBase = async (id) => {
   );
   return result.rows[0];
 };
-
-
-// ================================================================
-// PBI-24: KELOLA AKUN PENGGUNA
-// ================================================================
 
 // ================= GET ALL USERS (paginasi + filter + sort) =================
 exports.getAllUsers = async (filters = {}) => {
@@ -144,7 +134,6 @@ exports.getAllUsers = async (filters = {}) => {
 
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
-  // Hitung total
   const countResult = await db.query(
     `SELECT COUNT(*) AS total
      FROM users u
@@ -155,7 +144,6 @@ exports.getAllUsers = async (filters = {}) => {
   );
   const totalItems = parseInt(countResult.rows[0].total);
 
-  // Data dengan JOIN lengkap
   const dataResult = await db.query(
     `SELECT
        u.id, u.name, u.email, u.role, u.npm_nip, u.profile_picture,
@@ -192,7 +180,7 @@ exports.findUserById = async (userId) => {
        m.angkatan, m.current_semester, m.dosen_pa_id,
        m.ipk,
        pa.name AS dosen_pa_name,
-       dp_mhs.kode_kelas,
+       COALESCE(dp.kode_kelas, dp_mhs.kode_kelas) AS kode_kelas,
        (SELECT COUNT(*) FROM booking_bimbingan b
         JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
         WHERE (u.role = 'mahasiswa' AND b.mahasiswa_id = u.id)
@@ -286,11 +274,6 @@ exports.deleteUser = async (userId) => {
   );
   return result.rows[0];
 };
-
-
-// ================================================================
-// PBI-25: MONITORING DOKUMEN MAHASISWA
-// ================================================================
 
 // ================= GET SEMUA DOKUMEN MAHASISWA =================
 exports.getAllDocuments = async (filters = {}) => {

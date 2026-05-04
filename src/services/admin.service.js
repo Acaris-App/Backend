@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const adminRepository = require('../repositories/admin.repository');
 const { bucket } = require('../config/gcs');
 
@@ -37,11 +38,9 @@ const deleteFromGCS = async (fileRef) => {
   try {
     let objectPath;
     if (fileRef.startsWith('https://')) {
-      // format baru: full URL
       const url = new URL(fileRef);
       objectPath = url.pathname.split('/').slice(2).join('/');
     } else {
-      // format lama: path relatif (misal knowledge-base/xxx.pdf)
       objectPath = fileRef.startsWith('/') ? fileRef.slice(1) : fileRef;
     }
     await bucket.file(objectPath).delete();
@@ -49,11 +48,6 @@ const deleteFromGCS = async (fileRef) => {
     console.error(`[GCS] Gagal hapus file: ${err.message}`);
   }
 };
-
-
-// ================================================================
-// PBI-12: KNOWLEDGE BASE
-// ================================================================
 
 // ================= GET ALL =================
 exports.getAllKnowledgeBase = async ({ user, query }) => {
@@ -179,17 +173,11 @@ exports.deleteKnowledgeBase = async ({ user, id }) => {
 
   await adminRepository.deleteKnowledgeBase(id);
 
-  // support kolom lama (file_path) maupun kolom baru (file_url)
   const fileRef = existing.file_url || existing.file_path;
   if (fileRef) await deleteFromGCS(fileRef);
 
   return { message: "Dokumen berhasil dihapus" };
 };
-
-
-// ================================================================
-// PBI-24: KELOLA AKUN PENGGUNA
-// ================================================================
 
 // ================= HELPER: FORMAT USER RESPONSE =================
 const formatUser = (r) => ({
@@ -258,8 +246,6 @@ exports.createAdmin = async ({ user, body }) => {
   if (!name || !email || !password) {
     throw { status: 400, message: "name, email, dan password wajib diisi" };
   }
-
-  const bcrypt = require('bcrypt');
 
   const existing = await adminRepository.findUserByEmail(email);
   if (existing) throw { status: 400, message: "Email sudah digunakan" };
@@ -331,9 +317,7 @@ exports.updateUserStatus = async ({ user, userId, body }) => {
     throw { status: 400, message: "is_active wajib diisi (true/false)" };
   }
 
-  // Parsing eksplisit agar string "false" dari form-urlencoded Android terbaca benar
-  // Boolean("false") = true (SALAH karena non-empty string)
-  // Solusi: parse manual berdasarkan nilai string
+  // Parse eksplisit: string "false" dari Android harus dibaca sebagai boolean false
   let isActiveBool;
   if (typeof is_active === 'boolean') {
     isActiveBool = is_active;
@@ -346,7 +330,6 @@ exports.updateUserStatus = async ({ user, userId, body }) => {
   const target = await adminRepository.findUserById(userId);
   if (!target) throw { status: 404, message: "User tidak ditemukan" };
 
-  // isActiveBool true → is_verified true (active), false → is_verified false (inactive)
   await adminRepository.updateUserStatus(userId, isActiveBool);
 };
 
@@ -369,11 +352,6 @@ exports.deleteUser = async ({ user, userId }) => {
 
   await adminRepository.deleteUser(userId);
 };
-
-
-// ================================================================
-// PBI-25: MONITORING DOKUMEN MAHASISWA
-// ================================================================
 
 // ================= GET ALL DOCUMENTS =================
 exports.getAllDocuments = async ({ user, query }) => {

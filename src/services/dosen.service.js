@@ -82,7 +82,6 @@ exports.getRiwayatBimbingan = async ({ user, mahasiswaId }) => {
       status = 'menunggu';
     }
 
-    // Format time: "09:00 - 10:00"
     const time = `${row.waktu_mulai.slice(0, 5)} - ${row.waktu_selesai.slice(0, 5)}`;
 
     return {
@@ -91,7 +90,7 @@ exports.getRiwayatBimbingan = async ({ user, mahasiswaId }) => {
       time,
       agenda:           row.agenda || null,
       status,
-      keterangan_dosen: ""
+      keterangan_dosen: row.keterangan_dosen || null
     };
   });
 };

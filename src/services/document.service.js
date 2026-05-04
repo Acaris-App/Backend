@@ -35,37 +35,34 @@ const deleteFromGCS = async (filename, userId) => {
 
 // ================= UPLOAD DOCUMENT =================
 exports.uploadDocument = async ({ user, body, file }) => {
-
-  try {
-
-    if (!file) {
+  if (!file) {
       throw { status: 400, message: "File wajib diupload" };
-    }
+  }
 
-    if (!user || user.role !== 'mahasiswa') {
+  if (!user || user.role !== 'mahasiswa') {
       throw { status: 403, message: "Hanya mahasiswa yang dapat upload dokumen" };
-    }
+  }
 
-    const { document_type, semester } = body;
+  const { document_type, semester } = body;
 
-    const allowedTypes = ['krs', 'khs', 'transkrip'];
+  const allowedTypes = ['krs', 'khs', 'transkrip'];
 
-    if (!allowedTypes.includes(document_type)) {
+  if (!allowedTypes.includes(document_type)) {
       throw { status: 400, message: "document_type tidak valid" };
-    }
+  }
 
-    const profile = await profileRepository.getMahasiswaProfile(user.id);
+  const profile = await profileRepository.getMahasiswaProfile(user.id);
 
-    if (!profile) {
+  if (!profile) {
       throw { status: 404, message: "Profile mahasiswa tidak ditemukan" };
-    }
+  }
 
-    const currentSemester = profile.current_semester;
+  const currentSemester = profile.current_semester;
 
-    // transkrip tidak butuh semester, gunakan 0 agar tidak violate NOT NULL constraint
-    let semesterInt = 0;
+  // transkrip tidak butuh semester, gunakan 0 agar tidak violate NOT NULL constraint
+  let semesterInt = 0;
 
-    if (document_type !== 'transkrip') {
+  if (document_type !== 'transkrip') {
 
       if (!semester) {
         throw { status: 400, message: "Semester wajib diisi" };
@@ -87,23 +84,23 @@ exports.uploadDocument = async ({ user, body, file }) => {
           message: `Semester tidak valid. Semester saat ini: ${currentSemester}, maksimal upload semester ${currentSemester}`
         };
       }
-    }
+  }
 
-    const existing = await documentRepository.findByUserTypeSemester(
+  const existing = await documentRepository.findByUserTypeSemester(
       user.id,
       document_type,
       semesterInt
-    );
+  );
 
-    if (existing) {
+  if (existing) {
       throw {
         status: 400,
         message: `${document_type.toUpperCase()} semester ${semesterInt} sudah diupload`
       };
-    }
+  }
 
-    // Validasi urutan: semester N butuh minimal 1 file di semester N-1
-    if (document_type !== 'transkrip' && semesterInt > 1) {
+  // Validasi urutan: semester N butuh minimal 1 file di semester N-1
+  if (document_type !== 'transkrip' && semesterInt > 1) {
       const prevSemesterHasFile = await documentRepository.hasAnyDocumentForSemester(
         user.id,
         semesterInt - 1
@@ -115,44 +112,41 @@ exports.uploadDocument = async ({ user, body, file }) => {
           message: `Semester ${semesterInt - 1} belum memiliki dokumen. Upload minimal 1 file (KRS atau KHS) untuk semester ${semesterInt - 1} terlebih dahulu`
         };
       }
-    }
+  }
 
-    const safeName = (user.name || 'user')
+  const safeName = (user.name || 'user')
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-');
 
-    const date = new Date().toISOString().split('T')[0];
-    const unique = Date.now();
+  const date = new Date().toISOString().split('T')[0];
+  const unique = Date.now();
 
-    let newFilename = '';
+  let newFilename = '';
 
-    if (document_type === 'transkrip') {
+  if (document_type === 'transkrip') {
       newFilename = `${safeName}-${document_type}-${date}-${unique}.pdf`;
-    } else {
+  } else {
       newFilename = `${safeName}-${document_type}-semester-${semesterInt}-${date}-${unique}.pdf`;
-    }
+  }
 
-    const fileUrl = await uploadToGCS(file, newFilename, user.id);
+  const fileUrl = await uploadToGCS(file, newFilename, user.id);
 
-    let document;
-    try {
+  let document;
+  try {
       document = await documentRepository.createDocument({
         user_id: user.id,
         document_type,
         semester: semesterInt,
         file_path: fileUrl
       });
-    } catch (dbErr) {
+  } catch (dbErr) {
       // DB gagal → rollback file dari GCS
       await deleteFromGCS(newFilename, user.id);
       throw dbErr;
-    }
-
-    return document;
-
-  } catch (err) {
-    throw err;
   }
+
+  return document;
+
 };
 
 // ================= GET DOCUMENTS =================
@@ -197,10 +191,7 @@ exports.getDocuments = async ({ user, query = {} }) => {
 
 // ================= CHECK COMPLETENESS =================
 exports.checkCompleteness = async (user) => {
-
-  try {
-
-    if (!user || user.role !== 'mahasiswa') {
+  if (!user || user.role !== 'mahasiswa') {
       throw { status: 403, message: "Hanya mahasiswa yang dapat mengecek kelengkapan dokumen" };
     }
 
@@ -254,9 +245,6 @@ exports.checkCompleteness = async (user) => {
       is_complete: isComplete
     };
 
-  } catch (err) {
-    throw err;
-  }
 };
 
 // ================= DELETE DOCUMENT =================

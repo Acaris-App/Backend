@@ -1,9 +1,5 @@
 const adminService = require('../services/admin.service');
 
-// ================================================================
-// PBI-12: KNOWLEDGE BASE
-// ================================================================
-
 exports.getAllKnowledgeBase = async (req, res, next) => {
   try {
     const data = await adminService.getAllKnowledgeBase({ user: req.user, query: req.query });
@@ -48,11 +44,6 @@ exports.deleteKnowledgeBase = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-
-// ================================================================
-// PBI-24: KELOLA AKUN PENGGUNA
-// ================================================================
-
 exports.getAllUsers = async (req, res, next) => {
   try {
     const result = await adminService.getAllUsers({ user: req.user, query: req.query });
@@ -92,11 +83,6 @@ exports.deleteUser = async (req, res, next) => {
     res.json({ status: "success", message: "Pengguna berhasil dihapus secara permanen", data: null });
   } catch (err) { next(err); }
 };
-
-
-// ================================================================
-// PBI-25: MONITORING DOKUMEN MAHASISWA
-// ================================================================
 
 exports.getAllDocuments = async (req, res, next) => {
   try {

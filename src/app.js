@@ -1,16 +1,14 @@
-// ✅ FIX: path dotenv sebelumnya terbalik — local load production, production load local
 require('dotenv').config({
   path: process.env.NODE_ENV === 'production'
     ? '.env.production'
     : '.env.local'
 });
 
-// 🚧 DEV MODE: Skip load email job worker jika DISABLE_QUEUE=true
-// Ini mencegah Bull Queue connect ke Upstash dan spam polling
+// Nonaktifkan email job worker di dev jika DISABLE_QUEUE=true
 if (process.env.DISABLE_QUEUE !== 'true') {
   require('./jobs/email.job');
 } else {
-  console.log('📭 [DEV MODE] Email job worker dinonaktifkan (DISABLE_QUEUE=true)');
+  console.log('[DEV] Email job worker dinonaktifkan');
 }
 
 const express = require('express');

@@ -23,7 +23,6 @@ exports.authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Cek apakah token sudah di-blacklist (user sudah logout)
     const isBlacklisted = await redis.get(`blacklist:${token}`);
     if (isBlacklisted) {
       return res.status(401).json({
