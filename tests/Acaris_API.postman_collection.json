@@ -1444,18 +1444,18 @@
                 {
                   "key": "category",
                   "value": "Jadwal",
-                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI",
-                  "disabled": true
+                  "disabled": true,
+                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI"
                 },
                 {
                   "key": "search",
                   "value": "pedoman",
-                  "description": "Opsional: cari berdasarkan judul dokumen",
-                  "disabled": true
+                  "disabled": true,
+                  "description": "Opsional: cari berdasarkan judul dokumen"
                 }
               ]
             },
-            "description": "Ambil semua dokumen knowledge base.\n\nFilter opsional:\n- ?category=Jadwal\n- ?search=pedoman\n\nResponse fields per item:\nid, title, file_name, file_url, category, uploaded_at, updated_at"
+            "description": "Filter opsional: ?category dan ?search (by judul). Response include: id, title, file_name, file_url, category, uploaded_at, updated_at"
           }
         },
         {
@@ -1468,6 +1468,17 @@
                 "value": "Bearer {{token}}"
               }
             ],
+            "url": {
+              "raw": "{{base_url}}/admin/knowledge-base",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "knowledge-base"
+              ]
+            },
+            "description": "Upload dokumen PDF baru. Response 201 include: id, title, file_name, file_url, category, uploaded_at, updated_at",
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -1475,7 +1486,7 @@
                   "key": "title",
                   "value": "Pedoman Akademik Unila 2026",
                   "type": "text",
-                  "description": "Judul dokumen (wajib)"
+                  "description": "Wajib: judul dokumen"
                 },
                 {
                   "key": "category",
@@ -1487,21 +1498,10 @@
                   "key": "file",
                   "type": "file",
                   "src": "",
-                  "description": "File PDF (wajib, maks 50MB)"
+                  "description": "Wajib: file PDF (maks 50MB)"
                 }
               ]
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/knowledge-base",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "knowledge-base"
-              ]
-            },
-            "description": "Upload dokumen PDF baru. Content-Type: multipart/form-data.\n\nField wajib: title, category, file\nKategori valid: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI\n\nResponse: id, title, file_name, file_url, category, uploaded_at, updated_at"
+            }
           }
         },
         {
@@ -1514,29 +1514,6 @@
                 "value": "Bearer {{token}}"
               }
             ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "title",
-                  "value": "Pedoman Akademik Unila 2026 (Revisi)",
-                  "type": "text",
-                  "description": "Opsional: ubah judul dokumen"
-                },
-                {
-                  "key": "category",
-                  "value": "Peraturan Akademik",
-                  "type": "text",
-                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI"
-                },
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": "",
-                  "description": "Opsional — jika dikirim, file lama di GCS akan ditimpa"
-                }
-              ]
-            },
             "url": {
               "raw": "{{base_url}}/admin/knowledge-base/:id",
               "host": [
@@ -1554,7 +1531,30 @@
                 }
               ]
             },
-            "description": "Update metadata (title/category) dan/atau ganti file PDF.\nSemua field opsional. updated_at otomatis diperbarui.\n\nResponse: id, title, file_name, file_url, category, uploaded_at, updated_at"
+            "description": "Update metadata (title/category) dan/atau ganti file. updated_at otomatis berubah setiap PUT.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Pedoman Akademik Unila 2026 (Revisi)",
+                  "type": "text",
+                  "description": "Opsional: ubah judul"
+                },
+                {
+                  "key": "category",
+                  "value": "Peraturan Akademik",
+                  "type": "text",
+                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Opsional: file PDF pengganti. Jika dikirim, file lama di GCS ditimpa. updated_at otomatis diperbarui."
+                }
+              ]
+            }
           }
         },
         {
@@ -1584,7 +1584,7 @@
                 }
               ]
             },
-            "description": "Hapus dokumen dari database dan otomatis hapus file dari GCS."
+            "description": "Hapus dokumen dari DB dan otomatis hapus file dari GCS."
           }
         },
         {
@@ -1610,24 +1610,116 @@
                 {
                   "key": "role",
                   "value": "mahasiswa",
-                  "description": "mahasiswa | dosen | admin",
-                  "disabled": true
-                },
-                {
-                  "key": "is_verified",
-                  "value": "false",
-                  "description": "true | false",
-                  "disabled": true
+                  "disabled": false,
+                  "description": "WAJIB: mahasiswa | dosen | admin"
                 },
                 {
                   "key": "search",
                   "value": "budi",
-                  "description": "Cari by nama, email, atau npm_nip",
-                  "disabled": true
+                  "disabled": true,
+                  "description": "Opsional: cari by name atau identifier"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "name_asc",
+                  "disabled": true,
+                  "description": "Opsional: name_asc | name_desc | identifier_asc | identifier_desc | angkatan_asc | angkatan_desc | semester_asc | semester_desc"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true,
+                  "description": "Opsional, default: 1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true,
+                  "description": "Opsional, default: 20"
                 }
               ]
             },
-            "description": "List semua pengguna. Filter: role, is_verified, search."
+            "description": "Wajib kirim ?role. Response punya meta (pagination) + data (array user)."
+          }
+        },
+        {
+          "name": "POST Tambah Admin Baru",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "admin"
+              ]
+            },
+            "description": "Tambah akun admin baru. npm_nip di-generate otomatis (ADM-<timestamp>) agar unik.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin Baru\",\n  \"email\": \"admin.baru@unila.ac.id\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT Edit Data Pengguna",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Edit nama, email, atau identifier user. Semua field opsional. Cek duplikat email & identifier otomatis.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nama Baru\",\n  \"email\": \"email.baru@unila.ac.id\",\n  \"identifier\": \"2015061099\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           }
         },
         {
@@ -1644,29 +1736,34 @@
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"is_verified\": false\n}"
-            },
             "url": {
-              "raw": "{{base_url}}/admin/users/:userId/status",
+              "raw": "{{base_url}}/admin/users/:id/status",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "admin",
                 "users",
-                ":userId",
+                ":id",
                 "status"
               ],
               "variable": [
                 {
-                  "key": "userId",
+                  "key": "id",
                   "value": "1"
                 }
               ]
             },
-            "description": "Aktifkan (true) atau nonaktifkan (false) akun pengguna."
+            "description": "Aktifkan (is_active: true) atau blokir (is_active: false) akun pengguna.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           }
         },
         {
@@ -1680,23 +1777,23 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/admin/users/:userId",
+              "raw": "{{base_url}}/admin/users/:id",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "admin",
                 "users",
-                ":userId"
+                ":id"
               ],
               "variable": [
                 {
-                  "key": "userId",
+                  "key": "id",
                   "value": "1"
                 }
               ]
             },
-            "description": "Hapus akun pengguna. Tidak bisa hapus akun admin lain atau diri sendiri."
+            "description": "Hapus akun pengguna secara permanen dari database."
           }
         },
         {

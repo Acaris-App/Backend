@@ -160,8 +160,9 @@ exports.getAllUsers = async (filters = {}) => {
        u.id, u.name, u.email, u.role, u.npm_nip, u.profile_picture,
        u.is_verified,
        m.angkatan, m.current_semester, m.dosen_pa_id,
+       m.ipk,
        pa.name AS dosen_pa_name,
-       dp.kode_kelas,
+       m.kode_kelas,
        (SELECT COUNT(*) FROM booking_bimbingan b
         JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
         WHERE (u.role = 'mahasiswa' AND b.mahasiswa_id = u.id)
@@ -186,8 +187,9 @@ exports.findUserById = async (userId) => {
     `SELECT
        u.id, u.name, u.email, u.role, u.npm_nip, u.profile_picture, u.is_verified,
        m.angkatan, m.current_semester, m.dosen_pa_id,
+       m.ipk,
        pa.name AS dosen_pa_name,
-       dp.kode_kelas,
+       m.kode_kelas,
        (SELECT COUNT(*) FROM booking_bimbingan b
         JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
         WHERE (u.role = 'mahasiswa' AND b.mahasiswa_id = u.id)

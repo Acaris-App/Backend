@@ -202,6 +202,7 @@ const formatUser = (r) => ({
   profile_picture_url: r.profile_picture || null,
   angkatan:            r.angkatan || null,
   current_semester:    r.current_semester || null,
+  ipk:                 r.ipk !== undefined ? r.ipk : null,
   dosen_pa:            r.dosen_pa_name || null,
   kode_kelas:          r.kode_kelas || null,
   total_bimbingan:     r.total_bimbingan !== undefined ? parseInt(r.total_bimbingan) : null,
@@ -326,15 +327,27 @@ exports.updateUserStatus = async ({ user, userId, body }) => {
 
   const { is_active } = body;
 
-  if (is_active === undefined) {
+  if (is_active === undefined || is_active === null || is_active === '') {
     throw { status: 400, message: "is_active wajib diisi (true/false)" };
+  }
+
+  // Parsing eksplisit agar string "false" dari form-urlencoded Android terbaca benar
+  // Boolean("false") = true (SALAH karena non-empty string)
+  // Solusi: parse manual berdasarkan nilai string
+  let isActiveBool;
+  if (typeof is_active === 'boolean') {
+    isActiveBool = is_active;
+  } else if (typeof is_active === 'string') {
+    isActiveBool = is_active.toLowerCase() === 'true' || is_active === '1';
+  } else {
+    isActiveBool = Boolean(is_active);
   }
 
   const target = await adminRepository.findUserById(userId);
   if (!target) throw { status: 404, message: "User tidak ditemukan" };
 
-  // is_active true → is_verified true (active), false → is_verified false (inactive)
-  await adminRepository.updateUserStatus(userId, Boolean(is_active));
+  // isActiveBool true → is_verified true (active), false → is_verified false (inactive)
+  await adminRepository.updateUserStatus(userId, isActiveBool);
 };
 
 // ================= DELETE USER =================
