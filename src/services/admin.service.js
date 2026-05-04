@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
-const adminRepository = require('../repositories/admin.repository');
+const adminRepository  = require('../repositories/admin.repository');
+const documentRepository = require('../repositories/document.repository');
 const { bucket } = require('../config/gcs');
 
 const VALID_CATEGORIES = [
@@ -398,4 +399,87 @@ exports.getDocumentStats = async ({ user }) => {
     total_khs:        parseInt(stats.total_khs),
     total_transkrip:  parseInt(stats.total_transkrip)
   };
+};
+
+// ================= GET DOCUMENTS BY USER (ADMIN) =================
+exports.getDocumentsByUser = async ({ user, userId }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: 'Hanya admin yang dapat mengakses endpoint ini' };
+  }
+
+  const target = await adminRepository.findUserById(userId);
+  if (!target) throw { status: 404, message: 'Pengguna tidak ditemukan' };
+
+  const docs = await documentRepository.getDocumentsByUserId(userId);
+  return docs;
+};
+
+// ================= CREATE DOCUMENT BY ADMIN =================
+exports.createDocumentAdmin = async ({ user, userId, body, file }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: 'Hanya admin yang dapat mengakses endpoint ini' };
+  }
+
+  const target = await adminRepository.findUserById(userId);
+  if (!target) throw { status: 404, message: 'Pengguna tidak ditemukan' };
+
+  const { document_type, semester } = body;
+
+  if (!document_type) throw { status: 400, message: 'document_type wajib diisi' };
+  if (!file)          throw { status: 400, message: 'File wajib diupload' };
+
+  const semesterInt = semester ? parseInt(semester) : null;
+
+  const { file_name, file_url } = await uploadToGCS(file, userId);
+
+  const doc = await documentRepository.createDocumentAdmin({
+    user_id:       userId,
+    document_type,
+    semester:      semesterInt,
+    file_path:     file_url,
+  });
+
+  return doc;
+};
+
+// ================= UPDATE DOCUMENT BY ADMIN =================
+exports.updateDocumentAdmin = async ({ user, documentId, body, file }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: 'Hanya admin yang dapat mengakses endpoint ini' };
+  }
+
+  const existing = await documentRepository.findByIdAdmin(documentId);
+  if (!existing) throw { status: 404, message: 'Dokumen tidak ditemukan' };
+
+  const updateData = {};
+
+  if (body.semester !== undefined && body.semester !== '') {
+    updateData.semester = parseInt(body.semester);
+  }
+
+  if (file) {
+    const { file_url } = await uploadToGCS(file, existing.user_id);
+    updateData.file_path = file_url;
+    await deleteFromGCS(existing.file_path);
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    throw { status: 400, message: 'Tidak ada data yang diperbarui' };
+  }
+
+  const updated = await documentRepository.updateDocumentAdmin(documentId, updateData);
+  return updated;
+};
+
+// ================= DELETE DOCUMENT BY ADMIN =================
+exports.deleteDocumentAdmin = async ({ user, documentId }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: 'Hanya admin yang dapat mengakses endpoint ini' };
+  }
+
+  const existing = await documentRepository.findByIdAdmin(documentId);
+  if (!existing) throw { status: 404, message: 'Dokumen tidak ditemukan' };
+
+  await documentRepository.deleteDocumentAdmin(documentId);
+  await deleteFromGCS(existing.file_path);
 };

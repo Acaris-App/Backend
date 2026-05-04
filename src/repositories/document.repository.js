@@ -139,3 +139,72 @@ exports.updateFilePath = async (documentId, filePath) => {
 
   return result.rows[0];
 };
+
+// ================= FIND BY ID (ADMIN — tanpa filter user_id) =================
+exports.findByIdAdmin = async (documentId) => {
+  const result = await db.query(
+    `SELECT * FROM dokumen_mahasiswa WHERE id = $1`,
+    [documentId]
+  );
+  return result.rows[0];
+};
+
+// ================= GET ALL BY USER ID (ADMIN) =================
+exports.getDocumentsByUserId = async (userId) => {
+  const result = await db.query(
+    `SELECT id, document_type, semester, file_path, uploaded_at
+     FROM dokumen_mahasiswa
+     WHERE user_id = $1
+     ORDER BY uploaded_at DESC`,
+    [userId]
+  );
+  return result.rows;
+};
+
+// ================= CREATE BY ADMIN =================
+exports.createDocumentAdmin = async (data) => {
+  const result = await db.query(
+    `INSERT INTO dokumen_mahasiswa (user_id, document_type, semester, file_path, uploaded_at)
+     VALUES ($1, $2, $3, $4, NOW())
+     RETURNING id, document_type, semester, file_path, uploaded_at`,
+    [data.user_id, data.document_type, data.semester || null, data.file_path]
+  );
+  return result.rows[0];
+};
+
+// ================= UPDATE DOKUMEN (ADMIN) =================
+exports.updateDocumentAdmin = async (documentId, data) => {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+
+  if (data.semester !== undefined) {
+    fields.push(`semester = $${idx++}`);
+    values.push(data.semester);
+  }
+  if (data.file_path !== undefined) {
+    fields.push(`file_path = $${idx++}`);
+    values.push(data.file_path);
+  }
+
+  if (fields.length === 0) return null;
+
+  fields.push(`uploaded_at = NOW()`);
+  values.push(documentId);
+
+  const result = await db.query(
+    `UPDATE dokumen_mahasiswa SET ${fields.join(', ')} WHERE id = $${idx}
+     RETURNING id, document_type, semester, file_path, uploaded_at`,
+    values
+  );
+  return result.rows[0];
+};
+
+// ================= DELETE BY ID (ADMIN — tanpa filter user_id) =================
+exports.deleteDocumentAdmin = async (documentId) => {
+  const result = await db.query(
+    `DELETE FROM dokumen_mahasiswa WHERE id = $1 RETURNING *`,
+    [documentId]
+  );
+  return result.rows[0];
+};

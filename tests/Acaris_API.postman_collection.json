@@ -1861,6 +1861,168 @@
             },
             "description": "Ringkasan statistik: total mahasiswa yang upload, total KRS, KHS, dan Transkrip."
           }
+        },
+        {
+          "name": "GET Dokumen per Mahasiswa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Ambil semua dokumen milik mahasiswa tertentu."
+          }
+        },
+        {
+          "name": "POST Upload Dokumen Mahasiswa (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "document_type",
+                  "value": "krs",
+                  "type": "text",
+                  "description": "Wajib: krs | khs | transkrip"
+                },
+                {
+                  "key": "semester",
+                  "value": "4",
+                  "type": "text",
+                  "description": "Opsional (null untuk transkrip)"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Wajib: file PDF"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Upload dokumen baru untuk mahasiswa tertentu."
+          }
+        },
+        {
+          "name": "PUT Update Dokumen (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "semester",
+                  "value": "5",
+                  "type": "text",
+                  "description": "Opsional: ubah nomor semester"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Opsional: ganti file PDF (file lama di GCS otomatis dihapus)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/documents/:documentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "documents",
+                ":documentId"
+              ],
+              "variable": [
+                {
+                  "key": "documentId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Edit semester dan/atau ganti file dokumen."
+          }
+        },
+        {
+          "name": "DELETE Dokumen (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/documents/:documentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "documents",
+                ":documentId"
+              ],
+              "variable": [
+                {
+                  "key": "documentId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Hapus dokumen dari DB dan GCS. Response data: null."
+          }
         }
       ]
     }

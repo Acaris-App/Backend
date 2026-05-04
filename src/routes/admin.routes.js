@@ -30,4 +30,10 @@ router.get('/documents', ...adminOnly, adminController.getAllDocuments);
 
 router.get('/documents/stats', ...adminOnly, adminController.getDocumentStats);
 
+// Dokumen per user
+router.get('/users/:userId/documents',                ...adminOnly, adminController.getDocumentsByUser);
+router.post('/users/:userId/documents',               ...adminOnly, uploadPDF.single('file'), adminController.createDocumentAdmin);
+router.put('/documents/:documentId',                  ...adminOnly, uploadPDF.single('file'), adminController.updateDocumentAdmin);
+router.delete('/documents/:documentId',               ...adminOnly, adminController.deleteDocumentAdmin);
+
 module.exports = router;

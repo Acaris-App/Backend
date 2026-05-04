@@ -97,3 +97,35 @@ exports.getDocumentStats = async (req, res, next) => {
     res.json({ status: "success", message: "Statistik dokumen berhasil diambil", data: result });
   } catch (err) { next(err); }
 };
+
+// ================= GET DOCUMENTS BY USER =================
+exports.getDocumentsByUser = async (req, res, next) => {
+  try {
+    const data = await adminService.getDocumentsByUser({ user: req.user, userId: req.params.userId });
+    res.status(200).json({ status: 'success', message: 'Berhasil mengambil dokumen', data });
+  } catch (err) { next(err); }
+};
+
+// ================= CREATE DOCUMENT =================
+exports.createDocumentAdmin = async (req, res, next) => {
+  try {
+    const data = await adminService.createDocumentAdmin({ user: req.user, userId: req.params.userId, body: req.body, file: req.file });
+    res.status(201).json({ status: 'success', message: 'Dokumen berhasil diunggah', data });
+  } catch (err) { next(err); }
+};
+
+// ================= UPDATE DOCUMENT =================
+exports.updateDocumentAdmin = async (req, res, next) => {
+  try {
+    const data = await adminService.updateDocumentAdmin({ user: req.user, documentId: req.params.documentId, body: req.body, file: req.file });
+    res.status(200).json({ status: 'success', message: 'Dokumen berhasil diperbarui', data });
+  } catch (err) { next(err); }
+};
+
+// ================= DELETE DOCUMENT =================
+exports.deleteDocumentAdmin = async (req, res, next) => {
+  try {
+    await adminService.deleteDocumentAdmin({ user: req.user, documentId: req.params.documentId });
+    res.status(200).json({ status: 'success', message: 'Dokumen berhasil dihapus', data: null });
+  } catch (err) { next(err); }
+};
