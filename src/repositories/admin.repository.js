@@ -162,16 +162,17 @@ exports.getAllUsers = async (filters = {}) => {
        m.angkatan, m.current_semester, m.dosen_pa_id,
        m.ipk,
        pa.name AS dosen_pa_name,
-       m.kode_kelas,
+       dp_mhs.kode_kelas,
        (SELECT COUNT(*) FROM booking_bimbingan b
         JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
         WHERE (u.role = 'mahasiswa' AND b.mahasiswa_id = u.id)
            OR (u.role = 'dosen'     AND j.dosen_id    = u.id)) AS total_bimbingan,
        (SELECT COUNT(*) FROM mahasiswa mb WHERE mb.dosen_pa_id = u.id) AS total_mahasiswa
      FROM users u
-     LEFT JOIN mahasiswa m ON m.user_id = u.id
-     LEFT JOIN users pa    ON pa.id = m.dosen_pa_id
-     LEFT JOIN dosen_pa dp ON dp.user_id = u.id
+     LEFT JOIN mahasiswa m        ON m.user_id = u.id
+     LEFT JOIN users pa           ON pa.id = m.dosen_pa_id
+     LEFT JOIN dosen_pa dp        ON dp.user_id = u.id
+     LEFT JOIN dosen_pa dp_mhs    ON dp_mhs.user_id = m.dosen_pa_id
      ${where}
      ORDER BY ${order}
      LIMIT $${idx++} OFFSET $${idx++}`,
@@ -189,16 +190,17 @@ exports.findUserById = async (userId) => {
        m.angkatan, m.current_semester, m.dosen_pa_id,
        m.ipk,
        pa.name AS dosen_pa_name,
-       m.kode_kelas,
+       dp_mhs.kode_kelas,
        (SELECT COUNT(*) FROM booking_bimbingan b
         JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
         WHERE (u.role = 'mahasiswa' AND b.mahasiswa_id = u.id)
            OR (u.role = 'dosen'     AND j.dosen_id    = u.id)) AS total_bimbingan,
        (SELECT COUNT(*) FROM mahasiswa mb WHERE mb.dosen_pa_id = u.id) AS total_mahasiswa
      FROM users u
-     LEFT JOIN mahasiswa m ON m.user_id = u.id
-     LEFT JOIN users pa    ON pa.id = m.dosen_pa_id
-     LEFT JOIN dosen_pa dp ON dp.user_id = u.id
+     LEFT JOIN mahasiswa m        ON m.user_id = u.id
+     LEFT JOIN users pa           ON pa.id = m.dosen_pa_id
+     LEFT JOIN dosen_pa dp        ON dp.user_id = u.id
+     LEFT JOIN dosen_pa dp_mhs    ON dp_mhs.user_id = m.dosen_pa_id
      WHERE u.id = $1`,
     [userId]
   );
