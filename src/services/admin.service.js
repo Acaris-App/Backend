@@ -428,7 +428,7 @@ exports.createDocumentAdmin = async ({ user, userId, body, file }) => {
   if (!document_type) throw { status: 400, message: 'document_type wajib diisi' };
   if (!file)          throw { status: 400, message: 'File wajib diupload' };
 
-  const semesterInt = semester ? parseInt(semester) : null;
+  const semesterInt = semester ? parseInt(semester) : 0;
 
   const { file_name, file_url } = await uploadToGCS(file, userId);
 
