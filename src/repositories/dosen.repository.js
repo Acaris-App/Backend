@@ -38,7 +38,7 @@ exports.getRiwayatBimbingan = async (mahasiswaId, dosenId) => {
             j.tanggal, j.waktu_mulai, j.waktu_selesai,
             b.catatan AS agenda,
             b.status AS booking_status,
-            b.keterangan AS keterangan_dosen
+            j.keterangan AS keterangan_dosen
      FROM booking_bimbingan b
      JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
      WHERE b.mahasiswa_id = $1
