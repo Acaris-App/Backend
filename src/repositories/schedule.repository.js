@@ -245,6 +245,7 @@ exports.getBookingsByDosen = async (dosenId, scheduleId = null) => {
 
   const result = await db.query(
     `SELECT b.id AS booking_id, b.mahasiswa_id, b.status AS booking_status, b.catatan,
+            b.keterangan AS keterangan_dosen,
             b.created_at AS booked_at,
             u.name AS mahasiswa_name, u.npm_nip, u.profile_picture AS foto_mahasiswa,
             j.id AS jadwal_id, j.tanggal, j.waktu_mulai, j.waktu_selesai,
@@ -263,6 +264,7 @@ exports.getBookingsByDosen = async (dosenId, scheduleId = null) => {
 exports.getBookingsByMahasiswa = async (mahasiswaId) => {
   const result = await db.query(
     `SELECT b.id AS booking_id, b.status AS booking_status, b.catatan,
+            b.keterangan AS keterangan_dosen,
             b.created_at AS booked_at,
             j.id AS jadwal_id, j.tanggal, j.waktu_mulai, j.waktu_selesai,
             j.kuota, j.kuota_tersisa, j.keterangan AS keterangan_jadwal, j.status AS status_jadwal,
@@ -410,9 +412,10 @@ exports.getMonthlyForMahasiswa = async (dosenId, year, month, mahasiswaId) => {
 exports.getBookingHistoryMahasiswa = async (mahasiswaId) => {
   const result = await db.query(
     `SELECT b.id AS booking_id, b.status AS booking_status, b.catatan AS mahasiswa_agenda,
+            b.keterangan AS keterangan_dosen,
             b.created_at AS booked_at,
             j.id AS jadwal_id, j.tanggal, j.waktu_mulai, j.waktu_selesai,
-            j.kuota, j.kuota_tersisa, j.keterangan, j.status AS status_jadwal,
+            j.kuota, j.kuota_tersisa, j.keterangan AS keterangan_jadwal, j.status AS status_jadwal,
             u.name AS nama_dosen, u.npm_nip AS nip_dosen, u.profile_picture AS foto_dosen
      FROM booking_bimbingan b
      JOIN jadwal_bimbingan j ON b.jadwal_id = j.id

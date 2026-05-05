@@ -517,8 +517,9 @@ exports.getMahasiswaBookingHistory = async ({ user }) => {
       : new Date(row.tanggal) < new Date().setHours(0, 0, 0, 0)
         ? 'selesai'
         : 'Dipesan',
-    keterangan:      row.keterangan || null,
-    booking_id:      row.booking_id,
-    mahasiswa_agenda: row.mahasiswa_agenda || null
+    keterangan_jadwal:  row.keterangan_jadwal || null,
+    keterangan_dosen:   row.keterangan_dosen || null,
+    booking_id:         row.booking_id,
+    mahasiswa_agenda:   row.mahasiswa_agenda || null
   }));
 };
