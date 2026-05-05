@@ -324,3 +324,22 @@ exports.getDocumentStats = async () => {
   );
   return result.rows[0];
 };
+
+// ================= GET RIWAYAT BIMBINGAN BY MAHASISWA ID (ADMIN) =================
+exports.getRiwayatBimbinganAdmin = async (mahasiswaId) => {
+  const result = await db.query(
+    `SELECT b.id          AS booking_id,
+            j.tanggal,
+            j.waktu_mulai,
+            j.waktu_selesai,
+            b.catatan     AS agenda,
+            b.status      AS booking_status,
+            b.keterangan  AS keterangan_dosen
+     FROM booking_bimbingan b
+     JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+     WHERE b.mahasiswa_id = $1
+     ORDER BY j.tanggal DESC, j.waktu_mulai DESC`,
+    [mahasiswaId]
+  );
+  return result.rows;
+};
