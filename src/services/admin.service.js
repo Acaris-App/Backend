@@ -483,3 +483,50 @@ exports.deleteDocumentAdmin = async ({ user, documentId }) => {
   await documentRepository.deleteDocumentAdmin(documentId);
   await deleteFromGCS(existing.file_path);
 };
+
+// ================= GET RIWAYAT BIMBINGAN (ADMIN) =================
+exports.getRiwayatBimbinganAdmin = async ({ user, mahasiswaId }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: 'Hanya admin yang dapat mengakses endpoint ini' };
+  }
+
+  const target = await adminRepository.findUserById(mahasiswaId);
+  if (!target) throw { status: 404, message: 'Pengguna tidak ditemukan' };
+  if (target.role !== 'mahasiswa') throw { status: 400, message: 'ID yang diberikan bukan mahasiswa' };
+
+  const rows = await adminRepository.getRiwayatBimbinganAdmin(mahasiswaId);
+
+  const BULAN = [
+    'Januari','Februari','Maret','April','Mei','Juni',
+    'Juli','Agustus','September','Oktober','November','Desember'
+  ];
+
+  const now = new Date().setHours(0, 0, 0, 0);
+
+  return rows.map(row => {
+    const tanggal = new Date(row.tanggal);
+    const d = tanggal.getDate();
+    const m = BULAN[tanggal.getMonth()];
+    const y = tanggal.getFullYear();
+    const dateFormatted = `${d} ${m} ${y}`;
+    const timeFormatted = `${row.waktu_mulai.slice(0, 5)} WIB`;
+
+    let status;
+    if (row.booking_status === 'dibatalkan') {
+      status = 'dibatalkan';
+    } else if (tanggal < now) {
+      status = 'selesai';
+    } else {
+      status = 'dijadwalkan';
+    }
+
+    return {
+      id:              row.booking_id,
+      date:            dateFormatted,
+      time:            timeFormatted,
+      agenda:          row.agenda || null,
+      status,
+      keteranganDosen: row.keterangan_dosen || ''
+    };
+  });
+};
