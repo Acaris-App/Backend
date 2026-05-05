@@ -2023,6 +2023,38 @@
             },
             "description": "Hapus dokumen dari DB dan GCS. Response data: null."
           }
+        },
+        {
+          "name": "GET Riwayat Bimbingan Mahasiswa (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:id/bimbingan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id",
+                "bimbingan"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "User ID mahasiswa"
+                }
+              ]
+            },
+            "description": "Ambil riwayat bimbingan mahasiswa by userId.\nResponse: id, date (04 Mei 2026), time (10:00 WIB), agenda, status (selesai|dijadwalkan|dibatalkan), keteranganDosen"
+          }
         }
       ]
     }

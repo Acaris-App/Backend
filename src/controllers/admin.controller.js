@@ -129,3 +129,11 @@ exports.deleteDocumentAdmin = async (req, res, next) => {
     res.status(200).json({ status: 'success', message: 'Dokumen berhasil dihapus', data: null });
   } catch (err) { next(err); }
 };
+
+// ================= GET RIWAYAT BIMBINGAN MAHASISWA =================
+exports.getRiwayatBimbinganAdmin = async (req, res, next) => {
+  try {
+    const data = await adminService.getRiwayatBimbinganAdmin({ user: req.user, mahasiswaId: req.params.id });
+    res.status(200).json({ status: 'success', message: 'Berhasil mengambil data riwayat bimbingan.', data });
+  } catch (err) { next(err); }
+};

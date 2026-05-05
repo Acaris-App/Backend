@@ -36,4 +36,6 @@ router.post('/users/:userId/documents',               ...adminOnly, uploadPDF.si
 router.put('/documents/:documentId',                  ...adminOnly, uploadPDF.single('file'), adminController.updateDocumentAdmin);
 router.delete('/documents/:documentId',               ...adminOnly, adminController.deleteDocumentAdmin);
 
+router.get('/users/:id/bimbingan', ...adminOnly, adminController.getRiwayatBimbinganAdmin);
+
 module.exports = router;
