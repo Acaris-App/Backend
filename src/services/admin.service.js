@@ -456,8 +456,10 @@ exports.updateDocumentAdmin = async ({ user, documentId, body, file }) => {
 
   const updateData = {};
 
-  if (body.semester !== undefined && body.semester !== '') {
-    updateData.semester = parseInt(body.semester);
+  // semester nullable — jika dikirim string kosong atau null, set null
+  if (body.semester !== undefined) {
+    const raw = body.semester;
+    updateData.semester = (raw === '' || raw === null) ? null : parseInt(raw);
   }
 
   if (file) {
@@ -529,7 +531,7 @@ exports.getRiwayatBimbinganAdmin = async ({ user, mahasiswaId }) => {
       time:            timeFormatted,
       agenda:          row.agenda || null,
       status,
-      keteranganDosen: row.keterangan_dosen || ''
+      keterangan:      row.keterangan_dosen || null
     };
   });
 };

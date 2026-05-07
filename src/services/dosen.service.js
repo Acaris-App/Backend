@@ -90,7 +90,7 @@ exports.getRiwayatBimbingan = async ({ user, mahasiswaId }) => {
       time,
       agenda:           row.agenda || null,
       status,
-      keterangan_dosen: row.keterangan_dosen || null
+      keterangan:       row.keterangan_dosen || null
     };
   });
 };
