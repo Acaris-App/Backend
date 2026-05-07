@@ -504,22 +504,18 @@ exports.getMahasiswaBookingHistory = async ({ user }) => {
   const rows = await scheduleRepository.getBookingHistoryMahasiswa(user.id);
 
   return rows.map(row => ({
-    id:              row.jadwal_id,
-    dosen_id:        null,
-    dosen_name:      row.nama_dosen || null,
-    date:            row.tanggal,
-    start_time:      row.waktu_mulai,
-    end_time:        row.waktu_selesai,
-    quota:           row.kuota,
-    remaining_quota: row.kuota_tersisa,
-    status:          row.booking_status === 'dibatalkan'
+    id:               row.booking_id,
+    jadwal_id:        row.jadwal_id,
+    dosen_name:       row.nama_dosen || null,
+    date:             row.tanggal,
+    start_time:       row.waktu_mulai,
+    end_time:         row.waktu_selesai,
+    status:           row.booking_status === 'dibatalkan'
       ? 'dibatalkan'
       : new Date(row.tanggal) < new Date().setHours(0, 0, 0, 0)
         ? 'selesai'
-        : 'Dipesan',
-    keterangan_jadwal:  row.keterangan_jadwal || null,
-    keterangan_dosen:   row.keterangan_dosen || null,
-    booking_id:         row.booking_id,
-    mahasiswa_agenda:   row.mahasiswa_agenda || null
+        : 'dijadwalkan',
+    keterangan:       row.keterangan || null,
+    agenda:           row.mahasiswa_agenda || null
   }));
 };
