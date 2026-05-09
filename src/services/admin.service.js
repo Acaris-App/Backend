@@ -614,3 +614,11 @@ exports.getRiwayatBimbinganAdmin = async ({ user, mahasiswaId }) => {
     };
   });
 };
+
+// ================= GET ALL KODE KELAS =================
+exports.getAllKodeKelas = async ({ user }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: 'Hanya admin yang dapat mengakses endpoint ini' };
+  }
+  return await adminRepository.getAllKodeKelas();
+};

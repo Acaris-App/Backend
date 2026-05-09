@@ -137,3 +137,11 @@ exports.getRiwayatBimbinganAdmin = async (req, res, next) => {
     res.status(200).json({ status: 'success', message: 'Berhasil mengambil data riwayat bimbingan.', data });
   } catch (err) { next(err); }
 };
+
+// ================= GET ALL KODE KELAS =================
+exports.getAllKodeKelas = async (req, res, next) => {
+  try {
+    const data = await adminService.getAllKodeKelas({ user: req.user });
+    res.status(200).json({ status: 'success', message: 'Berhasil mengambil daftar kode kelas', data });
+  } catch (err) { next(err); }
+};

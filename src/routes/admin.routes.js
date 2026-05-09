@@ -38,4 +38,6 @@ router.delete('/documents/:documentId',               ...adminOnly, adminControl
 
 router.get('/users/:id/bimbingan', ...adminOnly, adminController.getRiwayatBimbinganAdmin);
 
+router.get('/classes', ...adminOnly, adminController.getAllKodeKelas);
+
 module.exports = router;

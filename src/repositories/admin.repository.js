@@ -382,3 +382,14 @@ exports.updateKodeKelas = async (userId, role, kode_kelas) => {
     );
   }
 };
+
+// ================= GET ALL KODE KELAS =================
+exports.getAllKodeKelas = async () => {
+  const result = await db.query(
+    `SELECT DISTINCT kode_kelas
+     FROM dosen_pa
+     WHERE kode_kelas IS NOT NULL AND kode_kelas <> ''
+     ORDER BY kode_kelas ASC`
+  );
+  return result.rows.map(r => r.kode_kelas);
+};

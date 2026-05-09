@@ -2055,6 +2055,29 @@
             },
             "description": "Ambil riwayat bimbingan mahasiswa by userId.\nResponse: id, date (04 Mei 2026), time (10:00 WIB), agenda, status (selesai|dijadwalkan|dibatalkan), keteranganDosen"
           }
+        },
+        {
+          "name": "GET Daftar Kode Kelas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/classes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "classes"
+              ]
+            },
+            "description": "Ambil semua kode kelas unik dari tabel dosen_pa.\nDigunakan untuk dropdown Edit Mahasiswa di sisi Admin.\nResponse: { status, message, data: [\"TI-A\", \"TI-B\", ...] }"
+          }
         }
       ]
     }
