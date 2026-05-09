@@ -217,14 +217,11 @@ exports.findUserByNpm = async (npm_nip) => {
 
 // ================= CREATE ADMIN =================
 exports.createAdmin = async (data) => {
-  // Generate npm_nip unik: ADM-<timestamp> agar tidak duplicate (UNIQUE constraint)
-  const uniqueIdentifier = `ADM-${Date.now()}`;
-
   const result = await db.query(
-    `INSERT INTO users (name, email, password, role, npm_nip, is_verified)
-     VALUES ($1, $2, $3, 'admin', $4, TRUE)
+    `INSERT INTO users (name, email, password, role, npm_nip, profile_picture, is_verified)
+     VALUES ($1, $2, $3, 'admin', $4, $5, TRUE)
      RETURNING *`,
-    [data.name, data.email, data.password, uniqueIdentifier]
+    [data.name, data.email, data.password, data.identifier, data.profile_picture || null]
   );
   return result.rows[0];
 };
@@ -246,6 +243,10 @@ exports.updateUser = async (userId, data) => {
   if (data.npm_nip !== undefined) {
     fields.push(`npm_nip = $${idx++}`);
     values.push(data.npm_nip);
+  }
+  if (data.profile_picture !== undefined) {
+    fields.push(`profile_picture = $${idx++}`);
+    values.push(data.profile_picture);
   }
 
   if (fields.length === 0) return null;
@@ -342,4 +343,42 @@ exports.getRiwayatBimbinganAdmin = async (mahasiswaId) => {
     [mahasiswaId]
   );
   return result.rows;
+};
+
+// ================= UPDATE MAHASISWA DATA (ADMIN) =================
+exports.updateMahasiswaData = async (userId, data) => {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+
+  if (data.angkatan !== undefined) {
+    fields.push(`angkatan = $${idx++}`);
+    values.push(data.angkatan);
+  }
+  if (data.current_semester !== undefined) {
+    fields.push(`current_semester = $${idx++}`);
+    values.push(data.current_semester);
+  }
+  if (data.ipk !== undefined) {
+    fields.push(`ipk = $${idx++}`);
+    values.push(data.ipk);
+  }
+
+  if (fields.length === 0) return;
+
+  values.push(userId);
+  await db.query(
+    `UPDATE mahasiswa SET ${fields.join(', ')} WHERE user_id = $${idx}`,
+    values
+  );
+};
+
+// ================= UPDATE KODE KELAS (ADMIN) =================
+exports.updateKodeKelas = async (userId, role, kode_kelas) => {
+  if (role === 'dosen') {
+    await db.query(
+      `UPDATE dosen_pa SET kode_kelas = $1 WHERE user_id = $2`,
+      [kode_kelas, userId]
+    );
+  }
 };

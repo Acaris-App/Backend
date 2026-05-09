@@ -198,6 +198,27 @@ const formatUser = (r) => ({
   total_mahasiswa:     r.role === 'dosen' ? parseInt(r.total_mahasiswa) : null
 });
 
+// ================= HELPER GCS UPLOAD (profile picture) =================
+const uploadProfilePicture = async (file, userId) => {
+  const ext = file.originalname.split('.').pop().toLowerCase();
+  const filename = `profile-pictures/${userId}-${Date.now()}.${ext}`;
+  const blob = bucket.file(filename);
+
+  const blobStream = blob.createWriteStream({
+    resumable: false,
+    contentType: file.mimetype
+  });
+
+  return new Promise((resolve, reject) => {
+    blobStream.on('finish', () => {
+      resolve(`https://storage.googleapis.com/${bucket.name}/${filename}`);
+    });
+    blobStream.on('error', reject);
+    blobStream.end(file.buffer);
+  });
+};
+
+// ================= HELPER GCS UPLOAD (profile picture) =================
 // ================= GET ALL USERS =================
 exports.getAllUsers = async ({ user, query }) => {
   if (!user || user.role !== 'admin') {
@@ -237,66 +258,116 @@ exports.getAllUsers = async ({ user, query }) => {
 };
 
 // ================= TAMBAH ADMIN =================
-exports.createAdmin = async ({ user, body }) => {
+exports.createAdmin = async ({ user, body, file }) => {
   if (!user || user.role !== 'admin') {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
   }
 
-  const { name, email, password } = body;
+  const { name, email, password, identifier } = body;
 
-  if (!name || !email || !password) {
-    throw { status: 400, message: "name, email, dan password wajib diisi" };
+  if (!name || !email || !password || !identifier) {
+    throw { status: 400, message: "name, email, password, dan identifier wajib diisi" };
   }
 
-  const existing = await adminRepository.findUserByEmail(email);
-  if (existing) throw { status: 400, message: "Email sudah digunakan" };
+  if (password.length < 6) {
+    throw { status: 400, message: "Password minimal 6 karakter" };
+  }
+
+  const existingEmail = await adminRepository.findUserByEmail(email);
+  if (existingEmail) throw { status: 400, message: "Email sudah terdaftar pada akun lain." };
+
+  const existingNip = await adminRepository.findUserByNpm(identifier.trim());
+  if (existingNip) throw { status: 400, message: "Identifier sudah terdaftar pada akun lain." };
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  let profile_picture_url = null;
+  if (file) {
+    profile_picture_url = await uploadProfilePicture(file, 'tmp');
+  }
+
   const created = await adminRepository.createAdmin({
-    name: name.trim(),
-    email: email.trim(),
-    password: hashedPassword
+    name:            name.trim(),
+    email:           email.trim(),
+    password:        hashedPassword,
+    identifier:      identifier.trim(),
+    profile_picture: profile_picture_url
   });
+
+  // Update GCS path pakai ID yang benar jika ada foto
+  if (file && profile_picture_url) {
+    const ext = file.originalname.split('.').pop().toLowerCase();
+    const newFilename = `profile-pictures/${created.id}-${Date.now()}.${ext}`;
+    const blob = bucket.file(newFilename);
+    const blobStream = blob.createWriteStream({ resumable: false, contentType: file.mimetype });
+    await new Promise((resolve, reject) => {
+      blobStream.on('finish', resolve);
+      blobStream.on('error', reject);
+      blobStream.end(file.buffer);
+    });
+    const newUrl = `https://storage.googleapis.com/${bucket.name}/${newFilename}`;
+    await adminRepository.updateUser(created.id, { profile_picture: newUrl });
+    await deleteFromGCS(profile_picture_url);
+  }
 
   const full = await adminRepository.findUserById(created.id);
   return formatUser(full);
 };
 
 // ================= EDIT USER =================
-exports.updateUser = async ({ user, userId, body }) => {
+exports.updateUser = async ({ user, userId, body, file }) => {
   if (!user || user.role !== 'admin') {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
   }
 
-  const { name, email, identifier } = body;
+  const { name, email, identifier, angkatan, current_semester, dosen_pa, kode_kelas, ipk } = body;
 
-  if (!name && !email && !identifier) {
-    throw { status: 400, message: "Tidak ada data yang dikirim" };
+  if (!name || !email || !identifier) {
+    throw { status: 400, message: "name, email, dan identifier wajib diisi" };
   }
 
   const target = await adminRepository.findUserById(userId);
   if (!target) throw { status: 404, message: "User tidak ditemukan" };
 
-  if (email) {
-    const existing = await adminRepository.findUserByEmail(email);
-    if (existing && existing.id !== parseInt(userId)) {
-      throw { status: 400, message: "Email sudah digunakan" };
-    }
+  const existingEmail = await adminRepository.findUserByEmail(email);
+  if (existingEmail && existingEmail.id !== parseInt(userId)) {
+    throw { status: 400, message: "Email sudah terdaftar pada akun lain." };
   }
 
-  if (identifier) {
-    const existing = await adminRepository.findUserByNpm(identifier);
-    if (existing && existing.id !== parseInt(userId)) {
-      throw { status: 400, message: "Identifier sudah digunakan" };
-    }
+  const existingNpm = await adminRepository.findUserByNpm(identifier);
+  if (existingNpm && existingNpm.id !== parseInt(userId)) {
+    throw { status: 400, message: "Identifier sudah terdaftar pada akun lain." };
+  }
+
+  // Handle profile picture
+  let profile_picture = undefined;
+  if (file) {
+    const newUrl = await uploadProfilePicture(file, userId);
+    if (target.profile_picture) await deleteFromGCS(target.profile_picture);
+    profile_picture = newUrl;
   }
 
   await adminRepository.updateUser(userId, {
-    name:    name    ? name.trim()    : undefined,
-    email:   email   ? email.trim()   : undefined,
-    npm_nip: identifier ? identifier.trim() : undefined
+    name:            name.trim(),
+    email:           email.trim(),
+    npm_nip:         identifier.trim(),
+    profile_picture
   });
+
+  // Update data mahasiswa jika ada
+  if (target.role === 'mahasiswa') {
+    await adminRepository.updateMahasiswaData(userId, {
+      angkatan:        angkatan        ? parseInt(angkatan)        : undefined,
+      current_semester: current_semester ? parseInt(current_semester) : undefined,
+      ipk:             ipk !== undefined && ipk !== '' ? parseFloat(ipk) : undefined,
+      dosen_pa_name:   dosen_pa        ? dosen_pa.trim()           : undefined,
+    });
+  }
+
+  // Update kode_kelas di dosen_pa jika ada
+  if (kode_kelas !== undefined) {
+    await adminRepository.updateKodeKelas(userId, target.role, kode_kelas.trim());
+  }
 
   const updated = await adminRepository.findUserById(userId);
   return formatUser(updated);

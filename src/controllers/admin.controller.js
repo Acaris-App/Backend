@@ -58,14 +58,14 @@ exports.getAllUsers = async (req, res, next) => {
 
 exports.createAdmin = async (req, res, next) => {
   try {
-    const result = await adminService.createAdmin({ user: req.user, body: req.body });
+    const result = await adminService.createAdmin({ user: req.user, body: req.body, file: req.file });
     res.status(201).json({ status: "success", message: "Admin berhasil ditambahkan", data: result });
   } catch (err) { next(err); }
 };
 
 exports.updateUser = async (req, res, next) => {
   try {
-    const result = await adminService.updateUser({ user: req.user, userId: req.params.id, body: req.body });
+    const result = await adminService.updateUser({ user: req.user, userId: req.params.id, body: req.body, file: req.file });
     res.json({ status: "success", message: "Data pengguna berhasil diperbarui", data: result });
   } catch (err) { next(err); }
 };
