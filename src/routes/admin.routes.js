@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { authenticate } = require('../middlewares/auth.middleware');
 const { authorize } = require('../middlewares/role.middleware');
-const { uploadPDF, uploadPDFLarge } = require('../config/multer');
+const { uploadPDF, uploadPDFLarge, uploadImage } = require('../config/multer');
 const adminController = require('../controllers/admin.controller');
 
 const adminOnly = [authenticate, authorize('admin')];
@@ -18,9 +18,9 @@ router.delete('/knowledge-base/:id', ...adminOnly, adminController.deleteKnowled
 
 router.get('/users', ...adminOnly, adminController.getAllUsers);
 
-router.post('/users/admin', ...adminOnly, adminController.createAdmin);
+router.post('/users/admin', ...adminOnly, uploadImage.single('profile_picture'), adminController.createAdmin);
 
-router.put('/users/:id', ...adminOnly, adminController.updateUser);
+router.put('/users/:id', ...adminOnly, uploadImage.single('profile_picture'), adminController.updateUser);
 
 router.patch('/users/:id/status', ...adminOnly, adminController.updateUserStatus);
 

@@ -263,6 +263,10 @@ exports.createAdmin = async ({ user, body, file }) => {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
   }
 
+  if (!body || typeof body !== 'object') {
+    throw { status: 400, message: "Request body tidak terbaca. Pastikan Content-Type multipart/form-data dikirim dengan benar." };
+  }
+
   const { name, email, password, identifier } = body;
 
   if (!name || !email || !password || !identifier) {
@@ -318,6 +322,10 @@ exports.createAdmin = async ({ user, body, file }) => {
 exports.updateUser = async ({ user, userId, body, file }) => {
   if (!user || user.role !== 'admin') {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
+  }
+
+  if (!body || typeof body !== 'object') {
+    throw { status: 400, message: "Request body tidak terbaca. Pastikan Content-Type multipart/form-data dikirim dengan benar." };
   }
 
   const { name, email, identifier, angkatan, current_semester, dosen_pa, kode_kelas, ipk } = body;
