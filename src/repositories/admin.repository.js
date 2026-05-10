@@ -363,6 +363,10 @@ exports.updateMahasiswaData = async (userId, data) => {
     fields.push(`ipk = $${idx++}`);
     values.push(data.ipk);
   }
+  if (data.dosen_pa_id !== undefined) {
+    fields.push(`dosen_pa_id = $${idx++}`);
+    values.push(data.dosen_pa_id);
+  }
 
   if (fields.length === 0) return;
 
@@ -381,6 +385,33 @@ exports.updateKodeKelas = async (userId, role, kode_kelas) => {
       [kode_kelas, userId]
     );
   }
+};
+
+// ================= FIND DOSEN PA BY KODE KELAS (ADMIN) =================
+exports.findDosenPaByKode = async (kode_kelas) => {
+  const result = await db.query(
+    `SELECT dp.user_id, u.name
+     FROM dosen_pa dp
+     JOIN users u ON u.id = dp.user_id
+     WHERE dp.kode_kelas = $1
+     LIMIT 1`,
+    [kode_kelas]
+  );
+  return result.rows[0];
+};
+
+// ================= CANCEL PENDING BOOKINGS (ganti dosen PA) =================
+exports.cancelPendingBookings = async (mahasiswaId, oldDosenPaId) => {
+  await db.query(
+    `UPDATE booking_bimbingan b
+     SET status = 'dibatalkan'
+     FROM jadwal_bimbingan j
+     WHERE b.jadwal_id = j.id
+       AND b.mahasiswa_id = $1
+       AND j.dosen_id = $2
+       AND b.status NOT IN ('selesai', 'dibatalkan')`,
+    [mahasiswaId, oldDosenPaId]
+  );
 };
 
 // ================= GET ALL KODE KELAS =================

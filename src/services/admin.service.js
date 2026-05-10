@@ -362,19 +362,38 @@ exports.updateUser = async ({ user, userId, body, file }) => {
     profile_picture
   });
 
-  // Update data mahasiswa jika ada
+  // Update data mahasiswa
   if (target.role === 'mahasiswa') {
-    await adminRepository.updateMahasiswaData(userId, {
-      angkatan:        angkatan        ? parseInt(angkatan)        : undefined,
+    const mahasiswaUpdate = {
+      angkatan:         angkatan         ? parseInt(angkatan)         : undefined,
       current_semester: current_semester ? parseInt(current_semester) : undefined,
-      ipk:             ipk !== undefined && ipk !== '' ? parseFloat(ipk) : undefined,
-      dosen_pa_name:   dosen_pa        ? dosen_pa.trim()           : undefined,
-    });
+      ipk:              ipk !== undefined && ipk !== '' ? parseFloat(ipk) : undefined,
+    };
+
+    // Resolve kode_kelas → dosen_pa_id
+    if (kode_kelas !== undefined && kode_kelas !== '') {
+      const dosenPa = await adminRepository.findDosenPaByKode(kode_kelas.trim());
+      if (!dosenPa) {
+        throw { status: 400, message: `Kode kelas '${kode_kelas}' tidak ditemukan` };
+      }
+
+      const oldDosenPaId = target.dosen_pa_id || null;
+      const newDosenPaId = dosenPa.user_id;
+
+      // Jika dosen PA berubah → cancel semua booking pending ke dosen lama
+      if (oldDosenPaId && oldDosenPaId !== newDosenPaId) {
+        await adminRepository.cancelPendingBookings(userId, oldDosenPaId);
+      }
+
+      mahasiswaUpdate.dosen_pa_id = newDosenPaId;
+    }
+
+    await adminRepository.updateMahasiswaData(userId, mahasiswaUpdate);
   }
 
-  // Update kode_kelas di dosen_pa jika ada
-  if (kode_kelas !== undefined) {
-    await adminRepository.updateKodeKelas(userId, target.role, kode_kelas.trim());
+  // Update kode_kelas untuk dosen
+  if (target.role === 'dosen' && kode_kelas !== undefined) {
+    await adminRepository.updateKodeKelas(userId, 'dosen', kode_kelas.trim());
   }
 
   const updated = await adminRepository.findUserById(userId);
