@@ -386,10 +386,14 @@ exports.updateKodeKelas = async (userId, role, kode_kelas) => {
 // ================= GET ALL KODE KELAS =================
 exports.getAllKodeKelas = async () => {
   const result = await db.query(
-    `SELECT DISTINCT kode_kelas
-     FROM dosen_pa
-     WHERE kode_kelas IS NOT NULL AND kode_kelas <> ''
-     ORDER BY kode_kelas ASC`
+    `SELECT dp.kode_kelas, u.name AS dosen_pa
+     FROM dosen_pa dp
+     JOIN users u ON u.id = dp.user_id
+     WHERE dp.kode_kelas IS NOT NULL AND dp.kode_kelas <> ''
+     ORDER BY dp.kode_kelas ASC`
   );
-  return result.rows.map(r => r.kode_kelas);
+  return result.rows.map(r => ({
+    kode_kelas: r.kode_kelas,
+    dosen_pa:   r.dosen_pa || null
+  }));
 };

@@ -113,7 +113,7 @@ exports.login = async ({ email, password, ip }) => {
   }
 
   if (!user.is_verified) {
-    throw { status: 403, message: "Akun belum diverifikasi, silakan cek email untuk OTP" };
+    throw { status: 403, message: "Akun Anda nonaktif, silakan hubungi admin." };
   }
 
   const profileData = await buildProfileData(user);

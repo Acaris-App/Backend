@@ -420,15 +420,11 @@ exports.deleteUser = async ({ user, userId }) => {
   }
 
   if (user.id === parseInt(userId)) {
-    throw { status: 400, message: "Admin tidak dapat menghapus akunnya sendiri" };
+    throw { status: 400, message: "Tidak dapat menghapus akun Anda sendiri" };
   }
 
   const target = await adminRepository.findUserById(userId);
   if (!target) throw { status: 404, message: "User tidak ditemukan" };
-
-  if (target.role === 'admin') {
-    throw { status: 400, message: "Tidak dapat menghapus akun admin lain" };
-  }
 
   await adminRepository.deleteUser(userId);
 };
