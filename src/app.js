@@ -1,14 +1,16 @@
+// ✅ FIX: path dotenv sebelumnya terbalik — local load production, production load local
 require('dotenv').config({
   path: process.env.NODE_ENV === 'production'
     ? '.env.production'
     : '.env.local'
 });
 
-// Nonaktifkan email job worker di dev jika DISABLE_QUEUE=true
+// 🚧 DEV MODE: Skip load email job worker jika DISABLE_QUEUE=true
+// Ini mencegah Bull Queue connect ke Upstash dan spam polling
 if (process.env.DISABLE_QUEUE !== 'true') {
   require('./jobs/email.job');
 } else {
-  console.log('[DEV] Email job worker dinonaktifkan');
+  console.log('📭 [DEV MODE] Email job worker dinonaktifkan (DISABLE_QUEUE=true)');
 }
 
 const express = require('express');
@@ -27,7 +29,8 @@ const userRoutes = require('./routes/user.routes');
 const documentRoutes = require('./routes/document.routes');
 const scheduleRoutes = require('./routes/schedule.routes');
 const dosenRoutes = require('./routes/dosen.routes');
-const adminRoutes = require('./routes/admin.routes');
+const adminRoutes    = require('./routes/admin.routes');
+const mahasiswaRoutes = require('./routes/mahasiswa.routes');
 
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
@@ -35,6 +38,7 @@ app.use('/document', documentRoutes);
 app.use('/schedule', scheduleRoutes);
 app.use('/dosen', dosenRoutes);
 app.use('/admin', adminRoutes);
+app.use('/mahasiswa', mahasiswaRoutes);
 
 // ================= ERROR HANDLER =================
 app.use(errorHandler);
