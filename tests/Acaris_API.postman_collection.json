@@ -1293,6 +1293,29 @@
       "name": "Dosen — Monitoring Mahasiswa",
       "item": [
         {
+          "name": "GET Dashboard Dosen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dosen/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dosen",
+                "dashboard"
+              ]
+            },
+            "description": "Dashboard dosen. Role: dosen only.\n\nResponse fields:\n- nama_dosen, foto_dosen, kode_kelas\n- jumlah_mahasiswa_bimbingan, bimbingan_hari_ini, bimbingan_semester_ini (semua int)\n- jadwal_minggu_ini: jadwal 7 hari ke depan, tiap item punya array mahasiswa []\n- kalender_bimbingan: [{date YYYY-MM-DD, status: booked|available}]"
+          }
+        },
+        {
           "name": "GET Daftar Mahasiswa Bimbingan",
           "request": {
             "method": "GET",

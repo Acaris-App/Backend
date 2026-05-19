@@ -20,4 +20,7 @@ router.get('/mahasiswa/:mahasiswaId/history-bimbingan', ...dosenOnly, dosenContr
 // PATCH /dosen/bimbingan/:bookingId/keterangan — isi catatan/feedback dosen
 router.patch('/bimbingan/:bookingId/keterangan', ...dosenOnly, dosenController.updateKeteranganDosen);
 
+// GET /dosen/dashboard
+router.get('/dashboard', ...dosenOnly, dosenController.getDashboard);
+
 module.exports = router;

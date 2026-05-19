@@ -37,8 +37,7 @@ exports.getRiwayatBimbingan = async (mahasiswaId, dosenId) => {
     `SELECT b.id AS booking_id,
             j.tanggal, j.waktu_mulai, j.waktu_selesai,
             b.catatan AS agenda,
-            b.status AS booking_status,
-            j.keterangan AS keterangan_dosen
+            b.status AS booking_status
      FROM booking_bimbingan b
      JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
      WHERE b.mahasiswa_id = $1
@@ -62,4 +61,128 @@ exports.updateKeteranganDosen = async (bookingId, dosenId, keterangan) => {
     [keterangan, bookingId, dosenId]
   );
   return result.rows[0];
+};
+
+// ================= DASHBOARD DATA =================
+exports.getDashboardProfile = async (dosenId) => {
+  const result = await db.query(`
+    SELECT
+      u.name              AS nama_dosen,
+      u.profile_picture   AS foto_dosen,
+      dp.kode_kelas
+    FROM users u
+    LEFT JOIN dosen_pa dp ON dp.user_id = u.id
+    WHERE u.id = $1
+  `, [dosenId]);
+  return result.rows[0];
+};
+
+// ================= HITUNG MAHASISWA BIMBINGAN =================
+exports.countMahasiswaBimbingan = async (dosenId) => {
+  const result = await db.query(`
+    SELECT COUNT(*) AS total
+    FROM mahasiswa
+    WHERE dosen_pa_id = $1
+  `, [dosenId]);
+  return parseInt(result.rows[0].total) || 0;
+};
+
+// ================= HITUNG BIMBINGAN HARI INI =================
+exports.countBimbinganHariIni = async (dosenId) => {
+  const result = await db.query(`
+    SELECT COUNT(*) AS total
+    FROM booking_bimbingan b
+    JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+    WHERE j.dosen_id = $1
+      AND j.tanggal = CURRENT_DATE
+      AND b.status NOT IN ('dibatalkan')
+  `, [dosenId]);
+  return parseInt(result.rows[0].total) || 0;
+};
+
+// ================= HITUNG BIMBINGAN SEMESTER INI =================
+exports.countBimbinganSemesterIni = async (dosenId) => {
+  const result = await db.query(`
+    SELECT COUNT(*) AS total
+    FROM booking_bimbingan b
+    JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+    WHERE j.dosen_id = $1
+      AND b.status NOT IN ('dibatalkan')
+      AND EXTRACT(YEAR  FROM j.tanggal) = EXTRACT(YEAR  FROM NOW())
+      AND EXTRACT(MONTH FROM j.tanggal) BETWEEN
+          CASE WHEN EXTRACT(MONTH FROM NOW()) >= 8 THEN 8 ELSE 2 END
+          AND
+          CASE WHEN EXTRACT(MONTH FROM NOW()) >= 8 THEN 12 ELSE 7 END
+  `, [dosenId]);
+  return parseInt(result.rows[0].total) || 0;
+};
+
+// ================= JADWAL MINGGU INI (+ booking mahasiswanya) =================
+exports.getJadwalMingguIni = async (dosenId) => {
+  // Ambil jadwal 7 hari ke depan dari hari ini
+  const jadwalResult = await db.query(`
+    SELECT
+      j.id,
+      j.tanggal         AS date,
+      j.waktu_mulai     AS start_time,
+      j.waktu_selesai   AS end_time,
+      j.keterangan,
+      j.kuota_tersisa
+    FROM jadwal_bimbingan j
+    WHERE j.dosen_id = $1
+      AND j.tanggal >= CURRENT_DATE
+      AND j.tanggal <= CURRENT_DATE + INTERVAL '7 days'
+    ORDER BY j.tanggal ASC, j.waktu_mulai ASC
+  `, [dosenId]);
+
+  if (jadwalResult.rows.length === 0) return [];
+
+  const jadwalIds = jadwalResult.rows.map(r => r.id);
+
+  // Ambil semua booking untuk jadwal tersebut sekaligus
+  const bookingResult = await db.query(`
+    SELECT
+      b.jadwal_id,
+      u.name        AS nama,
+      u.npm_nip     AS npm,
+      b.catatan     AS agenda
+    FROM booking_bimbingan b
+    JOIN users u ON u.id = b.mahasiswa_id
+    WHERE b.jadwal_id = ANY($1)
+      AND b.status NOT IN ('dibatalkan')
+    ORDER BY b.created_at ASC
+  `, [jadwalIds]);
+
+  // Kelompokkan booking by jadwal_id
+  const bookingMap = {};
+  for (const row of bookingResult.rows) {
+    if (!bookingMap[row.jadwal_id]) bookingMap[row.jadwal_id] = [];
+    bookingMap[row.jadwal_id].push({
+      nama:   row.nama,
+      npm:    row.npm,
+      agenda: row.agenda || null,
+    });
+  }
+
+  return jadwalResult.rows.map(j => ({
+    ...j,
+    mahasiswa: bookingMap[j.id] || [],
+  }));
+};
+
+// ================= KALENDER BIMBINGAN DOSEN =================
+exports.getKalenderBimbingan = async (dosenId) => {
+  const result = await db.query(`
+    SELECT DISTINCT
+      j.tanggal     AS date,
+      CASE
+        WHEN j.kuota_tersisa = 0        THEN 'booked'
+        WHEN j.kuota_tersisa > 0        THEN 'available'
+        ELSE 'available'
+      END           AS status
+    FROM jadwal_bimbingan j
+    WHERE j.dosen_id = $1
+    ORDER BY j.tanggal ASC
+  `, [dosenId]);
+  return result.rows;
 };

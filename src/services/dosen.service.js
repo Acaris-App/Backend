@@ -82,6 +82,7 @@ exports.getRiwayatBimbingan = async ({ user, mahasiswaId }) => {
       status = 'menunggu';
     }
 
+    // Format time: "09:00 - 10:00"
     const time = `${row.waktu_mulai.slice(0, 5)} - ${row.waktu_selesai.slice(0, 5)}`;
 
     return {
@@ -90,7 +91,7 @@ exports.getRiwayatBimbingan = async ({ user, mahasiswaId }) => {
       time,
       agenda:           row.agenda || null,
       status,
-      keterangan:       row.keterangan_dosen || null
+      keterangan_dosen: ""
     };
   });
 };
@@ -114,4 +115,57 @@ exports.updateKeteranganDosen = async ({ user, bookingId, body }) => {
   }
 
   return { message: "Keterangan berhasil diperbarui" };
+};
+
+// ================= DASHBOARD =================
+exports.getDashboard = async ({ user }) => {
+  if (!user || user.role !== 'dosen') {
+    throw { status: 403, message: 'Hanya dosen yang dapat mengakses endpoint ini' };
+  }
+
+  const dosenId = user.id;
+
+  const [profile, jumlahMahasiswa, bimbinganHariIni, bimbinganSemester, jadwalMingguIni, kalender] =
+    await Promise.all([
+      dosenRepository.getDashboardProfile(dosenId),
+      dosenRepository.countMahasiswaBimbingan(dosenId),
+      dosenRepository.countBimbinganHariIni(dosenId),
+      dosenRepository.countBimbinganSemesterIni(dosenId),
+      dosenRepository.getJadwalMingguIni(dosenId),
+      dosenRepository.getKalenderBimbingan(dosenId),
+    ]);
+
+  if (!profile) throw { status: 404, message: 'Data dosen tidak ditemukan' };
+
+  // Format jadwal minggu ini
+  const jadwalFormatted = jadwalMingguIni.map(j => {
+    const dateStr = new Date(j.date).toISOString().split('T')[0];
+    const status  = j.mahasiswa.length > 0 ? 'booked' : 'available';
+    return {
+      id:          j.id,
+      date:        dateStr,
+      start_time:  j.start_time?.slice(0, 5) || null,
+      end_time:    j.end_time?.slice(0, 5) || null,
+      status,
+      keterangan:  j.keterangan || null,
+      mahasiswa:   j.mahasiswa,
+    };
+  });
+
+  // Format kalender
+  const kalenderFormatted = kalender.map(row => ({
+    date:   new Date(row.date).toISOString().split('T')[0],
+    status: row.status,
+  }));
+
+  return {
+    nama_dosen:                  profile.nama_dosen || null,
+    foto_dosen:                  profile.foto_dosen || null,
+    kode_kelas:                  profile.kode_kelas || null,
+    jumlah_mahasiswa_bimbingan:  jumlahMahasiswa,
+    bimbingan_hari_ini:          bimbinganHariIni,
+    bimbingan_semester_ini:      bimbinganSemester,
+    jadwal_minggu_ini:           jadwalFormatted,
+    kalender_bimbingan:          kalenderFormatted,
+  };
 };
