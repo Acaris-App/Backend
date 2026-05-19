@@ -8,15 +8,17 @@ exports.getDashboard = async ({ user }) => {
 
   const userId = user.id;
 
-  const [profile, bimbinganSemester, bimbinganTotal, chatbotCount, jadwalTerdekat, kalender] =
+  const [profile, bimbinganSemester, bimbinganTotal, jadwalTerdekat, kalender] =
     await Promise.all([
       mahasiswaRepository.getDashboardData(userId),
       mahasiswaRepository.countBimbinganSemesterIni(userId),
       mahasiswaRepository.countBimbinganKeseluruhan(userId),
-      mahasiswaRepository.countChatbotBulanIni(userId),
       mahasiswaRepository.getJadwalTerdekat(userId),
       mahasiswaRepository.getKalenderBimbingan(userId),
     ]);
+
+  // TODO: aktifkan setelah tabel chatbot_logs di-migrate
+  const chatbotCount = 0;
 
   if (!profile) throw { status: 404, message: 'Data mahasiswa tidak ditemukan' };
 

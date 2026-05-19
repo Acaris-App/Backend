@@ -47,15 +47,9 @@ exports.countBimbinganKeseluruhan = async (userId) => {
 };
 
 // ================= HITUNG CHATBOT BULAN INI =================
+// TODO: aktifkan setelah tabel chatbot_logs selesai dimigrasikan
 exports.countChatbotBulanIni = async (userId) => {
-  const result = await db.query(`
-    SELECT COUNT(*) AS total
-    FROM chatbot_logs
-    WHERE user_id = $1
-      AND EXTRACT(YEAR  FROM created_at) = EXTRACT(YEAR  FROM NOW())
-      AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM NOW())
-  `, [userId]);
-  return parseInt(result.rows[0].total) || 0;
+  return 0;
 };
 
 // ================= JADWAL TERDEKAT =================
