@@ -33,6 +33,12 @@ const getReplyText = (payload) => {
     }
   }
 
+  const nestedKeys = ['data', 'json', 'body', 'result'];
+  for (const key of nestedKeys) {
+    const reply = getReplyText(payload[key]);
+    if (reply) return reply;
+  }
+
   return null;
 };
 
@@ -76,7 +82,9 @@ exports.sendMessage = async ({ user, body }) => {
   const payload = {
     session_id: String(currentUser.id),
     npm_mahasiswa: currentUser.npm_nip,
-    pesan_user: pesanUser
+    pesan_user: pesanUser,
+    chatInput: pesanUser,
+    message: pesanUser
   };
 
   const controller = new AbortController();
@@ -99,7 +107,15 @@ exports.sendMessage = async ({ user, body }) => {
       throw { status: 502, message: `Gagal mendapatkan balasan chatbot: ${errorMessage}` };
     }
 
-    return normalizeResponse(responseBody);
+    const normalizedResponse = normalizeResponse(responseBody);
+    if (!normalizedResponse?.balasan_aca) {
+      throw {
+        status: 502,
+        message: 'Chatbot service tidak mengirim balasan. Pastikan workflow n8n memakai Respond to Webhook dan mengembalikan field balasan_aca/output.'
+      };
+    }
+
+    return normalizedResponse;
   } catch (err) {
     if (err.name === 'AbortError') {
       throw { status: 504, message: 'Chatbot membutuhkan waktu terlalu lama untuk merespons' };

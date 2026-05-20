@@ -1821,7 +1821,7 @@
                 "chat-bot"
               ]
             },
-            "description": "Proxy chatbot Aca via Backend utama. Role: mahasiswa only.\n\nFE cukup kirim pesan_user. Backend mengambil session_id dan npm_mahasiswa dari token/database, lalu meneruskan request ke n8n Production URL."
+            "description": "Proxy chatbot Aca via Backend utama. Role: mahasiswa only.\n\nFE cukup kirim pesan_user. Backend mengambil session_id dan npm_mahasiswa dari token/database, lalu meneruskan request ke n8n Production URL.\n\nn8n wajib mengembalikan JSON dengan salah satu field: balasan_aca, output, answer, reply, message, text, atau response."
           }
         }
       ]
