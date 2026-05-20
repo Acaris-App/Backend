@@ -31,6 +31,7 @@ const scheduleRoutes = require('./routes/schedule.routes');
 const dosenRoutes = require('./routes/dosen.routes');
 const adminRoutes    = require('./routes/admin.routes');
 const mahasiswaRoutes = require('./routes/mahasiswa.routes');
+const chatbotRoutes = require('./routes/chatbot.routes');
 
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
@@ -39,6 +40,7 @@ app.use('/schedule', scheduleRoutes);
 app.use('/dosen', dosenRoutes);
 app.use('/admin', adminRoutes);
 app.use('/mahasiswa', mahasiswaRoutes);
+app.use('/api/chat-bot', chatbotRoutes);
 
 // ================= ERROR HANDLER =================
 app.use(errorHandler);

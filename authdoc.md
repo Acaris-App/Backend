@@ -64,6 +64,11 @@ Sistem ini menggunakan pola **Clean Architecture** untuk memastikan kode mudah d
 | POST | `/document/upload` | Upload KRS/KHS (Check dependency & order). |
 | GET | `/document/check` | Cek kelengkapan dokumen tiap semester. |
 
+### 4. Chatbot
+| Method | Endpoint | Akses |
+| :--- | :--- | :--- |
+| POST | `/api/chat-bot` | Mahasiswa |
+
 ---
 
 ## ⚙️ Aturan Validasi Dokumen (Business Logic)

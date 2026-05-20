@@ -1791,6 +1791,42 @@
       ]
     },
     {
+      "name": "Chatbot",
+      "item": [
+        {
+          "name": "POST Chat Aca",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pesan_user\": \"Halo Aca, jadwal bimbingan saya kapan?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat-bot",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chat-bot"
+              ]
+            },
+            "description": "Proxy chatbot Aca via Backend utama. Role: mahasiswa only.\n\nFE cukup kirim pesan_user. Backend mengambil session_id dan npm_mahasiswa dari token/database, lalu meneruskan request ke n8n Production URL."
+          }
+        }
+      ]
+    },
+    {
       "name": "Mahasiswa",
       "item": [
         {
