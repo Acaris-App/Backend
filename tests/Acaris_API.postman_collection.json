@@ -1849,7 +1849,7 @@
                 "dashboard"
               ]
             },
-            "description": "Dashboard mahasiswa.\nRole: mahasiswa only.\n\nResponse fields:\n- nama_mahasiswa, npm_mahasiswa, foto_mahasiswa, dosen_pa, nip_dosen, foto_dosen\n- ipk (float), semester_saat_ini (int)\n- bimbingan_semester_ini (int), bimbingan_keseluruhan (int)\n- chatbot_bulan_ini (int)\n- jadwal_terdekat: { id, date (YYYY-MM-DD), start_time (HH:MM), end_time, status, mahasiswa_agenda, keterangan } | null\n- kalender_bimbingan: [{ date, status: booked|selesai }]"
+            "description": "Dashboard mahasiswa.\nRole: mahasiswa only.\n\nResponse fields:\n- nama_mahasiswa, npm_mahasiswa, foto_mahasiswa, dosen_pa, nip_dosen, foto_dosen\n- ipk (float), semester_saat_ini (int)\n- bimbingan_semester_ini (int), bimbingan_keseluruhan (int)\n- chatbot_bulan_ini (int)\n- jadwal_terdekat: [{ id, date (YYYY-MM-DD), start_time (HH:MM), end_time, status, mahasiswa_agenda, keterangan }]\n- kalender_bimbingan: [{ date, status: booked|selesai }]"
           }
         }
       ]

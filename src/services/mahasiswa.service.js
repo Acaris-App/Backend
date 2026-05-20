@@ -22,22 +22,21 @@ exports.getDashboard = async ({ user }) => {
 
   if (!profile) throw { status: 404, message: 'Data mahasiswa tidak ditemukan' };
 
-  // Format jadwal terdekat
-  let jadwalFormatted = null;
-  if (jadwalTerdekat) {
-    const tgl = new Date(jadwalTerdekat.date);
+  // Format semua jadwal bimbingan aktif yang sudah dipesan mahasiswa
+  const jadwalFormatted = jadwalTerdekat.map(row => {
+    const tgl = new Date(row.date);
     const dateStr = tgl.toISOString().split('T')[0]; // YYYY-MM-DD
 
-    jadwalFormatted = {
-      id:               jadwalTerdekat.id,
+    return {
+      id:               row.id,
       date:             dateStr,
-      start_time:       jadwalTerdekat.start_time?.slice(0, 5) || null,   // "10:00"
-      end_time:         jadwalTerdekat.end_time?.slice(0, 5) || null,
+      start_time:       row.start_time?.slice(0, 5) || null,   // "10:00"
+      end_time:         row.end_time?.slice(0, 5) || null,
       status:           'booked',
-      mahasiswa_agenda: jadwalTerdekat.mahasiswa_agenda || null,
-      keterangan:       jadwalTerdekat.keterangan || null,
+      mahasiswa_agenda: row.mahasiswa_agenda || null,
+      keterangan:       row.keterangan || null,
     };
-  }
+  });
 
   // Format kalender
   const kalenderFormatted = kalender.map(row => {

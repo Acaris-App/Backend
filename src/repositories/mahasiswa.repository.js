@@ -54,7 +54,7 @@ exports.countChatbotBulanIni = async (userId) => {
   return 0;
 };
 
-// ================= JADWAL TERDEKAT =================
+// ================= JADWAL BIMBINGAN AKTIF =================
 exports.getJadwalTerdekat = async (userId) => {
   const result = await db.query(`
     SELECT
@@ -71,9 +71,8 @@ exports.getJadwalTerdekat = async (userId) => {
       AND b.status NOT IN ('dibatalkan', 'selesai')
       AND j.tanggal >= CURRENT_DATE
     ORDER BY j.tanggal ASC, j.waktu_mulai ASC
-    LIMIT 1
   `, [userId]);
-  return result.rows[0] || null;
+  return result.rows;
 };
 
 // ================= KALENDER BIMBINGAN =================
