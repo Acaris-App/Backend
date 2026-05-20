@@ -68,6 +68,7 @@ exports.getDashboardProfile = async (dosenId) => {
   const result = await db.query(`
     SELECT
       u.name              AS nama_dosen,
+      u.npm_nip           AS nip_dosen,
       u.profile_picture   AS foto_dosen,
       dp.kode_kelas
     FROM users u

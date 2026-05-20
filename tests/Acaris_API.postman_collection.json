@@ -1312,7 +1312,7 @@
                 "dashboard"
               ]
             },
-            "description": "Dashboard dosen. Role: dosen only.\n\nResponse fields:\n- nama_dosen, foto_dosen, kode_kelas\n- jumlah_mahasiswa_bimbingan, bimbingan_hari_ini, bimbingan_semester_ini (semua int)\n- jadwal_minggu_ini: jadwal 7 hari ke depan, tiap item punya array mahasiswa []\n- kalender_bimbingan: [{date YYYY-MM-DD, status: booked|available}]"
+            "description": "Dashboard dosen. Role: dosen only.\n\nResponse fields:\n- nama_dosen, nip_dosen, foto_dosen, kode_kelas\n- jumlah_mahasiswa_bimbingan, bimbingan_hari_ini, bimbingan_semester_ini (semua int)\n- jadwal_minggu_ini: jadwal 7 hari ke depan, tiap item punya array mahasiswa []\n- kalender_bimbingan: [{date YYYY-MM-DD, status: booked|available}]"
           }
         },
         {
@@ -1813,7 +1813,7 @@
                 "dashboard"
               ]
             },
-            "description": "Dashboard mahasiswa.\nRole: mahasiswa only.\n\nResponse fields:\n- nama_mahasiswa, foto_mahasiswa, dosen_pa, foto_dosen\n- ipk (float), semester_saat_ini (int)\n- bimbingan_semester_ini (int), bimbingan_keseluruhan (int)\n- chatbot_bulan_ini (int)\n- jadwal_terdekat: { id, date (YYYY-MM-DD), start_time (HH:MM), end_time, status, mahasiswa_agenda, keterangan } | null\n- kalender_bimbingan: [{ date, status: booked|selesai }]"
+            "description": "Dashboard mahasiswa.\nRole: mahasiswa only.\n\nResponse fields:\n- nama_mahasiswa, npm_mahasiswa, foto_mahasiswa, dosen_pa, nip_dosen, foto_dosen\n- ipk (float), semester_saat_ini (int)\n- bimbingan_semester_ini (int), bimbingan_keseluruhan (int)\n- chatbot_bulan_ini (int)\n- jadwal_terdekat: { id, date (YYYY-MM-DD), start_time (HH:MM), end_time, status, mahasiswa_agenda, keterangan } | null\n- kalender_bimbingan: [{ date, status: booked|selesai }]"
           }
         }
       ]

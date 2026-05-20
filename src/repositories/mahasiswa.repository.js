@@ -5,10 +5,12 @@ exports.getDashboardData = async (userId) => {
   const result = await db.query(`
     SELECT
       u.name                AS nama_mahasiswa,
+      u.npm_nip             AS npm_mahasiswa,
       u.profile_picture     AS foto_mahasiswa,
       m.ipk,
       m.current_semester,
       pa.name               AS dosen_pa,
+      pa.npm_nip            AS nip_dosen,
       pa.profile_picture    AS foto_dosen
     FROM users u
     JOIN mahasiswa m        ON m.user_id = u.id

@@ -160,6 +160,7 @@ exports.getDashboard = async ({ user }) => {
 
   return {
     nama_dosen:                  profile.nama_dosen || null,
+    nip_dosen:                   profile.nip_dosen || null,
     foto_dosen:                  profile.foto_dosen || null,
     kode_kelas:                  profile.kode_kelas || null,
     jumlah_mahasiswa_bimbingan:  jumlahMahasiswa,

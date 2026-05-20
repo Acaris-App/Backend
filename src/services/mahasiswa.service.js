@@ -54,8 +54,10 @@ exports.getDashboard = async ({ user }) => {
 
   return {
     nama_mahasiswa:         profile.nama_mahasiswa || null,
+    npm_mahasiswa:          profile.npm_mahasiswa || null,
     foto_mahasiswa:         profile.foto_mahasiswa || null,
     dosen_pa:               profile.dosen_pa || null,
+    nip_dosen:              profile.nip_dosen || null,
     foto_dosen:             profile.foto_dosen || null,
     ipk:                    profile.ipk ? parseFloat(profile.ipk) : null,
     semester_saat_ini:      parseInt(profile.current_semester) || 0,
