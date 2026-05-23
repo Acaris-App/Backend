@@ -1,5 +1,107 @@
 const db = require('../config/db');
 
+const SEMESTER_RANGE_CTE = `
+  WITH semester_range AS (
+    SELECT
+      CASE
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) = 1
+          THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int - 1, 8, 1)
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) BETWEEN 2 AND 7
+          THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 2, 1)
+        ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 8, 1)
+      END AS start_date,
+      CASE
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) = 1
+          THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 2, 1)
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) BETWEEN 2 AND 7
+          THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 8, 1)
+        ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int + 1, 2, 1)
+      END AS end_date
+  )
+`;
+
+// ================= GET ADMIN DASHBOARD =================
+exports.getAdminDashboardProfile = async (adminId) => {
+  const result = await db.query(
+    `SELECT name AS nama_admin,
+            npm_nip AS nip_admin,
+            profile_picture AS foto_admin
+     FROM users
+     WHERE id = $1 AND role = 'admin'`,
+    [adminId]
+  );
+  return result.rows[0];
+};
+
+exports.getAdminDashboardStats = async () => {
+  const result = await db.query(`
+    ${SEMESTER_RANGE_CTE}
+    SELECT
+      (SELECT COUNT(*)
+       FROM users
+       WHERE role = 'mahasiswa'
+         AND is_verified = true) AS total_mahasiswa,
+      (SELECT COUNT(*)
+       FROM users
+       WHERE role = 'dosen'
+         AND is_verified = true) AS total_dosen,
+      (SELECT COUNT(*)
+       FROM booking_bimbingan b
+       JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+       CROSS JOIN semester_range sr
+       WHERE b.status NOT IN ('dibatalkan')
+         AND j.tanggal >= sr.start_date
+         AND j.tanggal < sr.end_date) AS total_bimbingan
+  `);
+  return result.rows[0];
+};
+
+exports.getTopDosenBimbinganSemesterIni = async () => {
+  const result = await db.query(`
+    ${SEMESTER_RANGE_CTE}
+    SELECT
+      d.name AS nama,
+      d.npm_nip AS nip,
+      COUNT(*) AS total
+    FROM booking_bimbingan b
+    JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+    JOIN users d ON d.id = j.dosen_id
+    CROSS JOIN semester_range sr
+    WHERE d.role = 'dosen'
+      AND d.is_verified = true
+      AND b.status NOT IN ('dibatalkan')
+      AND j.tanggal >= sr.start_date
+      AND j.tanggal < sr.end_date
+    GROUP BY d.id, d.name, d.npm_nip
+    ORDER BY COUNT(*) DESC, d.name ASC
+    LIMIT 5
+  `);
+  return result.rows;
+};
+
+exports.getTopMahasiswaBimbinganSemesterIni = async () => {
+  const result = await db.query(`
+    ${SEMESTER_RANGE_CTE}
+    SELECT
+      m.name AS nama,
+      m.npm_nip AS npm,
+      COUNT(*) AS total
+    FROM booking_bimbingan b
+    JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+    JOIN users m ON m.id = b.mahasiswa_id
+    CROSS JOIN semester_range sr
+    WHERE m.role = 'mahasiswa'
+      AND m.is_verified = true
+      AND b.status NOT IN ('dibatalkan')
+      AND j.tanggal >= sr.start_date
+      AND j.tanggal < sr.end_date
+    GROUP BY m.id, m.name, m.npm_nip
+    ORDER BY COUNT(*) DESC, m.name ASC
+    LIMIT 5
+  `);
+  return result.rows;
+};
+
 // ================= GET ALL KNOWLEDGE BASE =================
 exports.getAllKnowledgeBase = async (filters = {}) => {
   const conditions = [];

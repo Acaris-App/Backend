@@ -8,6 +8,8 @@ const adminController = require('../controllers/admin.controller');
 
 const adminOnly = [authenticate, authorize('admin')];
 
+router.get('/dashboard', ...adminOnly, adminController.getDashboard);
+
 router.get('/knowledge-base', ...adminOnly, adminController.getAllKnowledgeBase);
 
 router.post('/knowledge-base', ...adminOnly, uploadPDFLarge.single('file'), adminController.createKnowledgeBase);

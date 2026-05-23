@@ -1445,6 +1445,29 @@
       "name": "Admin",
       "item": [
         {
+          "name": "GET Dashboard Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard"
+              ]
+            },
+            "description": "Dashboard admin untuk ringkasan entitas aktif dan bimbingan semester ini.\n\nResponse data:\n- nama_admin, nip_admin, foto_admin\n- total_mahasiswa, total_dosen, total_bimbingan\n- total_chatbot: 0\n- top_dosen_bimbingan: maksimal 5 data\n- top_mahasiswa_bimbingan: maksimal 5 data\n- top_mahasiswa_chatbot: []"
+          }
+        },
+        {
           "name": "GET Knowledge Base",
           "request": {
             "method": "GET",

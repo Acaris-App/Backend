@@ -11,6 +11,45 @@ const VALID_CATEGORIES = [
   'KKNI'
 ];
 
+// ================= ADMIN DASHBOARD =================
+exports.getDashboard = async ({ user }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
+  }
+
+  const [profile, stats, topDosen, topMahasiswa] = await Promise.all([
+    adminRepository.getAdminDashboardProfile(user.id),
+    adminRepository.getAdminDashboardStats(),
+    adminRepository.getTopDosenBimbinganSemesterIni(),
+    adminRepository.getTopMahasiswaBimbinganSemesterIni()
+  ]);
+
+  if (!profile) {
+    throw { status: 404, message: "Data admin tidak ditemukan" };
+  }
+
+  return {
+    nama_admin: profile.nama_admin,
+    nip_admin: profile.nip_admin,
+    foto_admin: profile.foto_admin || null,
+    total_mahasiswa: parseInt(stats.total_mahasiswa) || 0,
+    total_dosen: parseInt(stats.total_dosen) || 0,
+    total_bimbingan: parseInt(stats.total_bimbingan) || 0,
+    total_chatbot: 0,
+    top_dosen_bimbingan: topDosen.map(row => ({
+      nama: row.nama,
+      nip: row.nip,
+      total: parseInt(row.total) || 0
+    })),
+    top_mahasiswa_bimbingan: topMahasiswa.map(row => ({
+      nama: row.nama,
+      npm: row.npm,
+      total: parseInt(row.total) || 0
+    })),
+    top_mahasiswa_chatbot: []
+  };
+};
+
 // ================= HELPER GCS UPLOAD =================
 const uploadToGCS = async (file, adminId) => {
   const originalName = file.originalname.replace(/\s+/g, '_');
