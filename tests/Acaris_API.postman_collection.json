@@ -1312,7 +1312,7 @@
                 "dashboard"
               ]
             },
-            "description": "Dashboard dosen. Role: dosen only.\n\nResponse fields:\n- nama_dosen, nip_dosen, foto_dosen, kode_kelas\n- jumlah_mahasiswa_bimbingan, bimbingan_hari_ini, bimbingan_semester_ini (semua int)\n- jadwal_minggu_ini: jadwal 7 hari ke depan, tiap item punya array mahasiswa []\n- kalender_bimbingan: [{date YYYY-MM-DD, status: booked|available}]"
+            "description": "Dashboard dosen. Role: dosen only.\n\nResponse fields:\n- nama_dosen, nip_dosen, foto_dosen, kode_kelas\n- jumlah_mahasiswa_bimbingan, bimbingan_hari_ini, bimbingan_semester_ini (semua int)\n- jadwal_minggu_ini: jadwal 7 hari ke depan, tiap item punya array mahasiswa []\n- kalender_bimbingan: [{date YYYY-MM-DD, status: booked|available}]\n- top_mahasiswa_bimbingan: maksimal 5 mahasiswa bimbingan dosen login, urut total bimbingan semester ini\n- top_mahasiswa_chatbot: []"
           }
         },
         {

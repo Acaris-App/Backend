@@ -1,5 +1,25 @@
 const db = require('../config/db');
 
+const SEMESTER_RANGE_CTE = `
+  WITH semester_range AS (
+    SELECT
+      CASE
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) = 1
+          THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int - 1, 8, 1)
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) BETWEEN 2 AND 7
+          THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 2, 1)
+        ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 8, 1)
+      END AS start_date,
+      CASE
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) = 1
+          THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 2, 1)
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) BETWEEN 2 AND 7
+          THEN MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 8, 1)
+        ELSE MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int + 1, 2, 1)
+      END AS end_date
+  )
+`;
+
 // ================= GET DAFTAR MAHASISWA BIMBINGAN =================
 exports.getMahasiswaBimbingan = async (dosenId) => {
   const result = await db.query(
@@ -116,6 +136,33 @@ exports.countBimbinganSemesterIni = async (dosenId) => {
           CASE WHEN EXTRACT(MONTH FROM NOW()) >= 8 THEN 12 ELSE 7 END
   `, [dosenId]);
   return parseInt(result.rows[0].total) || 0;
+};
+
+// ================= TOP MAHASISWA BIMBINGAN SEMESTER INI =================
+exports.getTopMahasiswaBimbinganSemesterIni = async (dosenId) => {
+  const result = await db.query(`
+    ${SEMESTER_RANGE_CTE}
+    SELECT
+      u.name AS nama,
+      u.npm_nip AS npm,
+      COUNT(*) AS total
+    FROM booking_bimbingan b
+    JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+    JOIN users u ON u.id = b.mahasiswa_id
+    JOIN mahasiswa m ON m.user_id = u.id
+    CROSS JOIN semester_range sr
+    WHERE j.dosen_id = $1
+      AND m.dosen_pa_id = $1
+      AND u.role = 'mahasiswa'
+      AND u.is_verified = true
+      AND b.status NOT IN ('dibatalkan')
+      AND j.tanggal >= sr.start_date
+      AND j.tanggal < sr.end_date
+    GROUP BY u.id, u.name, u.npm_nip
+    ORDER BY COUNT(*) DESC, u.name ASC
+    LIMIT 5
+  `, [dosenId]);
+  return result.rows;
 };
 
 // ================= JADWAL MINGGU INI (+ booking mahasiswanya) =================

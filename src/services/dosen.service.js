@@ -125,7 +125,15 @@ exports.getDashboard = async ({ user }) => {
 
   const dosenId = user.id;
 
-  const [profile, jumlahMahasiswa, bimbinganHariIni, bimbinganSemester, jadwalMingguIni, kalender] =
+  const [
+    profile,
+    jumlahMahasiswa,
+    bimbinganHariIni,
+    bimbinganSemester,
+    jadwalMingguIni,
+    kalender,
+    topMahasiswaBimbingan
+  ] =
     await Promise.all([
       dosenRepository.getDashboardProfile(dosenId),
       dosenRepository.countMahasiswaBimbingan(dosenId),
@@ -133,6 +141,7 @@ exports.getDashboard = async ({ user }) => {
       dosenRepository.countBimbinganSemesterIni(dosenId),
       dosenRepository.getJadwalMingguIni(dosenId),
       dosenRepository.getKalenderBimbingan(dosenId),
+      dosenRepository.getTopMahasiswaBimbinganSemesterIni(dosenId),
     ]);
 
   if (!profile) throw { status: 404, message: 'Data dosen tidak ditemukan' };
@@ -168,5 +177,11 @@ exports.getDashboard = async ({ user }) => {
     bimbingan_semester_ini:      bimbinganSemester,
     jadwal_minggu_ini:           jadwalFormatted,
     kalender_bimbingan:          kalenderFormatted,
+    top_mahasiswa_bimbingan:     topMahasiswaBimbingan.map(row => ({
+      nama: row.nama,
+      npm: row.npm,
+      total: parseInt(row.total) || 0,
+    })),
+    top_mahasiswa_chatbot:       [],
   };
 };
