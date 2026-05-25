@@ -126,7 +126,10 @@ GET /documents
 
 ### Chatbot
 ```id="chatbot-endpoints"
-POST /chatbot
+GET /chatbot/session/active
+POST /chatbot/message
+POST /chatbot/session/{session_id}/generate-summary
+POST /chatbot/session/{session_id}/close
 ```
 
 ---

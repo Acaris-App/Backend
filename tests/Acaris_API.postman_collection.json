@@ -15,6 +15,11 @@
       "key": "token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "chatbot_session_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -1817,7 +1822,120 @@
       "name": "Chatbot",
       "item": [
         {
-          "name": "POST Chat Aca",
+          "name": "GET Sesi Aktif Chatbot",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/chatbot/session/active",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "chatbot",
+                "session",
+                "active"
+              ]
+            },
+            "description": "Cek sesi chatbot aktif milik mahasiswa login. Jika tidak ada sesi aktif, response success dengan data: null."
+          }
+        },
+        {
+          "name": "POST Kirim Pesan Chatbot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": null,\n  \"message\": \"Apakah daftar pustaka wajib pakai Mendeley?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chatbot/message",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "chatbot",
+                "message"
+              ]
+            },
+            "description": "Mengirim pesan ke Aca. Kirim session_id null/string kosong untuk chat pertama; backend akan membuat atau memakai sesi aktif mahasiswa. Response data: session_id, reply_text, created_at."
+          }
+        },
+        {
+          "name": "POST Generate Draft Summary Chatbot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/chatbot/session/{{chatbot_session_id}}/generate-summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "chatbot",
+                "session",
+                "{{chatbot_session_id}}",
+                "generate-summary"
+              ]
+            },
+            "description": "Meminta draft kesimpulan dari AI berdasarkan seluruh history pada session_id. Response data: draft_summary."
+          }
+        },
+        {
+          "name": "POST Close Session Chatbot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"final_summary\": \"Tanya format margin 4433 dan wajib Mendeley.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chatbot/session/{{chatbot_session_id}}/close",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "chatbot",
+                "session",
+                "{{chatbot_session_id}}",
+                "close"
+              ]
+            },
+            "description": "Menyimpan catatan final dan menutup sesi chatbot. Setelah sukses, sesi tidak lagi muncul di GET /chatbot/session/active."
+          }
+        },
+        {
+          "name": "POST Chat Aca Legacy",
           "request": {
             "method": "POST",
             "header": [
@@ -1844,7 +1962,7 @@
                 "chat-bot"
               ]
             },
-            "description": "Proxy chatbot Aca via Backend utama. Role: mahasiswa only.\n\nFE cukup kirim pesan_user. Backend mengambil session_id dan npm_mahasiswa dari token/database, lalu meneruskan request ke n8n Production URL.\n\nn8n wajib mengembalikan JSON dengan salah satu field: balasan_aca, output, answer, reply, message, text, atau response."
+            "description": "Endpoint lama tetap tersedia untuk kompatibilitas. Untuk UI chatbot baru gunakan /chatbot/message."
           }
         }
       ]

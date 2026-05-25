@@ -40,6 +40,7 @@ app.use('/schedule', scheduleRoutes);
 app.use('/dosen', dosenRoutes);
 app.use('/admin', adminRoutes);
 app.use('/mahasiswa', mahasiswaRoutes);
+app.use('/chatbot', chatbotRoutes);
 app.use('/api/chat-bot', chatbotRoutes);
 
 // ================= ERROR HANDLER =================
