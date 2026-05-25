@@ -60,17 +60,6 @@ exports.findByUserTypeSemester = async (userId, type, semester) => {
   return result.rows[0];
 };
 
-// ================= GET BY USER & TYPE =================
-exports.getValidDocuments = async (userId, type) => {
-  const result = await db.query(
-    `SELECT * FROM dokumen_mahasiswa 
-     WHERE user_id = $1 AND document_type = $2`,
-    [userId, type]
-  );
-
-  return result.rows;
-};
-
 // ================= GET ALL BY USER =================
 exports.getDocumentsByUser = async (userId) => {
   const result = await db.query(
@@ -81,28 +70,6 @@ exports.getDocumentsByUser = async (userId) => {
   );
 
   return result.rows;
-};
-
-// ================= CEK MINIMAL 1 FILE DI SEMESTER TERTENTU =================
-exports.hasAnyDocumentForSemester = async (userId, semester) => {
-  const result = await db.query(
-    `SELECT 1 FROM dokumen_mahasiswa
-     WHERE user_id = $1
-       AND semester = $2
-       AND document_type IN ('krs', 'khs')
-     LIMIT 1`,
-    [userId, semester]
-  );
-  return result.rows.length > 0;
-};
-
-// ================= LAST SEMESTER BY TYPE =================
-exports.getLastSemester = async (userId, type) => {
-  const docs = await exports.getValidDocuments(userId, type);
-
-  if (!docs.length) return 0;
-
-  return Math.max(...docs.map(d => d.semester));
 };
 
 // ================= FIND BY ID =================

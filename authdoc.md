@@ -15,11 +15,11 @@ Backend API untuk sistem manajemen akademik mahasiswa berbasis **Node.js**. Proy
 
 ### 📄 Document Management System
 - **Strict Validation:** Hanya menerima format PDF dengan ukuran maksimal 2MB.
-- **Dependency Tracking:** Validasi keterkaitan antar dokumen (Contoh: Tidak bisa upload KHS jika KRS semester tersebut belum ada).
+- **Flexible Semester Upload:** Mahasiswa dapat upload KRS/KHS untuk semester mana pun selama semester tersebut valid dan belum ada dokumen dengan tipe yang sama.
 - **Auto-File Management:** Sistem folder per-user, penggantian nama file otomatis, dan penghapusan otomatis jika proses database gagal (*cleanup*).
 
 ### 🧠 Academic Logic System
-- **Sequential Validation:** Upload KRS dan KHS harus berurutan (1, 2, 3, dst), tidak boleh melompati semester.
+- **Duplicate Prevention:** Satu tipe dokumen hanya boleh diunggah satu kali per semester.
 - **Auto Semester Progression:** Indikator semester mahasiswa otomatis meningkat berdasarkan data KHS terakhir yang valid.
 - **Completeness Checker:** Fitur untuk mendeteksi dokumen yang hilang atau belum diunggah pada setiap semester.
 
@@ -71,7 +71,7 @@ Sistem ini menggunakan pola **Clean Architecture** untuk memastikan kode mudah d
 ### 3. Academic Document
 | Method | Endpoint | Deskripsi |
 | :--- | :--- | :--- |
-| POST | `/document/upload` | Upload KRS/KHS (Check dependency & order). |
+| POST | `/document/upload` | Upload KRS/KHS/transkrip. |
 | GET | `/document/check` | Cek kelengkapan dokumen tiap semester. |
 
 ### 4. Chatbot
@@ -83,9 +83,10 @@ Sistem ini menggunakan pola **Clean Architecture** untuk memastikan kode mudah d
 
 ## ⚙️ Aturan Validasi Dokumen (Business Logic)
 
-1. **KRS (Kartu Rencana Studi):** Harus diunggah secara berurutan.
-2. **KHS (Kartu Hasil Studi):** - Wajib memiliki KRS di semester yang sama.
-   - Harus diunggah secara berurutan.
+1. **KRS (Kartu Rencana Studi):** Boleh diunggah untuk semester mana pun selama tidak melebihi semester aktif mahasiswa.
+2. **KHS (Kartu Hasil Studi):** Boleh diunggah untuk semester mana pun selama tidak melebihi semester aktif mahasiswa.
+   - Tidak wajib memiliki KRS di semester yang sama.
+   - Tidak wajib berurutan dari semester 1.
 3. **Penyimpanan:** - Path: `uploads/{userId}/nama-krs-semester-{n}-{timestamp}.pdf`
 4. **Error Handling:** Menggunakan *Centralized Error Handler* untuk memastikan format response error tetap konsisten.
 

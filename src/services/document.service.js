@@ -99,21 +99,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
       };
   }
 
-  // Validasi urutan: semester N butuh minimal 1 file di semester N-1
-  if (document_type !== 'transkrip' && semesterInt > 1) {
-      const prevSemesterHasFile = await documentRepository.hasAnyDocumentForSemester(
-        user.id,
-        semesterInt - 1
-      );
-
-      if (!prevSemesterHasFile) {
-        throw {
-          status: 400,
-          message: `Semester ${semesterInt - 1} belum memiliki dokumen. Upload minimal 1 file (KRS atau KHS) untuk semester ${semesterInt - 1} terlebih dahulu`
-        };
-      }
-  }
-
   const safeName = (user.name || 'user')
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-');
