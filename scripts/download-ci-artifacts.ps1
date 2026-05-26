@@ -1,4 +1,5 @@
 param(
+  [string]$Repo = "Acaris-App/Backend",
   [string]$Workflow = "Backend CI",
   [string]$OutputDir = "data/CI",
   [int]$Limit = 20
@@ -6,11 +7,27 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+$ghCommand = Get-Command gh -ErrorAction SilentlyContinue
+
+if (-not $ghCommand -and (Test-Path "C:\Program Files\GitHub CLI\gh.exe")) {
+  $ghCommand = Get-Item "C:\Program Files\GitHub CLI\gh.exe"
+}
+
+if (-not $ghCommand) {
   throw "GitHub CLI 'gh' tidak ditemukan. Install dulu, lalu jalankan 'gh auth login'."
 }
 
-$runsJson = gh run list --workflow $Workflow --limit $Limit --json databaseId,conclusion,status,createdAt,headSha,displayTitle
+if ($ghCommand -is [System.IO.FileInfo]) {
+  $gh = $ghCommand.FullName
+} else {
+  $gh = $ghCommand.Source
+}
+
+$runsJson = & $gh run list --repo $Repo --workflow $Workflow --limit $Limit --json databaseId,conclusion,status,createdAt,headSha,displayTitle
+if ($LASTEXITCODE -ne 0) {
+  throw "Gagal mengambil daftar run GitHub Actions. Jalankan 'gh auth login' lalu coba lagi."
+}
+
 $runs = $runsJson | ConvertFrom-Json
 $run = $runs | Where-Object { $_.conclusion -eq "success" -and $_.status -eq "completed" } | Select-Object -First 1
 
@@ -24,7 +41,10 @@ $targetDir = Join-Path $OutputDir ("backend-ci-run-{0}-{1}" -f $runId, $timestam
 
 New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
 
-gh run download $runId --dir $targetDir
+& $gh run download $runId --repo $Repo --dir $targetDir
+if ($LASTEXITCODE -ne 0) {
+  throw "Gagal download artifact run $runId. Jalankan 'gh auth login' lalu coba lagi."
+}
 
 $renameMap = @{
   "backend-ci-summary.md"   = "backend-ci-summary-run-$runId.md"
@@ -42,6 +62,7 @@ $manifestPath = Join-Path $targetDir ("ci-artifact-manifest-run-{0}.md" -f $runI
 @(
   "# CI Artifact Manifest"
   ""
+  "- Repository: $Repo"
   "- Workflow: $Workflow"
   "- Run ID: $runId"
   "- Title: $($run.displayTitle)"
