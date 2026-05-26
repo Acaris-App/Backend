@@ -306,6 +306,366 @@
               ]
             }
           }
+        },
+        {
+          "name": "Akses Role Mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mahasiswa_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/mahasiswa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "mahasiswa"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Jadwal Tersedia Mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mahasiswa_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/available?month=5&year=2026",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "available"
+              ],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "5"
+                },
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Riwayat Booking Mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mahasiswa_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/my-bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "my-bookings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Riwayat Booking Mahasiswa Mobile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mahasiswa_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/mahasiswa/bookings/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "mahasiswa",
+                "bookings",
+                "history"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Kalender Bulanan Mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mahasiswa_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/mahasiswa/monthly?year=2026&month=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "mahasiswa",
+                "monthly"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026"
+                },
+                {
+                  "key": "month",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail Harian Mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mahasiswa_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/mahasiswa/daily?date=2026-05-26",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "mahasiswa",
+                "daily"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-05-26"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sesi Aktif Chatbot Mahasiswa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mahasiswa_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/chatbot/session/active",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "chatbot",
+                "session",
+                "active"
+              ]
+            }
+          }
         }
       ]
     },
@@ -567,6 +927,257 @@
               ]
             }
           }
+        },
+        {
+          "name": "Akses Role Dosen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dosen_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/dosen",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "dosen"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Dashboard Shared Dosen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dosen_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Daftar Booking Mahasiswa Dosen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dosen_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "bookings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Kalender Bulanan Dosen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dosen_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/monthly?year=2026&month=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "monthly"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026"
+                },
+                {
+                  "key": "month",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail Harian Dosen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dosen_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedule/daily?date=2026-05-26",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedule",
+                "daily"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-05-26"
+                }
+              ]
+            }
+          }
         }
       ]
     },
@@ -816,6 +1427,194 @@
                 "admin",
                 "documents",
                 "stats"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Akses Role Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "admin"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Dashboard Shared Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Knowledge Base Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/knowledge-base",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "knowledge-base"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Daftar Kode Kelas Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is valid JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('response does not contain server error', function () {",
+                  "  pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test('response time below 5000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/classes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "classes"
               ]
             }
           }
