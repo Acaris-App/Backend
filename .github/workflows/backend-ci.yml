@@ -1,0 +1,108 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-test:
+    name: Static and Collection Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run backend checks
+        run: npm test
+
+      - name: Write CI summary artifact
+        if: always()
+        run: |
+          mkdir -p test-results/ci
+          {
+            echo "# Backend CI Summary"
+            echo ""
+            echo "Run ID: $GITHUB_RUN_ID"
+            echo "Run number: $GITHUB_RUN_NUMBER"
+            echo "Commit: $GITHUB_SHA"
+            echo "Branch/ref: $GITHUB_REF_NAME"
+            echo "Triggered by: $GITHUB_EVENT_NAME"
+            echo "Generated at: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo ""
+            echo "Checks:"
+            echo "- npm ci"
+            echo "- npm run check:syntax"
+            echo "- npm run check:postman"
+          } > test-results/ci/backend-ci-summary.md
+
+      - name: Upload CI summary artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-ci-summary
+          path: test-results/ci/
+          if-no-files-found: ignore
+
+  health-smoke-test:
+    name: Health Smoke Test
+    runs-on: ubuntu-latest
+    needs: static-test
+    env:
+      ACARIS_BASE_URL: ${{ secrets.ACARIS_BASE_URL }}
+
+    steps:
+      - name: Prepare result folder
+        run: mkdir -p test-results/smoke
+
+      - name: Skip smoke test when URL is not configured
+        if: env.ACARIS_BASE_URL == ''
+        run: |
+          {
+            echo "# Health Smoke Test"
+            echo ""
+            echo "Status: skipped"
+            echo "Reason: repository secret ACARIS_BASE_URL is not configured"
+          } > test-results/smoke/health-smoke-summary.md
+
+      - name: Run health smoke test
+        if: env.ACARIS_BASE_URL != ''
+        run: |
+          set -e
+          BASE_URL="${ACARIS_BASE_URL%/}"
+          curl --fail --silent --show-error "$BASE_URL/health" \
+            --output test-results/smoke/health-response.json
+          {
+            echo "# Health Smoke Test"
+            echo ""
+            echo "Status: success"
+            echo "URL: $BASE_URL/health"
+            echo "Run ID: $GITHUB_RUN_ID"
+            echo "Commit: $GITHUB_SHA"
+            echo "Generated at: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > test-results/smoke/health-smoke-summary.md
+
+      - name: Upload smoke test artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-smoke-test
+          path: test-results/smoke/
+          if-no-files-found: ignore

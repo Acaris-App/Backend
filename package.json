@@ -24,6 +24,9 @@
     "test": "tests"
   },
   "scripts": {
+    "check:postman": "node scripts/check-postman-collections.js",
+    "check:syntax": "node scripts/check-syntax.js",
+    "test": "npm run check:syntax && npm run check:postman",
     "dev": "nodemon src/app.js",
     "worker": "node src/jobs/email.job.js"
   },

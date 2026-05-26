@@ -1,225 +1,245 @@
-# 🚀 Acaris Backend System with CI/CD Pipeline
-## 📌 Overview
-Acaris is a backend system designed to manage academic consultation processes between students and lecturers.
-This project implements a **cloud-native microservices architecture** integrated with a **CI/CD pipeline** to improve system scalability, reliability, and deployment efficiency.
+# Acaris Backend
 
-The system is deployed using **Google Cloud Run** and utilizes **Docker containerization** with automated workflows via **GitHub Actions**.
+Backend Acaris adalah layanan utama untuk sistem bimbingan akademik. Kondisi arsitektur saat ini:
 
----
+- Backend utama berjalan di Google Cloud Run.
+- Layanan AI/chatbot berjalan terpisah di VPS melalui n8n.
+- Backend masih berupa satu aplikasi Express modular, dengan pemisahan layer controller, service, repository, middleware, dan route.
+- Rencana pemecahan backend menjadi beberapa service independen disimpan sebagai rencana lanjutan.
 
-## 🎯 Objectives
-* Implement a backend system using microservices architecture
-* Automate build, testing, and deployment using CI/CD
-* Evaluate system performance using DORA metrics
-* Ensure system reliability through comprehensive testing
+Formulasi yang aman untuk skripsi saat ini adalah **cloud-native modular backend dengan layanan AI terpisah**, bukan klaim pure microservices yang semua modul backend-nya sudah dipisah.
 
----
+## Arsitektur Sementara
 
-## 🏗️ System Architecture
-### Architecture Style:
-* Microservices
-* REST API
-* Cloud-native deployment
-
-### Main Services:
-* **Auth Service** → Authentication & authorization
-* **Acaris Service** → Core academic features
-* **Chatbot Service** → Automated assistance
-
----
-
-## ⚙️ Tech Stack
-### Backend
-* Node.js
-* Express.js
-
-### DevOps
-* Docker
-* GitHub Actions (CI/CD)
-
-### Cloud
-* Google Cloud Run
-
-### Database
-* (Relational / NoSQL depending on implementation)
-
-### Authentication
-* Firebase Authentication
-
----
-
-## 📁 Project Structure
-```id="tree-structure"
-src/
-├── config/
-├── controllers/
-├── services/
-├── repositories/
-├── models/
-├── routes/
-├── middlewares/
-├── utils/
-├── validations/
-├── constants/
-└── app.js
-/docs
-/docker
-/tests
-/.github/workflows
+```text
+Mobile/Frontend
+  -> Acaris Backend (Cloud Run)
+    -> PostgreSQL
+    -> Redis
+    -> Google Cloud Storage
+    -> n8n AI Service (VPS)
 ```
 
----
+Service yang berjalan:
 
-## 🔄 CI/CD Pipeline
-The CI/CD pipeline is implemented using GitHub Actions and includes:
-```id="pipeline-flow"
-1. Code Push (GitHub)
-2. Build Process
-3. Automated Testing
-4. Docker Image Build
-5. Push to Container Registry
-6. Deploy to Google Cloud Run
-```
+- `acaris-service`: backend utama di Cloud Run.
+- `n8n`: workflow AI/chatbot di VPS.
 
-### Benefits:
-* Faster deployment cycles
-* Reduced manual errors
-* Continuous integration and delivery
+## Endpoint Penting
 
----
-
-## 🐳 Containerization
-Each service is containerized using Docker:
-```id="docker-commands"
-docker build -t service-name .
-docker run -p 3000:3000 service-name
-```
-
----
-
-## ☁️ Deployment
-Deployment is handled via Google Cloud Run:
-```id="deployment-flow"
-GitHub → GitHub Actions → Docker Image → Cloud Run
-```
-
-### Features:
-* Scalable
-* Serverless
-* Fully managed
-
----
-
-## 🔌 API Endpoints
-### Authentication
-```id="auth-endpoints"
-POST /auth/register
+```text
+GET  /health
 POST /auth/login
-```
-
-### Core Features
-```id="core-endpoints"
-GET /schedules
-POST /booking
-GET /documents
-```
-
-### Chatbot
-```id="chatbot-endpoints"
-GET /chatbot/session/active
+POST /auth/register/mahasiswa
+POST /auth/register/dosen
+GET  /user/profile
+GET  /mahasiswa/dashboard
+GET  /dosen/dashboard
+GET  /admin/dashboard
+POST /document/upload
+GET  /document/list
+POST /schedule
+GET  /schedule/available
+POST /schedule/book
+GET  /chatbot/session/active
 POST /chatbot/message
-POST /chatbot/session/{session_id}/generate-summary
-POST /chatbot/session/{session_id}/close
+POST /chatbot/session/:session_id/generate-summary
+POST /chatbot/session/:session_id/close
+POST /api/chat-bot
 ```
 
----
+`/health` dipakai untuk smoke test CI/CD karena tidak membutuhkan token.
 
-## 🧪 Testing Strategy
-### 1. Functional Testing
-* Validate all API endpoints
-* Ensure correct response and status codes
+## Environment
 
-### 2. Integration Testing
-* Validate interaction between services
+Untuk kebutuhan skripsi, satu environment production/staging sederhana masih cukup. Yang penting:
 
-### 3. Regression Testing
-* Ensure existing features remain stable after updates
+- Jangan commit secret asli ke repository.
+- Runtime Cloud Run tetap memakai Secret Manager untuk secret penting.
+- GitHub Actions cukup diberi secret non-sensitif berupa URL backend untuk smoke test.
 
-### 4. Performance Testing
-* Tool: Apache JMeter
-* Scenarios:
-  * 50 users
-  * 100 users
+Repository secret yang disarankan:
 
-* Metrics:
-  * Response Time
-  * Throughput
-  * Error Rate
-
-### 5. CI/CD Pipeline Testing
-* Pipeline duration
-* Success/failure rate
-* Deployment frequency
-
----
-
-## 📊 Performance Evaluation (DORA Metrics)
-
-### Deployment Frequency
-$$
-Deployment\ Frequency = \frac{|D|}{t_n - t_0}
-$$
-
-### Lead Time for Changes
-$$
-Lead\ Time = \frac{1}{n} \sum (t_{deploy} - t_{commit})
-$$
-
-### Change Failure Rate
-$$
-CFR = \frac{D_f}{D} \times 100%
-$$
-
-### Mean Time to Recovery (MTTR)
-$$
-MTTR = \frac{1}{n} \sum (t_{recovery} - t_{failure})
-$$
-
-### Pipeline Success Rate
-$$
-Success\ Rate = \frac{D_s}{D} \times 100%
-$$
-
----
-
-## ✅ Expected Outcomes
-* Fully functional backend system
-* Automated CI/CD pipeline
-* Cloud-deployed microservices
-* Comprehensive testing results
-* Performance evaluation using DORA metrics
-
----
-
-## 📌 Development Workflow
-```id="workflow"
-1. Local Development
-2. API Testing (Postman)
-3. Dockerization
-4. Manual Deployment
-5. CI/CD Implementation
-6. Automated Testing
-7. Data Collection & Evaluation
+```text
+ACARIS_BASE_URL=https://url-cloud-run-kamu
 ```
 
----
+Cara set di GitHub:
 
-## 👨‍💻 Author
-* Name: M. Arifin Syam
-* Program: Informatics Engineering
-* Project: Thesis Implementation (CI/CD Microservices System)
+```text
+Repository -> Settings -> Secrets and variables -> Actions -> New repository secret
+```
 
----
+## Local Development
 
-## 📄 License
-This project is developed for academic purposes.
+```bash
+npm install
+npm run dev
+```
+
+Pastikan `.env.local` tersedia dan berisi konfigurasi DB, Redis, JWT, GCS, email, dan port.
+
+## Test Lokal Ringan
+
+```bash
+npm test
+```
+
+Isi test saat ini:
+
+- `npm run check:syntax`: mengecek syntax semua file JavaScript di `src`.
+- `npm run check:postman`: memastikan Postman collection di folder `tests` valid sebagai JSON.
+
+Test ini belum menggantikan functional test penuh, tetapi cukup sebagai quality gate awal di CI/CD.
+
+## GitHub Actions
+
+Workflow yang tersedia:
+
+```text
+.github/workflows/backend-ci.yml
+.github/workflows/jmeter-load-test.yml
+```
+
+### Backend CI
+
+Trigger:
+
+- Otomatis saat push ke `main`.
+- Otomatis saat pull request ke `main`.
+- Manual melalui `workflow_dispatch`.
+
+Tahapan:
+
+```text
+checkout -> npm ci -> npm test -> optional /health smoke test
+```
+
+Smoke test `/health` hanya berjalan jika secret `ACARIS_BASE_URL` sudah diisi.
+
+Artifact yang bisa diunduh untuk data skripsi:
+
+- `backend-ci-summary`
+- `health-smoke-test`
+
+Cara mengambil hasil:
+
+```text
+GitHub -> repository Backend -> Actions -> pilih run -> Artifacts -> download
+```
+
+### JMeter Load Test
+
+Workflow JMeter dibuat manual agar load test tidak berjalan setiap push dan tidak membebani Cloud Run, database, Redis, atau VPS n8n tanpa sengaja.
+
+Cara menjalankan:
+
+```text
+GitHub -> Actions -> JMeter Load Test -> Run workflow
+```
+
+Input contoh:
+
+```text
+target_url: https://url-cloud-run-kamu/health
+users: 50
+ramp_up: 30
+duration: 60
+```
+
+Untuk skenario 100 user:
+
+```text
+target_url: https://url-cloud-run-kamu/health
+users: 100
+ramp_up: 60
+duration: 120
+```
+
+Artifact yang dihasilkan:
+
+- `result.jtl`
+- folder `report`
+- `jmeter-summary.md`
+
+Data ini bisa dipakai untuk:
+
+- average response time
+- throughput
+- error rate
+- bukti performance testing
+
+## Postman dan Newman
+
+Kalau test manual sudah dilakukan di Postman, hasilnya bisa diambil dengan cara:
+
+```text
+Postman -> Collection Runner -> Run collection -> Export Results
+```
+
+Simpan hasil export sebagai lampiran atau bukti Bab 4.
+
+Kalau ingin hasil Postman yang lebih mudah dijadikan artifact, gunakan Newman:
+
+```bash
+npx newman run tests/Acaris_API.postman_collection.json \
+  --reporters cli,json \
+  --reporter-json-export test-results/postman/acaris-api-result.json
+```
+
+Catatan:
+
+- Jangan commit environment Postman yang berisi token atau password.
+- Untuk endpoint yang butuh login, siapkan Postman environment lokal atau GitHub secret terpisah.
+- Untuk CI awal, cukup gunakan `/health` karena aman dan tidak butuh auth.
+
+## Data Untuk Skripsi
+
+Data yang perlu dikumpulkan setelah aplikasi stabil:
+
+| Tujuan/Data | Sumber |
+| --- | --- |
+| Deployment frequency | Jumlah deployment sukses dari GitHub Actions/Cloud Build/Cloud Run dalam periode pengamatan |
+| Lead time for change | Selisih timestamp commit sampai deployment sukses |
+| Change failure rate | Jumlah deployment gagal dibagi total deployment |
+| MTTR | Selisih waktu failure terdeteksi sampai recovery/deployment sukses ulang |
+| Pipeline success rate | Jumlah run sukses dibagi total run GitHub Actions/Cloud Build |
+| Functional testing | Export hasil Postman/Newman |
+| Regression testing | Run ulang collection setelah perubahan fitur |
+| Performance testing | Artifact JMeter `.jtl` dan HTML report |
+| Cloud reliability | Log Cloud Run dan status revision |
+
+Urutan kerja yang disarankan:
+
+1. Stabilkan fitur aplikasi.
+2. Pastikan `/health` aktif.
+3. Aktifkan GitHub Actions `Backend CI`.
+4. Isi secret `ACARIS_BASE_URL`.
+5. Jalankan beberapa push/sprint agar data pipeline terkumpul.
+6. Export hasil Postman manual atau jalankan Newman.
+7. Jalankan JMeter manual untuk 50 dan 100 user.
+8. Ambil artifact GitHub Actions dan laporan JMeter.
+9. Susun tabel DORA dan hasil testing untuk Bab 4.
+
+## Deployment
+
+Deployment saat ini menggunakan Cloud Build dan Cloud Run melalui `cloudbuild.yaml`. GitHub Actions yang ditambahkan di repository ini berperan sebagai quality gate/testing. Jika Cloud Build trigger sudah tersambung ke GitHub, maka deployment tetap dapat berjalan setelah push.
+
+Alur yang bisa dijelaskan:
+
+```text
+GitHub push
+  -> GitHub Actions untuk testing
+  -> Cloud Build untuk build image dan deploy
+  -> Cloud Run menjalankan acaris-service
+```
+
+Jika nanti backend dipecah, workflow bisa dikembangkan menjadi beberapa service:
+
+```text
+auth-service
+acaris-service
+chatbot-gateway-service
+```
+
+Untuk saat ini, rencana tersebut cukup dicatat sebagai pengembangan lanjutan.
