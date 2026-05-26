@@ -33,6 +33,7 @@ jobs:
   jmeter:
     name: Run JMeter
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       TARGET_URL: ${{ inputs.target_url }}
 
@@ -98,3 +99,4 @@ jobs:
           name: jmeter-load-test
           path: test-results/jmeter/
           if-no-files-found: ignore
+          retention-days: 30

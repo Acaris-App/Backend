@@ -24,6 +24,7 @@
     "test": "tests"
   },
   "scripts": {
+    "artifacts:ci": "powershell -ExecutionPolicy Bypass -File scripts/download-ci-artifacts.ps1",
     "check:postman": "node scripts/check-postman-collections.js",
     "check:syntax": "node scripts/check-syntax.js",
     "test": "npm run check:syntax && npm run check:postman",
