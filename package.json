@@ -27,6 +27,7 @@
     "artifacts:ci": "powershell -ExecutionPolicy Bypass -File scripts/download-ci-artifacts.ps1",
     "check:postman": "node scripts/check-postman-collections.js",
     "check:syntax": "node scripts/check-syntax.js",
+    "jmeter:local:smoke": "powershell -ExecutionPolicy Bypass -File scripts/run-local-jmeter.ps1",
     "test": "npm run check:syntax && npm run check:postman",
     "dev": "nodemon src/app.js",
     "worker": "node src/jobs/email.job.js"

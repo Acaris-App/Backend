@@ -66,8 +66,8 @@ jobs:
 
       - name: Install JMeter
         run: |
-          curl --fail --location --silent --show-error \
-            "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz" \
+          curl --fail --location --silent --show-error --connect-timeout 20 --max-time 180 \
+            "https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz" \
             --output jmeter.tgz
           tar -xzf jmeter.tgz
           echo "JMETER_HOME=$PWD/apache-jmeter-${JMETER_VERSION}" >> "$GITHUB_ENV"
