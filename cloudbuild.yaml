@@ -24,7 +24,7 @@ steps:
 
     # ENV non-sensitif
     - '--set-env-vars=NODE_ENV=production'
-    - '--set-env-vars=DB_HOST=34.50.102.231'
+    - '--set-env-vars=DB_HOST=34.128.107.123'
     - '--set-env-vars=DB_PORT=5432'
     - '--set-env-vars=DB_USER=acaris_user'
     - '--set-env-vars=DB_NAME=acaris_db'
