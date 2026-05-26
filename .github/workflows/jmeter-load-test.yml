@@ -29,6 +29,7 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  JMETER_VERSION: "5.6.3"
 
 jobs:
   jmeter:
@@ -57,17 +58,29 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_ENV, `${lines.join('\n')}\n`);
           NODE
 
-      - name: Run JMeter with Docker
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install JMeter
+        run: |
+          curl --fail --location --silent --show-error \
+            "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz" \
+            --output jmeter.tgz
+          tar -xzf jmeter.tgz
+          echo "JMETER_HOME=$PWD/apache-jmeter-${JMETER_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Run JMeter
         run: |
           mkdir -p test-results/jmeter
-          docker run --rm \
-            -v "${{ github.workspace }}:/workspace" \
-            justb4/jmeter:5.6.3 \
+          "$JMETER_HOME/bin/jmeter" \
             -n \
-            -t /workspace/tests/load/acaris-health-load-test.jmx \
-            -l /workspace/test-results/jmeter/result.jtl \
+            -t tests/load/acaris-health-load-test.jmx \
+            -l test-results/jmeter/result.jtl \
             -e \
-            -o /workspace/test-results/jmeter/report \
+            -o test-results/jmeter/report \
             -Jtarget_protocol="$TARGET_PROTOCOL" \
             -Jtarget_host="$TARGET_HOST" \
             -Jtarget_port="$TARGET_PORT" \
