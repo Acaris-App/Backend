@@ -56,18 +56,18 @@ Untuk kebutuhan skripsi, satu environment production/staging sederhana masih cuk
 
 - Jangan commit secret asli ke repository.
 - Runtime Cloud Run tetap memakai Secret Manager untuk secret penting.
-- GitHub Actions cukup diberi secret non-sensitif berupa URL backend untuk smoke test.
+- GitHub Actions cukup diberi URL backend untuk smoke test. URL ini boleh disimpan sebagai Repository Variable karena bukan data rahasia. Workflow juga tetap mendukung Repository Secret jika suatu saat ingin disembunyikan.
 
-Repository secret yang disarankan:
+Repository variable yang disarankan:
 
 ```text
-ACARIS_BASE_URL=https://url-cloud-run-kamu
+ACARIS_BASE_URL=https://acaris-service-649442063927.asia-southeast2.run.app
 ```
 
 Cara set di GitHub:
 
 ```text
-Repository -> Settings -> Secrets and variables -> Actions -> New repository secret
+Repository -> Settings -> Secrets and variables -> Actions -> Variables -> New repository variable
 ```
 
 ## Local Development
@@ -115,7 +115,7 @@ Tahapan:
 checkout -> npm ci -> npm test -> optional /health smoke test
 ```
 
-Smoke test `/health` hanya berjalan jika secret `ACARIS_BASE_URL` sudah diisi.
+Smoke test `/health` berjalan jika `ACARIS_BASE_URL` sudah diisi sebagai Repository Variable atau Repository Secret.
 
 Artifact yang bisa diunduh untuk data skripsi:
 
@@ -214,7 +214,7 @@ Urutan kerja yang disarankan:
 1. Stabilkan fitur aplikasi.
 2. Pastikan `/health` aktif.
 3. Aktifkan GitHub Actions `Backend CI`.
-4. Isi secret `ACARIS_BASE_URL`.
+4. Isi variable `ACARIS_BASE_URL`.
 5. Jalankan beberapa push/sprint agar data pipeline terkumpul.
 6. Export hasil Postman manual atau jalankan Newman.
 7. Jalankan JMeter manual untuk 50 dan 100 user.
