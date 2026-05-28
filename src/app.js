@@ -22,6 +22,31 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const { errorHandler } = require('./middlewares/error.middleware');
 
+// ================= CORS FOR API DOCS / WEB CLIENTS =================
+const corsOrigins = (process.env.CORS_ORIGINS || '*')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowAllOrigins = corsOrigins.includes('*');
+
+  if (origin && (allowAllOrigins || corsOrigins.includes(origin))) {
+    res.setHeader('Access-Control-Allow-Origin', allowAllOrigins ? '*' : origin);
+    res.setHeader('Vary', 'Origin');
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
 // ================= HEALTH CHECK =================
 app.get('/health', (req, res) => {
   res.status(200).json({
