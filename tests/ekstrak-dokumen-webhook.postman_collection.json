@@ -76,7 +76,7 @@
   "variable": [
     {
       "key": "n8n_base_url",
-      "value": "http://34.101.190.86:5678"
+      "value": "http://34.101.47.211:5678"
     }
   ]
 }

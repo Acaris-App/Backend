@@ -1,7 +1,7 @@
 const userRepository = require('../repositories/user.repository');
 const chatbotRepository = require('../repositories/chatbot.repository');
 
-const DEFAULT_CHATBOT_WEBHOOK_URL = 'http://34.101.190.86:5678/webhook/chat-aca';
+const DEFAULT_CHATBOT_WEBHOOK_URL = 'http://34.101.47.211:5678/webhook/chat-aca';
 const CHATBOT_TIMEOUT_MS = parseInt(process.env.N8N_CHATBOT_TIMEOUT_MS, 10) || 30000;
 
 const getWebhookUrl = () => process.env.N8N_CHATBOT_WEBHOOK_URL || DEFAULT_CHATBOT_WEBHOOK_URL;

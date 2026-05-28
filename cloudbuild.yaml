@@ -30,7 +30,7 @@ steps:
     - '--set-env-vars=DB_NAME=acaris_db'
     - '--set-env-vars=EMAIL_USER=marsneedduitbanget@gmail.com'
     - '--set-env-vars=GCS_BUCKET=acaris-storage'
-    - '--set-env-vars=N8N_CHATBOT_WEBHOOK_URL=http://34.101.190.86:5678/webhook/chat-aca'
+    - '--set-env-vars=N8N_CHATBOT_WEBHOOK_URL=http://34.101.47.211:5678/webhook/chat-aca'
 
     # SECRETS — diambil dari Google Secret Manager
     - '--set-secrets=JWT_SECRET=JWT_SECRET:latest'
