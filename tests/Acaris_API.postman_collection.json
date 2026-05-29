@@ -1846,6 +1846,53 @@
           }
         },
         {
+          "name": "GET Riwayat Chatbot",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/chatbot/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "chatbot",
+                "history"
+              ]
+            },
+            "description": "Mengambil daftar riwayat sesi chatbot yang sudah ditutup milik mahasiswa login. Response data selalu array."
+          }
+        },
+        {
+          "name": "GET Detail Riwayat Chatbot",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/chatbot/history/{{chatbot_session_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "chatbot",
+                "history",
+                "{{chatbot_session_id}}"
+              ]
+            },
+            "description": "Mengambil detail riwayat chatbot berdasarkan session_id. Struktur data mirip GET /chatbot/session/active, tetapi is_active false dan memiliki summary."
+          }
+        },
+        {
           "name": "POST Kirim Pesan Chatbot",
           "request": {
             "method": "POST",

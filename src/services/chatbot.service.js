@@ -186,6 +186,36 @@ exports.getActiveSession = async ({ user }) => {
   };
 };
 
+exports.getHistory = async ({ user }) => {
+  const currentUser = await ensureMahasiswa(user);
+  const sessions = await chatbotRepository.getClosedSessionsByUser(currentUser.id);
+
+  return sessions.map((session) => ({
+    session_id: session.id,
+    summary: session.final_summary || null,
+    created_at: session.created_at,
+    status: 'completed'
+  }));
+};
+
+exports.getHistoryDetail = async ({ user, sessionId }) => {
+  const currentUser = await ensureMahasiswa(user);
+  const session = await chatbotRepository.findClosedSessionByIdForUser(sessionId, currentUser.id);
+
+  if (!session) {
+    throw { status: 404, message: 'Riwayat chatbot tidak ditemukan' };
+  }
+
+  const messages = await chatbotRepository.getMessagesBySession(session.id);
+
+  return {
+    session_id: session.id,
+    is_active: false,
+    summary: session.final_summary || null,
+    messages
+  };
+};
+
 exports.sendMessage = async ({ user, body }) => {
   const currentUser = await ensureMahasiswa(user);
 

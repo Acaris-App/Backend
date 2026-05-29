@@ -78,6 +78,8 @@ Sistem ini menggunakan pola **Clean Architecture** untuk memastikan kode mudah d
 | Method | Endpoint | Akses |
 | :--- | :--- | :--- |
 | GET | `/chatbot/session/active` | Mahasiswa |
+| GET | `/chatbot/history` | Mahasiswa |
+| GET | `/chatbot/history/:session_id` | Mahasiswa |
 | POST | `/chatbot/message` | Mahasiswa |
 | POST | `/chatbot/session/:session_id/generate-summary` | Mahasiswa |
 | POST | `/chatbot/session/:session_id/close` | Mahasiswa |
@@ -85,6 +87,8 @@ Sistem ini menggunakan pola **Clean Architecture** untuk memastikan kode mudah d
 
 Catatan response chatbot:
 - `GET /chatbot/session/active` mengembalikan `data: null` jika tidak ada sesi aktif.
+- `GET /chatbot/history` mengembalikan array sesi selesai milik mahasiswa login; `summary` berasal dari `final_summary`.
+- `GET /chatbot/history/:session_id` mengembalikan detail riwayat dengan struktur seperti active session, `is_active: false`, `summary`, dan `messages`.
 - `POST /chatbot/message` menerima `session_id` null/string kosong untuk membuat atau melanjutkan sesi aktif milik mahasiswa.
 - `POST /chatbot/session/:session_id/generate-summary` meneruskan seluruh history sesi ke workflow AI/n8n dan mengharapkan field `draft_summary`, `summary`, atau `output`.
 - `POST /chatbot/session/:session_id/close` menyimpan `final_summary` dan mengubah status sesi menjadi `selesai`.

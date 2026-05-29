@@ -42,6 +42,8 @@ POST /schedule
 GET  /schedule/available
 POST /schedule/book
 GET  /chatbot/session/active
+GET  /chatbot/history
+GET  /chatbot/history/:session_id
 POST /chatbot/message
 POST /chatbot/session/:session_id/generate-summary
 POST /chatbot/session/:session_id/close

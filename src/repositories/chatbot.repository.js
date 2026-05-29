@@ -25,6 +25,33 @@ exports.findSessionByIdForUser = async (sessionId, mahasiswaId) => {
   return result.rows[0];
 };
 
+exports.getClosedSessionsByUser = async (mahasiswaId) => {
+  const result = await db.query(
+    `SELECT id, mahasiswa_id, status, final_summary, created_at, updated_at, closed_at
+     FROM chatbot_sessions
+     WHERE mahasiswa_id = $1
+       AND status = 'selesai'
+     ORDER BY COALESCE(closed_at, updated_at, created_at) DESC`,
+    [mahasiswaId]
+  );
+
+  return result.rows;
+};
+
+exports.findClosedSessionByIdForUser = async (sessionId, mahasiswaId) => {
+  const result = await db.query(
+    `SELECT id, mahasiswa_id, status, final_summary, created_at, updated_at, closed_at
+     FROM chatbot_sessions
+     WHERE id = $1
+       AND mahasiswa_id = $2
+       AND status = 'selesai'
+     LIMIT 1`,
+    [sessionId, mahasiswaId]
+  );
+
+  return result.rows[0];
+};
+
 exports.createSession = async ({ id, mahasiswa_id }) => {
   const result = await db.query(
     `INSERT INTO chatbot_sessions (id, mahasiswa_id, status)

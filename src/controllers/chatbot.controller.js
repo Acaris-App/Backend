@@ -13,6 +13,35 @@ exports.getActiveSession = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+exports.getHistory = async (req, res, next) => {
+  try {
+    const data = await chatbotService.getHistory({
+      user: req.user
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Berhasil mengambil riwayat obrolan',
+      data
+    });
+  } catch (err) { next(err); }
+};
+
+exports.getHistoryDetail = async (req, res, next) => {
+  try {
+    const data = await chatbotService.getHistoryDetail({
+      user: req.user,
+      sessionId: req.params.session_id
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Berhasil mengambil detail riwayat',
+      data
+    });
+  } catch (err) { next(err); }
+};
+
 exports.sendMessage = async (req, res, next) => {
   try {
     const result = await chatbotService.sendMessage({
