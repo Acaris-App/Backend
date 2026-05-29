@@ -91,7 +91,7 @@ exports.getRiwayatBimbingan = async ({ user, mahasiswaId }) => {
       time,
       agenda:           row.agenda || null,
       status,
-      keterangan_dosen: ""
+      keterangan:       row.keterangan || null
     };
   });
 };

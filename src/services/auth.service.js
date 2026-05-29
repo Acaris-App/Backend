@@ -15,6 +15,8 @@ const { sendOTPEmail } = require('../utils/email');
 const { validateRegister } = require('../validators/auth.validator');
 const { checkLoginLimit } = require('./rateLimit.service');
 
+const normalizeOTPCode = (code) => String(code || '').replace(/\D/g, '');
+
 // ================= HELPER GCS PROFILE PICTURE =================
 const uploadProfilePicture = async (file, nip) => {
   const ext = file.mimetype.split('/')[1];
@@ -314,6 +316,10 @@ exports.registerDosen = async (payload, file) => {
 // ================= VERIFY REGISTER OTP =================
 exports.verifyRegisterOTP = async ({ email, code }) => {
 
+  if (!email || !code) {
+    throw { status: 400, message: "Email dan kode OTP wajib diisi" };
+  }
+
   const user = await userRepository.findByEmail(email);
   if (!user) throw { status: 404, message: "User tidak ditemukan" };
 
@@ -323,7 +329,8 @@ exports.verifyRegisterOTP = async ({ email, code }) => {
     throw { status: 400, message: "OTP tidak valid atau expired" };
   }
 
-  const isValid = await compareOTP(code.trim(), otpData.code);
+  const normalizedCode = normalizeOTPCode(code);
+  const isValid = await compareOTP(normalizedCode, otpData.code);
 
   if (!isValid) {
     throw { status: 400, message: "OTP tidak valid atau expired" };
@@ -434,7 +441,8 @@ exports.verifyResetOTP = async ({ email, code }) => {
     throw { status: 400, message: "OTP tidak valid atau expired" };
   }
 
-  const isValid = await compareOTP(code.trim(), otpData.code);
+  const normalizedCode = normalizeOTPCode(code);
+  const isValid = await compareOTP(normalizedCode, otpData.code);
   if (!isValid) {
     throw { status: 400, message: "OTP tidak valid atau expired" };
   }
@@ -462,7 +470,8 @@ exports.resetPassword = async ({ email, code, new_password }) => {
     throw { status: 400, message: "OTP tidak valid atau expired" };
   }
 
-  const isValid = await compareOTP(code.trim(), otpData.code);
+  const normalizedCode = normalizeOTPCode(code);
+  const isValid = await compareOTP(normalizedCode, otpData.code);
   if (!isValid) {
     throw { status: 400, message: "OTP tidak valid atau expired" };
   }

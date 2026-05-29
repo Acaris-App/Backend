@@ -44,7 +44,6 @@ exports.findOTPByUser = async (userId, type) => {
      WHERE user_id = $1
      AND type = $2
      AND is_used = false
-     AND expires_at > NOW()
      ORDER BY created_at DESC
      LIMIT 1`,
     [userId, type]
