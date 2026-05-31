@@ -387,10 +387,15 @@ exports.closeSession = async ({ user, sessionId, body }) => {
     final_summary: finalSummary
   });
 
+  const resultSession = closedSession || await chatbotRepository.findSessionByIdForUser(session.id, currentUser.id);
+  if (!resultSession || resultSession.status !== 'selesai') {
+    throw { status: 409, message: 'Sesi chatbot gagal ditutup. Silakan cek status sesi lalu coba lagi.' };
+  }
+
   return {
-    session_id: closedSession.id,
+    session_id: resultSession.id,
     is_active: false,
-    final_summary: closedSession.final_summary,
-    closed_at: closedSession.closed_at
+    final_summary: resultSession.final_summary,
+    closed_at: resultSession.closed_at
   };
 };

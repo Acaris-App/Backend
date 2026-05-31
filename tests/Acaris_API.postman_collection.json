@@ -1843,7 +1843,22 @@
               ]
             },
             "description": "Cek sesi chatbot aktif milik mahasiswa login. Jika tidak ada sesi aktif, response success dengan data: null."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.session_id) {",
+                  "  pm.collectionVariables.set('chatbot_session_id', json.data.session_id);",
+                  "  console.log('Chatbot session ID tersimpan:', json.data.session_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "GET Riwayat Chatbot",
@@ -1921,7 +1936,22 @@
               ]
             },
             "description": "Mengirim pesan ke Aca. Kirim session_id null/string kosong untuk chat pertama; backend akan membuat atau memakai sesi aktif mahasiswa. Response data: session_id, reply_text, created_at."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.session_id) {",
+                  "  pm.collectionVariables.set('chatbot_session_id', json.data.session_id);",
+                  "  console.log('Chatbot session ID tersimpan:', json.data.session_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "POST Generate Draft Summary Chatbot",
