@@ -1905,7 +1905,21 @@
               ]
             },
             "description": "Mengambil detail riwayat chatbot berdasarkan session_id. Struktur data mirip GET /chatbot/session/active, tetapi is_active false dan memiliki summary."
-          }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var sessionId = pm.collectionVariables.get('chatbot_session_id');",
+                  "if (!sessionId || sessionId === '{{chatbot_session_id}}') {",
+                  "  throw new Error('chatbot_session_id kosong. Jalankan POST Kirim Pesan Chatbot dulu, atau salin session_id dari GET Riwayat Chatbot.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "POST Kirim Pesan Chatbot",
@@ -1923,7 +1937,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"session_id\": null,\n  \"message\": \"Apakah daftar pustaka wajib pakai Mendeley?\"\n}"
+              "raw": "{\n  \"message\": \"Apakah daftar pustaka wajib pakai Mendeley?\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/chatbot/message",
@@ -1935,7 +1949,7 @@
                 "message"
               ]
             },
-            "description": "Mengirim pesan ke Aca. Kirim session_id null/string kosong untuk chat pertama; backend akan membuat atau memakai sesi aktif mahasiswa. Response data: session_id, reply_text, created_at."
+            "description": "Mengirim pesan ke Aca. session_id tidak wajib; backend akan memakai sesi aktif mahasiswa atau membuat sesi baru jika belum ada. Response data.session_id otomatis disimpan ke variable chatbot_session_id."
           },
           "event": [
             {
@@ -1976,7 +1990,21 @@
               ]
             },
             "description": "Meminta draft kesimpulan dari AI berdasarkan seluruh history pada session_id. Response data: draft_summary."
-          }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var sessionId = pm.collectionVariables.get('chatbot_session_id');",
+                  "if (!sessionId || sessionId === '{{chatbot_session_id}}') {",
+                  "  throw new Error('chatbot_session_id kosong. Jalankan POST Kirim Pesan Chatbot dulu, atau GET Sesi Aktif Chatbot jika sesi masih aktif.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "POST Close Session Chatbot",
@@ -2009,7 +2037,21 @@
               ]
             },
             "description": "Menyimpan catatan final dan menutup sesi chatbot. Setelah sukses, sesi tidak lagi muncul di GET /chatbot/session/active."
-          }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var sessionId = pm.collectionVariables.get('chatbot_session_id');",
+                  "if (!sessionId || sessionId === '{{chatbot_session_id}}') {",
+                  "  throw new Error('chatbot_session_id kosong. Jalankan POST Kirim Pesan Chatbot dulu, atau GET Sesi Aktif Chatbot jika sesi masih aktif.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "POST Chat Aca Legacy",
