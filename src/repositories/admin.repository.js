@@ -51,7 +51,17 @@ exports.getAdminDashboardStats = async () => {
        CROSS JOIN semester_range sr
        WHERE b.status NOT IN ('dibatalkan')
          AND j.tanggal >= sr.start_date
-         AND j.tanggal < sr.end_date) AS total_bimbingan
+         AND j.tanggal < sr.end_date) AS total_bimbingan,
+      (SELECT COUNT(*)
+       FROM chatbot_messages cm
+       JOIN chatbot_sessions cs ON cs.id = cm.session_id
+       JOIN users m ON m.id = cs.mahasiswa_id
+       CROSS JOIN semester_range sr
+       WHERE cm.sender = 'user'
+         AND m.role = 'mahasiswa'
+         AND m.is_verified = true
+         AND cm.created_at >= sr.start_date
+         AND cm.created_at < sr.end_date) AS total_chatbot
   `);
   return result.rows[0];
 };
@@ -95,6 +105,29 @@ exports.getTopMahasiswaBimbinganSemesterIni = async () => {
       AND b.status NOT IN ('dibatalkan')
       AND j.tanggal >= sr.start_date
       AND j.tanggal < sr.end_date
+    GROUP BY m.id, m.name, m.npm_nip
+    ORDER BY COUNT(*) DESC, m.name ASC
+    LIMIT 5
+  `);
+  return result.rows;
+};
+
+exports.getTopMahasiswaChatbotSemesterIni = async () => {
+  const result = await db.query(`
+    ${SEMESTER_RANGE_CTE}
+    SELECT
+      m.name AS nama,
+      m.npm_nip AS npm,
+      COUNT(*) AS total
+    FROM chatbot_messages cm
+    JOIN chatbot_sessions cs ON cs.id = cm.session_id
+    JOIN users m ON m.id = cs.mahasiswa_id
+    CROSS JOIN semester_range sr
+    WHERE cm.sender = 'user'
+      AND m.role = 'mahasiswa'
+      AND m.is_verified = true
+      AND cm.created_at >= sr.start_date
+      AND cm.created_at < sr.end_date
     GROUP BY m.id, m.name, m.npm_nip
     ORDER BY COUNT(*) DESC, m.name ASC
     LIMIT 5

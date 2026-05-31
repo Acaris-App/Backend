@@ -61,12 +61,12 @@ Sistem ini menggunakan pola **Clean Architecture** untuk memastikan kode mudah d
 ### 2a. Admin
 | Method | Endpoint | Deskripsi |
 | :--- | :--- | :--- |
-| GET | `/admin/dashboard` | Dashboard admin: profil admin, total user aktif, total bimbingan semester ini, top dosen/mahasiswa bimbingan, dan placeholder chatbot. |
+| GET | `/admin/dashboard` | Dashboard admin: profil admin, total user aktif, total bimbingan semester ini, top dosen/mahasiswa bimbingan, total chatbot, dan top mahasiswa chatbot. |
 
 ### 2b. Dosen
 | Method | Endpoint | Deskripsi |
 | :--- | :--- | :--- |
-| GET | `/dosen/dashboard` | Dashboard dosen: profil dosen, ringkasan bimbingan, jadwal/kalender, top mahasiswa bimbingan dosen login, dan placeholder chatbot. |
+| GET | `/dosen/dashboard` | Dashboard dosen: profil dosen, ringkasan bimbingan, jadwal/kalender, top mahasiswa bimbingan dosen login, dan top mahasiswa chatbot bimbingan dosen login. |
 
 ### 3. Academic Document
 | Method | Endpoint | Deskripsi |

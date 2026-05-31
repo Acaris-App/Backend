@@ -17,11 +17,12 @@ exports.getDashboard = async ({ user }) => {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
   }
 
-  const [profile, stats, topDosen, topMahasiswa] = await Promise.all([
+  const [profile, stats, topDosen, topMahasiswa, topMahasiswaChatbot] = await Promise.all([
     adminRepository.getAdminDashboardProfile(user.id),
     adminRepository.getAdminDashboardStats(),
     adminRepository.getTopDosenBimbinganSemesterIni(),
-    adminRepository.getTopMahasiswaBimbinganSemesterIni()
+    adminRepository.getTopMahasiswaBimbinganSemesterIni(),
+    adminRepository.getTopMahasiswaChatbotSemesterIni()
   ]);
 
   if (!profile) {
@@ -35,7 +36,7 @@ exports.getDashboard = async ({ user }) => {
     total_mahasiswa: parseInt(stats.total_mahasiswa) || 0,
     total_dosen: parseInt(stats.total_dosen) || 0,
     total_bimbingan: parseInt(stats.total_bimbingan) || 0,
-    total_chatbot: 0,
+    total_chatbot: parseInt(stats.total_chatbot) || 0,
     top_dosen_bimbingan: topDosen.map(row => ({
       nama: row.nama,
       nip: row.nip,
@@ -46,7 +47,11 @@ exports.getDashboard = async ({ user }) => {
       npm: row.npm,
       total: parseInt(row.total) || 0
     })),
-    top_mahasiswa_chatbot: []
+    top_mahasiswa_chatbot: topMahasiswaChatbot.map(row => ({
+      nama: row.nama,
+      npm: row.npm,
+      total: parseInt(row.total) || 0
+    }))
   };
 };
 
