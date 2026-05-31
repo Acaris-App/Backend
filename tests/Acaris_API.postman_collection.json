@@ -20,6 +20,11 @@
       "key": "chatbot_session_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "chatbot_final_summary",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -1918,6 +1923,19 @@
                 ],
                 "type": "text/javascript"
               }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.draft_summary) {",
+                  "  pm.collectionVariables.set('chatbot_final_summary', json.data.draft_summary);",
+                  "  console.log('Draft summary tersimpan:', json.data.draft_summary);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
           ]
         },
@@ -2022,7 +2040,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"final_summary\": \"Tanya format margin 4433 dan wajib Mendeley.\"\n}"
+              "raw": "{\n  \"final_summary\": \"{{chatbot_final_summary}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/chatbot/session/{{chatbot_session_id}}/close",
@@ -2046,6 +2064,10 @@
                   "var sessionId = pm.collectionVariables.get('chatbot_session_id');",
                   "if (!sessionId || sessionId === '{{chatbot_session_id}}') {",
                   "  throw new Error('chatbot_session_id kosong. Jalankan POST Kirim Pesan Chatbot dulu, atau GET Sesi Aktif Chatbot jika sesi masih aktif.');",
+                  "}",
+                  "var finalSummary = pm.collectionVariables.get('chatbot_final_summary');",
+                  "if (!finalSummary || finalSummary === '{{chatbot_final_summary}}') {",
+                  "  throw new Error('chatbot_final_summary kosong. Jalankan POST Generate Draft Summary Chatbot dulu, atau isi variable chatbot_final_summary manual.');",
                   "}"
                 ],
                 "type": "text/javascript"
