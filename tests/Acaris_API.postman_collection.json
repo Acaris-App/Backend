@@ -1923,19 +1923,6 @@
                 ],
                 "type": "text/javascript"
               }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var json = pm.response.json();",
-                  "if (json.data && json.data.draft_summary) {",
-                  "  pm.collectionVariables.set('chatbot_final_summary', json.data.draft_summary);",
-                  "  console.log('Draft summary tersimpan:', json.data.draft_summary);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
             }
           ]
         },
@@ -2017,6 +2004,19 @@
                   "var sessionId = pm.collectionVariables.get('chatbot_session_id');",
                   "if (!sessionId || sessionId === '{{chatbot_session_id}}') {",
                   "  throw new Error('chatbot_session_id kosong. Jalankan POST Kirim Pesan Chatbot dulu, atau GET Sesi Aktif Chatbot jika sesi masih aktif.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.draft_summary) {",
+                  "  pm.collectionVariables.set('chatbot_final_summary', json.data.draft_summary);",
+                  "  console.log('Draft summary tersimpan:', json.data.draft_summary);",
                   "}"
                 ],
                 "type": "text/javascript"
