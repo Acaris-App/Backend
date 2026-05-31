@@ -1,6 +1,75 @@
 const documentRepository = require('../repositories/document.repository');
 const profileRepository = require('../repositories/profile.repository');
+const userRepository = require('../repositories/user.repository');
 const { bucket } = require('../config/gcs');
+
+const DEFAULT_DOCUMENT_EXTRACT_WEBHOOK_URL = 'http://34.101.47.211:5678/webhook/mahasiswa/ekstrak-dokumen';
+const DOCUMENT_EXTRACT_TIMEOUT_MS = parseInt(process.env.N8N_DOCUMENT_EXTRACT_TIMEOUT_MS, 10) || 30000;
+
+const getDocumentExtractWebhookUrl = () => (
+  process.env.N8N_DOCUMENT_EXTRACT_WEBHOOK_URL || DEFAULT_DOCUMENT_EXTRACT_WEBHOOK_URL
+);
+
+const parseWebhookResponse = async (response) => {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    return text;
+  }
+};
+
+const notifyDocumentExtractionWebhook = async ({ document, user, source }) => {
+  const currentUser = user.npm_nip ? user : await userRepository.findById(user.id);
+  const npmMahasiswa = currentUser?.npm_nip;
+
+  if (!npmMahasiswa) {
+    console.warn(`[n8n] Skip ekstrak dokumen ${document.id}: NPM mahasiswa belum tersedia`);
+    return;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), DOCUMENT_EXTRACT_TIMEOUT_MS);
+
+  const payload = {
+    action: 'extract_mahasiswa_document',
+    document_id: document.id,
+    npm_mahasiswa: npmMahasiswa,
+    document_type: document.document_type,
+    semester: document.document_type === 'transkrip' ? null : document.semester,
+    file_url: document.file_path,
+    source
+  };
+
+  try {
+    const response = await fetch(getDocumentExtractWebhookUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    const responseBody = await parseWebhookResponse(response);
+    if (!response.ok) {
+      const message = responseBody?.message || responseBody?.error || response.statusText;
+      console.error(`[n8n] Gagal trigger ekstrak dokumen ${document.id}: ${message}`);
+      return;
+    }
+
+    console.log(`[n8n] Trigger ekstrak dokumen ${document.id} berhasil`);
+  } catch (err) {
+    const message = err.name === 'AbortError'
+      ? `timeout setelah ${DOCUMENT_EXTRACT_TIMEOUT_MS}ms`
+      : err.message;
+    console.error(`[n8n] Gagal trigger ekstrak dokumen ${document.id}: ${message}`);
+  } finally {
+    clearTimeout(timeout);
+  }
+};
 
 // ================= HELPER GCS UPLOAD =================
 const uploadToGCS = async (file, filename, userId) => {
@@ -129,6 +198,12 @@ exports.uploadDocument = async ({ user, body, file }) => {
       await deleteFromGCS(newFilename, user.id);
       throw dbErr;
   }
+
+  await notifyDocumentExtractionWebhook({
+    document,
+    user,
+    source: 'backend_document_upload'
+  });
 
   return document;
 
@@ -298,6 +373,12 @@ exports.updateDocument = async ({ user, documentId, file }) => {
     await deleteFromGCS(newFilename, user.id);
     throw dbErr;
   }
+
+  await notifyDocumentExtractionWebhook({
+    document: updated,
+    user,
+    source: 'backend_document_update'
+  });
 
   return updated;
 };
