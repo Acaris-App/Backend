@@ -10,7 +10,7 @@
       "name": "Ekstrak Dokumen",
       "item": [
         {
-          "name": "Test Webhook Ekstrak Dokumen",
+          "name": "Test - Mahasiswa Ekstrak Dokumen",
           "event": [
             {
               "listen": "test",
@@ -34,7 +34,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"document_id\": \"83\",\n  \"file_url\": \"https://storage.googleapis.com/acaris-storage/58/user-khs-semester-1-2026-05-21-1779368637153.pdf\"\n}",
+              "raw": "{\n  \"action\": \"extract_mahasiswa_document\",\n  \"document_id\": \"{{document_id}}\",\n  \"npm_mahasiswa\": \"{{npm_mahasiswa}}\",\n  \"document_type\": \"{{document_type}}\",\n  \"semester\": {{semester}},\n  \"file_url\": \"{{document_file_url}}\",\n  \"source\": \"postman_webhook_test\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -42,21 +42,22 @@
               }
             },
             "url": {
-              "raw": "{{n8n_base_url}}/webhook-test/ekstrak-dokumen",
+              "raw": "{{n8n_base_url}}/webhook-test/mahasiswa/ekstrak-dokumen",
               "host": [
                 "{{n8n_base_url}}"
               ],
               "path": [
                 "webhook-test",
+                "mahasiswa",
                 "ekstrak-dokumen"
               ]
             },
-            "description": "Klik Execute workflow di n8n dulu, lalu kirim request ini. Webhook-test n8n hanya menerima satu request per eksekusi manual."
+            "description": "Klik Execute workflow di n8n dulu, lalu kirim request ini. Payload meniru backend setelah mahasiswa upload KRS/KHS: file_url dari storage, npm_mahasiswa, document_type, semester, dan document_id."
           },
           "response": []
         },
         {
-          "name": "Production Webhook Ekstrak Dokumen",
+          "name": "Prod - Mahasiswa Ekstrak Dokumen",
           "event": [
             {
               "listen": "test",
@@ -80,7 +81,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"document_id\": \"83\",\n  \"file_url\": \"https://storage.googleapis.com/acaris-storage/58/user-khs-semester-1-2026-05-21-1779368637153.pdf\"\n}",
+              "raw": "{\n  \"action\": \"extract_mahasiswa_document\",\n  \"document_id\": \"{{document_id}}\",\n  \"npm_mahasiswa\": \"{{npm_mahasiswa}}\",\n  \"document_type\": \"{{document_type}}\",\n  \"semester\": {{semester}},\n  \"file_url\": \"{{document_file_url}}\",\n  \"source\": \"postman_webhook_prod\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -88,16 +89,17 @@
               }
             },
             "url": {
-              "raw": "{{n8n_base_url}}/webhook/ekstrak-dokumen",
+              "raw": "{{n8n_base_url}}/webhook/mahasiswa/ekstrak-dokumen",
               "host": [
                 "{{n8n_base_url}}"
               ],
               "path": [
                 "webhook",
+                "mahasiswa",
                 "ekstrak-dokumen"
               ]
             },
-            "description": "Gunakan request ini kalau workflow n8n sudah diaktifkan/production. Tidak perlu klik Execute workflow setiap test."
+            "description": "Gunakan request ini kalau workflow n8n sudah diaktifkan/production. Payload meniru backend setelah mahasiswa upload KRS/KHS: file_url dari storage, npm_mahasiswa, document_type, semester, dan document_id."
           },
           "response": []
         }
@@ -377,6 +379,22 @@
     {
       "key": "npm_mahasiswa",
       "value": "1234567890"
+    },
+    {
+      "key": "document_id",
+      "value": "83"
+    },
+    {
+      "key": "document_type",
+      "value": "khs"
+    },
+    {
+      "key": "semester",
+      "value": "1"
+    },
+    {
+      "key": "document_file_url",
+      "value": "https://storage.googleapis.com/acaris-storage/58/user-khs-semester-1-2026-05-21-1779368637153.pdf"
     }
   ]
 }
