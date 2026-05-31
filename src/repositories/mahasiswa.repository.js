@@ -49,9 +49,18 @@ exports.countBimbinganKeseluruhan = async (userId) => {
 };
 
 // ================= HITUNG CHATBOT BULAN INI =================
-// TODO: aktifkan setelah tabel chatbot_logs selesai dimigrasikan
 exports.countChatbotBulanIni = async (userId) => {
-  return 0;
+  const result = await db.query(`
+    SELECT COUNT(*) AS total
+    FROM chatbot_messages cm
+    JOIN chatbot_sessions cs ON cs.id = cm.session_id
+    WHERE cs.mahasiswa_id = $1
+      AND cm.sender = 'user'
+      AND cm.created_at >= date_trunc('month', NOW())
+      AND cm.created_at < date_trunc('month', NOW()) + INTERVAL '1 month'
+  `, [userId]);
+
+  return parseInt(result.rows[0].total) || 0;
 };
 
 // ================= JADWAL BIMBINGAN AKTIF =================
