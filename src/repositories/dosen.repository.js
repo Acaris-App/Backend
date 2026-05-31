@@ -174,17 +174,15 @@ exports.getTopMahasiswaChatbotSemesterIni = async (dosenId) => {
       u.name AS nama,
       u.npm_nip AS npm,
       COUNT(*) AS total
-    FROM chatbot_messages cm
-    JOIN chatbot_sessions cs ON cs.id = cm.session_id
+    FROM chatbot_sessions cs
     JOIN users u ON u.id = cs.mahasiswa_id
     JOIN mahasiswa m ON m.user_id = u.id
     CROSS JOIN semester_range sr
     WHERE m.dosen_pa_id = $1
       AND u.role = 'mahasiswa'
       AND u.is_verified = true
-      AND cm.sender = 'user'
-      AND cm.created_at >= sr.start_date
-      AND cm.created_at < sr.end_date
+      AND cs.created_at >= sr.start_date
+      AND cs.created_at < sr.end_date
     GROUP BY u.id, u.name, u.npm_nip
     ORDER BY COUNT(*) DESC, u.name ASC
     LIMIT 5

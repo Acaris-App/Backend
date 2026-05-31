@@ -1322,7 +1322,7 @@
                 "dashboard"
               ]
             },
-            "description": "Dashboard dosen. Role: dosen only.\n\nResponse fields:\n- nama_dosen, nip_dosen, foto_dosen, kode_kelas\n- jumlah_mahasiswa_bimbingan, bimbingan_hari_ini, bimbingan_semester_ini (semua int)\n- jadwal_minggu_ini: jadwal 7 hari ke depan, tiap item punya array mahasiswa []\n- kalender_bimbingan: [{date YYYY-MM-DD, status: booked|available}]\n- top_mahasiswa_bimbingan: maksimal 5 mahasiswa bimbingan dosen login, urut total bimbingan semester ini\n- top_mahasiswa_chatbot: maksimal 5 mahasiswa bimbingan dosen login, urut total pesan chatbot semester ini"
+            "description": "Dashboard dosen. Role: dosen only.\n\nResponse fields:\n- nama_dosen, nip_dosen, foto_dosen, kode_kelas\n- jumlah_mahasiswa_bimbingan, bimbingan_hari_ini, bimbingan_semester_ini (semua int)\n- jadwal_minggu_ini: jadwal 7 hari ke depan, tiap item punya array mahasiswa []\n- kalender_bimbingan: [{date YYYY-MM-DD, status: booked|available}]\n- top_mahasiswa_bimbingan: maksimal 5 mahasiswa bimbingan dosen login, urut total bimbingan semester ini\n- top_mahasiswa_chatbot: maksimal 5 mahasiswa bimbingan dosen login, urut total sesi chatbot semester ini"
           }
         },
         {
@@ -1474,7 +1474,7 @@
                 "dashboard"
               ]
             },
-            "description": "Dashboard admin untuk ringkasan entitas aktif dan bimbingan semester ini.\n\nResponse data:\n- nama_admin, nip_admin, foto_admin\n- total_mahasiswa, total_dosen, total_bimbingan\n- total_chatbot: total pesan chatbot mahasiswa semester ini\n- top_dosen_bimbingan: maksimal 5 data\n- top_mahasiswa_bimbingan: maksimal 5 data\n- top_mahasiswa_chatbot: maksimal 5 mahasiswa, urut total pesan chatbot semester ini"
+            "description": "Dashboard admin untuk ringkasan entitas aktif dan bimbingan semester ini.\n\nResponse data:\n- nama_admin, nip_admin, foto_admin\n- total_mahasiswa, total_dosen, total_bimbingan\n- total_chatbot: total sesi chatbot mahasiswa semester ini\n- top_dosen_bimbingan: maksimal 5 data\n- top_mahasiswa_bimbingan: maksimal 5 data\n- top_mahasiswa_chatbot: maksimal 5 mahasiswa, urut total sesi chatbot semester ini"
           }
         },
         {
