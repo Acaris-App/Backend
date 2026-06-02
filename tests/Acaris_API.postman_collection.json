@@ -633,7 +633,7 @@
                 "profile"
               ]
             },
-            "description": "Ambil profil lengkap. Semua role dapat profile_picture URL.\n\nMahasiswa: tambah angkatan, ipk, current_semester, dan objek documents { krs: [...], khs: [...], transkrip: {...} }\nDosen: tambah kode_kelas."
+            "description": "Ambil profil lengkap. Semua role dapat profile_picture URL.\n\nMahasiswa: tambah angkatan, ipk, current_semester, is_dokumen_lengkap, dan objek documents { krs: [...], khs: [...], transkrip: {...} }\nDosen: tambah kode_kelas."
           }
         },
         {
@@ -1408,6 +1408,73 @@
               ]
             },
             "description": "Semua riwayat booking bimbingan mahasiswa tersebut. Status: 'selesai' (lewat), 'menunggu' (upcoming), 'dibatalkan'."
+          }
+        },
+        {
+          "name": "GET Riwayat Chatbot Mahasiswa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dosen/mahasiswa/:mahasiswaId/chatbot",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dosen",
+                "mahasiswa",
+                ":mahasiswaId",
+                "chatbot"
+              ],
+              "variable": [
+                {
+                  "key": "mahasiswaId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Dosen mengambil daftar riwayat sesi chatbot mahasiswa bimbingannya. Struktur data sama seperti GET /chatbot/history milik mahasiswa."
+          }
+        },
+        {
+          "name": "GET Detail Chatbot Mahasiswa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dosen/mahasiswa/:mahasiswaId/chatbot/:sessionId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dosen",
+                "mahasiswa",
+                ":mahasiswaId",
+                "chatbot",
+                ":sessionId"
+              ],
+              "variable": [
+                {
+                  "key": "mahasiswaId",
+                  "value": "1"
+                },
+                {
+                  "key": "sessionId",
+                  "value": "S-TEST-001"
+                }
+              ]
+            },
+            "description": "Dosen mengambil detail percakapan chatbot mahasiswa bimbingannya. Struktur data sama seperti GET /chatbot/history/:session_id milik mahasiswa."
           }
         },
         {

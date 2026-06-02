@@ -52,11 +52,15 @@ Sistem ini menggunakan pola **Clean Architecture** untuk memastikan kode mudah d
 ### 2. User & Roles
 | Method | Endpoint | Akses |
 | :--- | :--- | :--- |
-| GET | `/user/me` | Login User |
+| GET | `/user/profile` | Login User |
+| PUT | `/user/profile` | Login User |
 | GET | `/user/mahasiswa` | Mahasiswa |
 | GET | `/user/dosen` | Dosen |
 | GET | `/user/admin` | Admin |
 | GET | `/user/dashboard` | Admin & Dosen |
+
+Catatan response profile mahasiswa:
+- `GET /user/profile` dan `PUT /user/profile` mengembalikan `is_dokumen_lengkap` boolean untuk kontrol akses chatbot di mobile.
 
 ### 2a. Admin
 | Method | Endpoint | Deskripsi |
@@ -67,6 +71,8 @@ Sistem ini menggunakan pola **Clean Architecture** untuk memastikan kode mudah d
 | Method | Endpoint | Deskripsi |
 | :--- | :--- | :--- |
 | GET | `/dosen/dashboard` | Dashboard dosen: profil dosen, ringkasan bimbingan, jadwal/kalender, top mahasiswa bimbingan dosen login, dan top mahasiswa chatbot bimbingan dosen login. |
+| GET | `/dosen/mahasiswa/:mahasiswaId/chatbot` | Dosen mengambil daftar riwayat chatbot mahasiswa bimbingannya. |
+| GET | `/dosen/mahasiswa/:mahasiswaId/chatbot/:sessionId` | Dosen mengambil detail percakapan chatbot mahasiswa bimbingannya. |
 
 ### 3. Academic Document
 | Method | Endpoint | Deskripsi |
@@ -89,6 +95,7 @@ Catatan response chatbot:
 - `GET /chatbot/session/active` mengembalikan `data: null` jika tidak ada sesi aktif.
 - `GET /chatbot/history` mengembalikan array sesi selesai milik mahasiswa login; `summary` berasal dari `final_summary`.
 - `GET /chatbot/history/:session_id` mengembalikan detail riwayat dengan struktur seperti active session, `is_active: false`, `summary`, dan `messages`.
+- `GET /dosen/mahasiswa/:mahasiswaId/chatbot` dan `/dosen/mahasiswa/:mahasiswaId/chatbot/:sessionId` mengembalikan struktur data riwayat chatbot yang sama untuk mahasiswa bimbingan dosen login.
 - `POST /chatbot/message` menerima `session_id` null/string kosong untuk membuat atau melanjutkan sesi aktif milik mahasiswa.
 - `POST /chatbot/session/:session_id/generate-summary` meneruskan seluruh history sesi ke workflow AI/n8n dan mengharapkan field `draft_summary`, `summary`, atau `output`.
 - `POST /chatbot/session/:session_id/close` menyimpan `final_summary` dan mengubah status sesi menjadi `selesai`.

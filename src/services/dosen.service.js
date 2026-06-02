@@ -1,5 +1,6 @@
 const dosenRepository = require('../repositories/dosen.repository');
 const documentRepository = require('../repositories/document.repository');
+const chatbotRepository = require('../repositories/chatbot.repository');
 
 // ================= GET DAFTAR MAHASISWA BIMBINGAN =================
 exports.getMahasiswaBimbingan = async ({ user }) => {
@@ -94,6 +95,51 @@ exports.getRiwayatBimbingan = async ({ user, mahasiswaId }) => {
       keterangan:       row.keterangan || null
     };
   });
+};
+
+// ================= GET RIWAYAT CHATBOT MAHASISWA =================
+exports.getRiwayatChatbotMahasiswa = async ({ user, mahasiswaId }) => {
+  if (!user || user.role !== 'dosen') {
+    throw { status: 403, message: "Hanya dosen yang dapat mengakses endpoint ini" };
+  }
+
+  const mahasiswa = await dosenRepository.getMahasiswaDetail(mahasiswaId, user.id);
+  if (!mahasiswa) {
+    throw { status: 404, message: "Mahasiswa tidak ditemukan atau bukan bimbingan Anda" };
+  }
+
+  const sessions = await chatbotRepository.getClosedSessionsByUser(mahasiswaId);
+  return sessions.map((session) => ({
+    session_id: session.id,
+    summary: session.final_summary || null,
+    created_at: session.created_at,
+    status: 'completed'
+  }));
+};
+
+// ================= GET DETAIL CHATBOT MAHASISWA =================
+exports.getDetailChatbotMahasiswa = async ({ user, mahasiswaId, sessionId }) => {
+  if (!user || user.role !== 'dosen') {
+    throw { status: 403, message: "Hanya dosen yang dapat mengakses endpoint ini" };
+  }
+
+  const mahasiswa = await dosenRepository.getMahasiswaDetail(mahasiswaId, user.id);
+  if (!mahasiswa) {
+    throw { status: 404, message: "Mahasiswa tidak ditemukan atau bukan bimbingan Anda" };
+  }
+
+  const session = await chatbotRepository.findClosedSessionByIdForUser(sessionId, mahasiswaId);
+  if (!session) {
+    throw { status: 404, message: "Riwayat chatbot tidak ditemukan" };
+  }
+
+  const messages = await chatbotRepository.getMessagesBySession(session.id);
+  return {
+    session_id: session.id,
+    is_active: false,
+    summary: session.final_summary || null,
+    messages
+  };
 };
 
 // ================= UPDATE KETERANGAN DOSEN =================

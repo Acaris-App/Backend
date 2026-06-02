@@ -10,6 +10,8 @@ const dosenOnly = [authenticate, authorize('dosen')];
 
 // GET /dosen/mahasiswa — daftar mahasiswa bimbingan
 router.get('/mahasiswa', ...dosenOnly, dosenController.getMahasiswaBimbingan);
+router.get('/mahasiswa/:mahasiswaId/chatbot', ...dosenOnly, dosenController.getRiwayatChatbotMahasiswa);
+router.get('/mahasiswa/:mahasiswaId/chatbot/:sessionId', ...dosenOnly, dosenController.getDetailChatbotMahasiswa);
 
 // GET /dosen/mahasiswa/:mahasiswaId/detail — profil + dokumen
 router.get('/mahasiswa/:mahasiswaId/detail', ...dosenOnly, dosenController.getMahasiswaDetail);

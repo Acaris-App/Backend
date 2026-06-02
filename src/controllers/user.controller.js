@@ -26,6 +26,20 @@ const uploadProfilePicture = async (file, npm_nip) => {
 
 // ================= HELPER: BUILD FULL PROFILE RESPONSE =================
 // Dipakai oleh GET, PUT, dan POST photo — satu sumber kebenaran untuk struktur response
+const isDokumenLengkap = ({ currentSemester, documents }) => {
+  const semester = parseInt(currentSemester);
+  if (!semester || semester < 1) return false;
+
+  const hasTranskrip = Boolean(documents.transkrip);
+  const krsSemesters = new Set(documents.krs.map(doc => parseInt(doc.semester)));
+  const khsSemesters = new Set(documents.khs.map(doc => parseInt(doc.semester)));
+  const hasCurrentKrs = krsSemesters.has(semester);
+  const hasRequiredKhs = Array.from({ length: Math.max(semester - 1, 0) }, (_, index) => index + 1)
+    .every(requiredSemester => khsSemesters.has(requiredSemester));
+
+  return hasTranskrip && hasCurrentKrs && hasRequiredKhs;
+};
+
 const buildProfileResponse = async (userId, role) => {
   const user = await userRepository.findById(userId);
   if (!user) throw { status: 404, message: "User tidak ditemukan" };
@@ -73,6 +87,10 @@ const buildProfileResponse = async (userId, role) => {
     }
 
     responseData.documents = documents;
+    responseData.is_dokumen_lengkap = isDokumenLengkap({
+      currentSemester: responseData.current_semester,
+      documents
+    });
   }
 
   if (role === 'dosen') {

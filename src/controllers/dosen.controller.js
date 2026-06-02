@@ -45,6 +45,39 @@ exports.getRiwayatBimbingan = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// ================= GET RIWAYAT CHATBOT MAHASISWA =================
+exports.getRiwayatChatbotMahasiswa = async (req, res, next) => {
+  try {
+    const result = await dosenService.getRiwayatChatbotMahasiswa({
+      user: req.user,
+      mahasiswaId: req.params.mahasiswaId
+    });
+
+    res.json({
+      status: "success",
+      message: "Berhasil mengambil riwayat chatbot mahasiswa",
+      data: result
+    });
+  } catch (err) { next(err); }
+};
+
+// ================= GET DETAIL CHATBOT MAHASISWA =================
+exports.getDetailChatbotMahasiswa = async (req, res, next) => {
+  try {
+    const result = await dosenService.getDetailChatbotMahasiswa({
+      user: req.user,
+      mahasiswaId: req.params.mahasiswaId,
+      sessionId: req.params.sessionId
+    });
+
+    res.json({
+      status: "success",
+      message: "Berhasil mengambil detail chatbot mahasiswa",
+      data: result
+    });
+  } catch (err) { next(err); }
+};
+
 // ================= UPDATE KETERANGAN DOSEN =================
 exports.updateKeteranganDosen = async (req, res, next) => {
   try {
