@@ -633,7 +633,7 @@
                 "profile"
               ]
             },
-            "description": "Ambil profil lengkap. Semua role dapat profile_picture URL.\n\nMahasiswa: tambah angkatan, ipk, current_semester, is_dokumen_lengkap, dan objek documents { krs: [...], khs: [...], transkrip: {...} }\nDosen: tambah kode_kelas."
+            "description": "Ambil profil lengkap. Semua role dapat profile_picture URL.\n\nMahasiswa: tambah angkatan, ipk, current_semester, is_dokumen_lengkap, dan objek documents { krs: [...], khs: [...], transkrip: {...} }. is_dokumen_lengkap true jika KRS semester berjalan, KHS semester berjalan, dan Transkrip sudah ada.\nDosen: tambah kode_kelas."
           }
         },
         {

@@ -60,7 +60,7 @@ Sistem ini menggunakan pola **Clean Architecture** untuk memastikan kode mudah d
 | GET | `/user/dashboard` | Admin & Dosen |
 
 Catatan response profile mahasiswa:
-- `GET /user/profile` dan `PUT /user/profile` mengembalikan `is_dokumen_lengkap` boolean untuk kontrol akses chatbot di mobile.
+- `GET /user/profile` dan `PUT /user/profile` mengembalikan `is_dokumen_lengkap` boolean untuk kontrol akses chatbot di mobile. Nilai `true` jika KRS semester berjalan, KHS semester berjalan, dan Transkrip sudah ada.
 
 ### 2a. Admin
 | Method | Endpoint | Deskripsi |
