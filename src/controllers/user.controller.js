@@ -33,9 +33,10 @@ const isDokumenLengkap = ({ currentSemester, documents }) => {
   const hasTranskrip = Boolean(documents.transkrip);
   const krsSemesters = new Set(documents.krs.map(doc => parseInt(doc.semester)));
   const khsSemesters = new Set(documents.khs.map(doc => parseInt(doc.semester)));
-  const hasRequiredKrs = Array.from({ length: semester }, (_, index) => index + 1)
+  const completedSemesters = Math.max(semester - 1, 0);
+  const hasRequiredKrs = Array.from({ length: completedSemesters }, (_, index) => index + 1)
     .every(requiredSemester => krsSemesters.has(requiredSemester));
-  const hasRequiredKhs = Array.from({ length: Math.max(semester - 1, 0) }, (_, index) => index + 1)
+  const hasRequiredKhs = Array.from({ length: completedSemesters }, (_, index) => index + 1)
     .every(requiredSemester => khsSemesters.has(requiredSemester));
 
   return hasTranskrip && hasRequiredKrs && hasRequiredKhs;
