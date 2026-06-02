@@ -1754,6 +1754,73 @@
           }
         },
         {
+          "name": "GET Riwayat Chatbot Mahasiswa (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId/chatbot",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId",
+                "chatbot"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Admin mengambil daftar riwayat sesi chatbot mahasiswa. Struktur data sama seperti GET /chatbot/history milik mahasiswa."
+          }
+        },
+        {
+          "name": "GET Detail Chatbot Mahasiswa (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId/chatbot/:sessionId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId",
+                "chatbot",
+                ":sessionId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                },
+                {
+                  "key": "sessionId",
+                  "value": "S-TEST-001"
+                }
+              ]
+            },
+            "description": "Admin mengambil detail percakapan chatbot mahasiswa. Struktur data sama seperti GET /chatbot/history/:session_id milik mahasiswa."
+          }
+        },
+        {
           "name": "PATCH Update Status Akun",
           "request": {
             "method": "PATCH",

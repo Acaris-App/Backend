@@ -38,6 +38,8 @@ router.post('/users/:userId/documents',               ...adminOnly, uploadPDF.si
 router.put('/documents/:documentId',                  ...adminOnly, uploadPDF.single('file'), adminController.updateDocumentAdmin);
 router.delete('/documents/:documentId',               ...adminOnly, adminController.deleteDocumentAdmin);
 
+router.get('/users/:id/chatbot', ...adminOnly, adminController.getRiwayatChatbotMahasiswa);
+router.get('/users/:id/chatbot/:sessionId', ...adminOnly, adminController.getDetailChatbotMahasiswa);
 router.get('/users/:id/bimbingan', ...adminOnly, adminController.getRiwayatBimbinganAdmin);
 
 router.get('/classes', ...adminOnly, adminController.getAllKodeKelas);

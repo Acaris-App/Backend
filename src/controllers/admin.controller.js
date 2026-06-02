@@ -149,6 +149,39 @@ exports.getRiwayatBimbinganAdmin = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// ================= GET RIWAYAT CHATBOT MAHASISWA =================
+exports.getRiwayatChatbotMahasiswa = async (req, res, next) => {
+  try {
+    const data = await adminService.getRiwayatChatbotMahasiswa({
+      user: req.user,
+      mahasiswaId: req.params.id
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Berhasil mengambil riwayat chatbot mahasiswa',
+      data
+    });
+  } catch (err) { next(err); }
+};
+
+// ================= GET DETAIL CHATBOT MAHASISWA =================
+exports.getDetailChatbotMahasiswa = async (req, res, next) => {
+  try {
+    const data = await adminService.getDetailChatbotMahasiswa({
+      user: req.user,
+      mahasiswaId: req.params.id,
+      sessionId: req.params.sessionId
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Berhasil mengambil detail chatbot mahasiswa',
+      data
+    });
+  } catch (err) { next(err); }
+};
+
 // ================= GET ALL KODE KELAS =================
 exports.getAllKodeKelas = async (req, res, next) => {
   try {

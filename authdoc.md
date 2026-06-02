@@ -66,6 +66,8 @@ Catatan response profile mahasiswa:
 | Method | Endpoint | Deskripsi |
 | :--- | :--- | :--- |
 | GET | `/admin/dashboard` | Dashboard admin: profil admin, total user aktif, total bimbingan semester ini, top dosen/mahasiswa bimbingan, total chatbot, dan top mahasiswa chatbot. |
+| GET | `/admin/users/:id/chatbot` | Admin mengambil daftar riwayat chatbot mahasiswa tertentu. |
+| GET | `/admin/users/:id/chatbot/:sessionId` | Admin mengambil detail percakapan chatbot mahasiswa tertentu. |
 
 ### 2b. Dosen
 | Method | Endpoint | Deskripsi |
@@ -95,7 +97,7 @@ Catatan response chatbot:
 - `GET /chatbot/session/active` mengembalikan `data: null` jika tidak ada sesi aktif.
 - `GET /chatbot/history` mengembalikan array sesi selesai milik mahasiswa login; `summary` berasal dari `final_summary`.
 - `GET /chatbot/history/:session_id` mengembalikan detail riwayat dengan struktur seperti active session, `is_active: false`, `summary`, dan `messages`.
-- `GET /dosen/mahasiswa/:mahasiswaId/chatbot` dan `/dosen/mahasiswa/:mahasiswaId/chatbot/:sessionId` mengembalikan struktur data riwayat chatbot yang sama untuk mahasiswa bimbingan dosen login.
+- `GET /dosen/mahasiswa/:mahasiswaId/chatbot`, `/dosen/mahasiswa/:mahasiswaId/chatbot/:sessionId`, `/admin/users/:id/chatbot`, dan `/admin/users/:id/chatbot/:sessionId` mengembalikan struktur data riwayat chatbot yang sama.
 - `POST /chatbot/message` menerima `session_id` null/string kosong untuk membuat atau melanjutkan sesi aktif milik mahasiswa.
 - `POST /chatbot/session/:session_id/generate-summary` meneruskan seluruh history sesi ke workflow AI/n8n dan mengharapkan field `draft_summary`, `summary`, atau `output`.
 - `POST /chatbot/session/:session_id/close` menyimpan `final_summary` dan mengubah status sesi menjadi `selesai`.

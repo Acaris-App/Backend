@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const adminRepository  = require('../repositories/admin.repository');
 const documentRepository = require('../repositories/document.repository');
+const chatbotRepository = require('../repositories/chatbot.repository');
 const { bucket } = require('../config/gcs');
 
 const VALID_CATEGORIES = [
@@ -672,6 +673,49 @@ exports.getRiwayatBimbinganAdmin = async ({ user, mahasiswaId }) => {
       keterangan:      row.keterangan_dosen || null
     };
   });
+};
+
+// ================= GET RIWAYAT CHATBOT MAHASISWA (ADMIN) =================
+exports.getRiwayatChatbotMahasiswa = async ({ user, mahasiswaId }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: 'Hanya admin yang dapat mengakses endpoint ini' };
+  }
+
+  const target = await adminRepository.findUserById(mahasiswaId);
+  if (!target) throw { status: 404, message: 'Pengguna tidak ditemukan' };
+  if (target.role !== 'mahasiswa') throw { status: 400, message: 'ID yang diberikan bukan mahasiswa' };
+
+  const sessions = await chatbotRepository.getClosedSessionsByUser(mahasiswaId);
+  return sessions.map((session) => ({
+    session_id: session.id,
+    summary: session.final_summary || null,
+    created_at: session.created_at,
+    status: 'completed'
+  }));
+};
+
+// ================= GET DETAIL CHATBOT MAHASISWA (ADMIN) =================
+exports.getDetailChatbotMahasiswa = async ({ user, mahasiswaId, sessionId }) => {
+  if (!user || user.role !== 'admin') {
+    throw { status: 403, message: 'Hanya admin yang dapat mengakses endpoint ini' };
+  }
+
+  const target = await adminRepository.findUserById(mahasiswaId);
+  if (!target) throw { status: 404, message: 'Pengguna tidak ditemukan' };
+  if (target.role !== 'mahasiswa') throw { status: 400, message: 'ID yang diberikan bukan mahasiswa' };
+
+  const session = await chatbotRepository.findClosedSessionByIdForUser(sessionId, mahasiswaId);
+  if (!session) {
+    throw { status: 404, message: 'Riwayat chatbot tidak ditemukan' };
+  }
+
+  const messages = await chatbotRepository.getMessagesBySession(session.id);
+  return {
+    session_id: session.id,
+    is_active: false,
+    summary: session.final_summary || null,
+    messages
+  };
 };
 
 // ================= GET ALL KODE KELAS =================
