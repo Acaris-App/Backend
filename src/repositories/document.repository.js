@@ -47,6 +47,21 @@ exports.createDocument = async (data) => {
   return result.rows[0];
 };
 
+// ================= REPLACE EXISTING DOCUMENT FILE =================
+exports.replaceDocumentFile = async (documentId, filePath) => {
+  const result = await db.query(
+    `UPDATE dokumen_mahasiswa
+     SET file_path = $1,
+         isi_teks_dokumen = NULL,
+         uploaded_at = NOW()
+     WHERE id = $2
+     RETURNING *`,
+    [filePath, documentId]
+  );
+
+  return result.rows[0];
+};
+
 // ================= FIND BY TYPE & SEMESTER =================
 exports.findByUserTypeSemester = async (userId, type, semester) => {
   const result = await db.query(
@@ -98,7 +113,9 @@ exports.deleteDocument = async (documentId, userId) => {
 exports.updateFilePath = async (documentId, filePath) => {
   const result = await db.query(
     `UPDATE dokumen_mahasiswa
-     SET file_path = $1, uploaded_at = NOW()
+     SET file_path = $1,
+         isi_teks_dokumen = NULL,
+         uploaded_at = NOW()
      WHERE id = $2
      RETURNING *`,
     [filePath, documentId]

@@ -71,6 +71,56 @@ const notifyDocumentExtractionWebhook = async ({ document, user, source }) => {
   }
 };
 
+const notifyDocumentDeletionWebhook = async ({ document, user, source }) => {
+  const currentUser = user.npm_nip ? user : await userRepository.findById(user.id);
+  const npmMahasiswa = currentUser?.npm_nip;
+
+  if (!npmMahasiswa) {
+    console.warn(`[n8n] Skip hapus ekstrak dokumen ${document.id}: NPM mahasiswa belum tersedia`);
+    return;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), DOCUMENT_EXTRACT_TIMEOUT_MS);
+
+  const payload = {
+    action: 'delete_mahasiswa_document',
+    document_id: document.id,
+    npm_mahasiswa: npmMahasiswa,
+    document_type: document.document_type,
+    semester: document.document_type === 'transkrip' ? null : document.semester,
+    file_url: document.file_path,
+    source
+  };
+
+  try {
+    const response = await fetch(getDocumentExtractWebhookUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    const responseBody = await parseWebhookResponse(response);
+    if (!response.ok) {
+      const message = responseBody?.message || responseBody?.error || response.statusText;
+      console.error(`[n8n] Gagal trigger hapus ekstrak dokumen ${document.id}: ${message}`);
+      return;
+    }
+
+    console.log(`[n8n] Trigger hapus ekstrak dokumen ${document.id} berhasil`);
+  } catch (err) {
+    const message = err.name === 'AbortError'
+      ? `timeout setelah ${DOCUMENT_EXTRACT_TIMEOUT_MS}ms`
+      : err.message;
+    console.error(`[n8n] Gagal trigger hapus ekstrak dokumen ${document.id}: ${message}`);
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 // ================= HELPER GCS UPLOAD =================
 const uploadToGCS = async (file, filename, userId) => {
   const filePath = `${userId}/${filename}`;
@@ -161,13 +211,6 @@ exports.uploadDocument = async ({ user, body, file }) => {
       semesterInt
   );
 
-  if (existing) {
-      throw {
-        status: 400,
-        message: `${document_type.toUpperCase()} semester ${semesterInt} sudah diupload`
-      };
-  }
-
   const safeName = (user.name || 'user')
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-');
@@ -187,22 +230,37 @@ exports.uploadDocument = async ({ user, body, file }) => {
 
   let document;
   try {
+    if (existing) {
+      document = await documentRepository.replaceDocumentFile(existing.id, fileUrl);
+    } else {
       document = await documentRepository.createDocument({
         user_id: user.id,
         document_type,
         semester: semesterInt,
         file_path: fileUrl
       });
+    }
   } catch (dbErr) {
       // DB gagal → rollback file dari GCS
       await deleteFromGCS(newFilename, user.id);
       throw dbErr;
   }
 
+  if (existing?.file_path) {
+    try {
+      const oldUrl = new URL(existing.file_path);
+      const oldObjectPath = oldUrl.pathname.split('/').slice(2).join('/');
+      await bucket.file(oldObjectPath).delete();
+      console.log(`[GCS] File lama dihapus: ${oldObjectPath}`);
+    } catch (err) {
+      console.error(`[GCS] Gagal hapus file lama dari GCS: ${err.message}`);
+    }
+  }
+
   await notifyDocumentExtractionWebhook({
     document,
     user,
-    source: 'backend_document_upload'
+    source: existing ? 'backend_document_reupload' : 'backend_document_upload'
   });
 
   return document;
@@ -320,6 +378,11 @@ exports.deleteDocument = async ({ user, documentId }) => {
   }
 
   await documentRepository.deleteDocument(documentId, user.id);
+  await notifyDocumentDeletionWebhook({
+    document: existing,
+    user,
+    source: 'backend_document_delete'
+  });
 
   // Hapus file dari GCS — ekstrak object path dari full URL
   try {
