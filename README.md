@@ -48,7 +48,7 @@ Google Cloud Platform (GCP) menyediakan infrastruktur andal untuk menjalankan ko
 ## 🔧 Detail Infrastruktur Cloud  
 
 ### 🗄️ Cloud SQL  
-<img src="https://k21academy.com/wp-content/uploads/2021/03/cloud-SQL.png" width="120" height="100" alt="Cloud SQL Icon"/>  
+<img src="https://raw.githubusercontent.com/Aku-Mars/gambar/refs/heads/main/cloud-sql.png" width="150" height="120" alt="Cloud SQL Icon"/>  
 Database PostgreSQL relasional untuk menyimpan data terstruktur.  
 
 ```YAML
@@ -62,7 +62,7 @@ Connection      : Cloud SQL Auth Proxy / Private IP
 ---  
 
 ### 📦 Cloud Storage  
-<img src="https://symbols.getvecta.com/stencil_4/47_google-cloud-storage.fee263d33a.svg" width="100" height="50" alt="Cloud Storage Icon"/>  
+<img src="https://symbols.getvecta.com/stencil_4/47_google-cloud-storage.fee263d33a.svg" width="150" height="120" alt="Cloud Storage Icon"/>  
 Penyimpanan berkas statis berkinerja tinggi.  
 
 ```YAML
@@ -76,7 +76,7 @@ Bucket Name     : acaris-storage
 ---  
 
 ### 🚀 Cloud Run  
-<img src="https://static-00.iconduck.com/assets.00/google-cloud-run-icon-2048x1840-x12dqzzh.png" width="150" height="150" alt="Cloud Run Icon"/>  
+<img src="https://raw.githubusercontent.com/Aku-Mars/gambar/refs/heads/main/cloud-run.png" width="150" height="150" alt="Cloud Run Icon"/>  
 Deployment serverless untuk container aplikasi backend Express dan Elysia.  
 
 ```YAML

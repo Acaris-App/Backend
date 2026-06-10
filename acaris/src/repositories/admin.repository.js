@@ -232,7 +232,7 @@ exports.deleteKnowledgeBase = async (id) => {
 
 // ================= GET ALL USERS (paginasi + filter + sort) =================
 exports.getAllUsers = async (filters = {}) => {
-  const { role, search, sort_by, page = 1, limit = 20 } = filters;
+  const { role, search, sort_by, page = 1, limit = 20, angkatan, ipk, kode_kelas } = filters;
 
   const conditions = [];
   const values = [];
@@ -246,6 +246,22 @@ exports.getAllUsers = async (filters = {}) => {
   if (search) {
     conditions.push(`(u.name ILIKE $${idx} OR u.email ILIKE $${idx} OR u.npm_nip ILIKE $${idx} OR pa_search.name ILIKE $${idx})`);
     values.push(`%${search}%`);
+    idx++;
+  }
+
+  if (angkatan !== undefined && angkatan !== '') {
+    conditions.push(`m.angkatan = $${idx++}`);
+    values.push(parseInt(angkatan));
+  }
+
+  if (ipk !== undefined && ipk !== '') {
+    conditions.push(`m.ipk = $${idx++}`);
+    values.push(parseFloat(ipk));
+  }
+
+  if (kode_kelas !== undefined && kode_kelas !== '') {
+    conditions.push(`(dp.kode_kelas ILIKE $${idx} OR dp_mhs.kode_kelas ILIKE $${idx})`);
+    values.push(`%${kode_kelas}%`);
     idx++;
   }
 
@@ -270,6 +286,8 @@ exports.getAllUsers = async (filters = {}) => {
      FROM users u
      LEFT JOIN mahasiswa m        ON m.user_id = u.id
      LEFT JOIN users pa_search    ON pa_search.id = m.dosen_pa_id
+     LEFT JOIN dosen_pa dp        ON dp.user_id = u.id
+     LEFT JOIN dosen_pa dp_mhs    ON dp_mhs.user_id = m.dosen_pa_id
      ${where}`,
     values
   );

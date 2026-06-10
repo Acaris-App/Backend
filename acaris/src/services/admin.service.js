@@ -271,7 +271,7 @@ exports.getAllUsers = async ({ user, query }) => {
     throw { status: 403, message: "Hanya admin yang dapat mengakses endpoint ini" };
   }
 
-  const { role, search, sort_by, page = 1, limit = 20 } = query;
+  const { role, search, sort_by, page = 1, limit = 20, angkatan, ipk, kode_kelas } = query;
 
   const validRoles = ['mahasiswa', 'dosen', 'admin'];
   if (!role) throw { status: 400, message: "role wajib diisi (mahasiswa, dosen, admin)" };
@@ -287,7 +287,7 @@ exports.getAllUsers = async ({ user, query }) => {
   const limitInt = Math.min(100, Math.max(1, parseInt(limit) || 20));
 
   const { rows, totalItems } = await adminRepository.getAllUsers({
-    role, search, sort_by, page: pageInt, limit: limitInt
+    role, search, sort_by, page: pageInt, limit: limitInt, angkatan, ipk, kode_kelas
   });
 
   const totalPages = Math.ceil(totalItems / limitInt);

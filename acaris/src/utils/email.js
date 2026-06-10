@@ -17,7 +17,7 @@ const generateOTPTemplate = (code) => {
   <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #d9d9d9; border-radius: 12px; overflow: hidden;">
 
     <div style="background-color: #3674b5; padding: 20px; text-align: center;">
-      <img src="https://raw.githubusercontent.com/Aku-Mars/gambar/refs/heads/main/neko.png" 
+      <img src="https://raw.githubusercontent.com/Aku-Mars/gambar/refs/heads/main/logo-acaris.png" 
            alt="Acaris Logo" 
            style="width: 80px; height: auto; margin-bottom: 10px;">
       <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Acaris</h1>
@@ -29,8 +29,11 @@ const generateOTPTemplate = (code) => {
         Gunakan kode di bawah ini untuk melanjutkan proses Anda.
       </p>
 
-      <div style="background-color: #f3f3f3; padding: 15px; border-radius: 8px; display: inline-block; letter-spacing: 5px; border: 1px solid #d9d9d9;">
-        <span style="font-size: 32px; font-weight: bold; color: #1A1A1A;">${code}</span>
+      <div style="background-color: #f3f3f3; padding: 15px 25px; border-radius: 8px; display: inline-block; border: 1px solid #d9d9d9;">
+        <span style="font-size: 32px; font-weight: bold; color: #1A1A1A; letter-spacing: 5px; user-select: all; -webkit-user-select: all; -moz-user-select: all; -ms-user-select: all; cursor: pointer;" title="Klik ganda untuk menyalin">${code}</span>
+      </div>
+      <div style="margin-top: 10px; color: #888888; font-size: 12px;">
+        (Klik ganda / ketuk kode untuk menyeleksi dan menyalin)
       </div>
 
       <p style="color: #9d9999; font-size: 14px; margin-top: 25px;">
