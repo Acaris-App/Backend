@@ -164,7 +164,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
 
   const { document_type, semester } = body;
 
-  const allowedTypes = ['krs', 'khs', 'transkrip', 'kalender'];
+  const allowedTypes = ['krs', 'khs', 'transkrip'];
 
   if (!allowedTypes.includes(document_type)) {
       throw { status: 400, message: "document_type tidak valid" };
@@ -178,10 +178,10 @@ exports.uploadDocument = async ({ user, body, file }) => {
 
   const currentSemester = profile.current_semester;
 
-  // transkrip dan kalender tidak butuh semester, gunakan 0 agar tidak violate NOT NULL constraint
+  // transkrip tidak butuh semester, gunakan 0 agar tidak violate NOT NULL constraint
   let semesterInt = 0;
 
-  if (document_type !== 'transkrip' && document_type !== 'kalender') {
+  if (document_type !== 'transkrip') {
 
       if (!semester) {
         throw { status: 400, message: "Semester wajib diisi" };
@@ -380,6 +380,10 @@ exports.deleteDocument = async ({ user, documentId }) => {
     throw { status: 404, message: "Dokumen tidak ditemukan" };
   }
 
+  if (existing.document_type === 'kalender') {
+    throw { status: 403, message: "Dokumen bertipe kalender hanya dapat dihapus oleh admin" };
+  }
+
   await documentRepository.deleteDocument(documentId, user.id);
   await notifyDocumentDeletionWebhook({
     document: existing,
@@ -414,6 +418,10 @@ exports.updateDocument = async ({ user, documentId, file }) => {
   const existing = await documentRepository.findById(documentId, user.id);
   if (!existing) {
     throw { status: 404, message: "Dokumen tidak ditemukan" };
+  }
+
+  if (existing.document_type === 'kalender') {
+    throw { status: 403, message: "Dokumen bertipe kalender hanya dapat diubah oleh admin" };
   }
 
   const safeName = (user.name || 'user')
