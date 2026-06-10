@@ -158,8 +158,7 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
       'Kurikulum',
       'Peraturan Rektor',
       'KKNI',
-      'Kalender Akademik',
-      'Kalender'
+      'Kalender Akademik'
     )
   )
 );

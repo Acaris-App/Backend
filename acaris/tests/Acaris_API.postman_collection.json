@@ -1567,7 +1567,7 @@
                 {
                   "key": "category",
                   "value": "Jadwal",
-                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI",
+                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI | Kalender Akademik",
                   "disabled": true
                 },
                 {
@@ -1604,7 +1604,7 @@
                   "key": "category",
                   "value": "Peraturan Akademik",
                   "type": "text",
-                  "description": "Wajib: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI"
+                  "description": "Wajib: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI | Kalender Akademik"
                 },
                 {
                   "key": "file",
@@ -1624,7 +1624,7 @@
                 "knowledge-base"
               ]
             },
-            "description": "Upload dokumen PDF baru. Content-Type: multipart/form-data.\n\nField wajib: title, category, file\nKategori valid: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI\n\nResponse: id, title, file_name, file_url, category, uploaded_at, updated_at"
+            "description": "Upload dokumen PDF baru. Content-Type: multipart/form-data.\n\nField wajib: title, category, file\nKategori valid: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI | Kalender Akademik\n\nResponse: id, title, file_name, file_url, category, uploaded_at, updated_at"
           }
         },
         {
@@ -1650,7 +1650,7 @@
                   "key": "category",
                   "value": "Peraturan Akademik",
                   "type": "text",
-                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI"
+                  "description": "Opsional: Peraturan Akademik | Jadwal | Kurikulum | Peraturan Rektor | KKNI | Kalender Akademik"
                 },
                 {
                   "key": "file",
