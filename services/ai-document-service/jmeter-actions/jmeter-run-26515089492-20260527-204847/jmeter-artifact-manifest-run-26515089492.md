@@ -1,0 +1,133 @@
+﻿# JMeter Artifact Manifest
+
+- Repository: Acaris-App/Backend
+- Workflow: JMeter Load Test
+- Run ID: 26515089492
+- Title: JMeter Load Test
+- Commit: 9bf2af6c3d484c66f57fbd5d5c67739910676902
+- Created at: 2026-05-27T13:45:44Z
+- Downloaded at: 2026-05-27 20:48:55 +07:00
+- Output folder: data\jmeter-actions\jmeter-run-26515089492-20260527-204847
+
+## Files
+
+- jmeter-load-test\jmeter-result-run-26515089492.jtl
+- jmeter-load-test\jmeter-summary-run-26515089492.md
+- jmeter-load-test\report\index.html
+- jmeter-load-test\report\statistics.json
+- jmeter-load-test\report\content\css\dashboard.css
+- jmeter-load-test\report\content\css\jquery-ui.min.css
+- jmeter-load-test\report\content\css\jquery-ui.structure.min.css
+- jmeter-load-test\report\content\css\jquery-ui.theme.min.css
+- jmeter-load-test\report\content\css\legends.css
+- jmeter-load-test\report\content\css\theme.blue.css
+- jmeter-load-test\report\content\js\curvedLines.js
+- jmeter-load-test\report\content\js\customGraph.js
+- jmeter-load-test\report\content\js\dashboard-commons.js
+- jmeter-load-test\report\content\js\dashboard.js
+- jmeter-load-test\report\content\js\graph.js
+- jmeter-load-test\report\content\js\hashtable.js
+- jmeter-load-test\report\content\js\jquery-ui.min.js
+- jmeter-load-test\report\content\js\jquery.cookie.js
+- jmeter-load-test\report\content\js\jquery.flot.stack.js
+- jmeter-load-test\report\content\js\jquery.numberformatter-1.2.3.min.js
+- jmeter-load-test\report\content\js\jquery.tablesorter.min.js
+- jmeter-load-test\report\content\pages\CustomsGraphs.html
+- jmeter-load-test\report\content\pages\icon-apache.png
+- jmeter-load-test\report\content\pages\OverTime.html
+- jmeter-load-test\report\content\pages\ResponseTimes.html
+- jmeter-load-test\report\content\pages\Throughput.html
+- jmeter-load-test\report\sbadmin2-1.0.7\bower.json
+- jmeter-load-test\report\sbadmin2-1.0.7\README.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\bootstrap\README.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\bootstrap\dist\css\bootstrap.min.css
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.eot
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.svg
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.ttf
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.woff
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.woff2
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\bootstrap\dist\js\bootstrap.min.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\API.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\component.json
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\CONTRIBUTING.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\excanvas.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\excanvas.min.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\FAQ.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\flot.jquery.json
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.colorhelpers.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.canvas.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.categories.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.crosshair.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.errorbars.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.fillbetween.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.image.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.navigate.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.pie.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.resize.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.selection.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.stack.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.symbol.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.threshold.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\jquery.flot.time.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\Makefile
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\NEWS.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\package.json
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\PLUGINS.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot\README.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot-axislabels\jquery.flot.axislabels.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot-axislabels\README.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot.tooltip\bower.json
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot.tooltip\js\excanvas.min.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot.tooltip\js\jquery.flot.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot.tooltip\js\jquery.flot.tooltip.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot.tooltip\js\jquery.flot.tooltip.min.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\flot.tooltip\js\jquery.flot.tooltip.source.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\bower.json
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\css\font-awesome.css
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\css\font-awesome.min.css
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\fonts\fontawesome-webfont.eot
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\fonts\fontawesome-webfont.svg
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\fonts\fontawesome-webfont.ttf
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\fonts\fontawesome-webfont.woff
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\fonts\FontAwesome.otf
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\bordered-pulled.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\core.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\extras.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\fixed-width.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\font-awesome.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\icons.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\larger.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\list.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\mixins.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\path.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\rotated-flipped.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\spinning.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\stacked.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\less\variables.less
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\font-awesome.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_bordered-pulled.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_core.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_extras.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_fixed-width.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_icons.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_larger.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_list.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_mixins.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_path.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_rotated-flipped.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_spinning.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_stacked.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\font-awesome\scss\_variables.scss
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\jquery\bower.json
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\jquery\dist\jquery.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\jquery\dist\jquery.min.js
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\jquery\dist\jquery.min.map
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\metisMenu\README.md
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\metisMenu\dist\metisMenu.min.css
+- jmeter-load-test\report\sbadmin2-1.0.7\bower_components\metisMenu\dist\metisMenu.min.js
+- jmeter-load-test\report\sbadmin2-1.0.7\dist\css\sb-admin-2.css
+- jmeter-load-test\report\sbadmin2-1.0.7\dist\js\sb-admin-2.js
+- jmeter-load-test\report\sbadmin2-1.0.7\less\mixins.less
+- jmeter-load-test\report\sbadmin2-1.0.7\less\sb-admin-2.less
+- jmeter-load-test\report\sbadmin2-1.0.7\less\variables.less
