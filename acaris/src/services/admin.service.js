@@ -10,7 +10,8 @@ const VALID_CATEGORIES = [
   'Kurikulum',
   'Peraturan Rektor',
   'KKNI',
-  'Kalender Akademik'
+  'Kalender Akademik',
+  'Kalender'
 ];
 
 // ================= ADMIN DASHBOARD =================
