@@ -69,11 +69,17 @@ const buildProfileResponse = async (userId, role) => {
     }
 
     const allDocs = await documentRepository.getDocumentsList(userId);
-    const documents = { krs: [], khs: [], transkrip: null };
+    const documents = { krs: [], khs: [], transkrip: null, kalender: null };
 
     for (const doc of allDocs) {
       if (doc.document_type === 'transkrip') {
         documents.transkrip = {
+          id:          doc.id,
+          file_path:   doc.file_path,
+          uploaded_at: doc.uploaded_at
+        };
+      } else if (doc.document_type === 'kalender') {
+        documents.kalender = {
           id:          doc.id,
           file_path:   doc.file_path,
           uploaded_at: doc.uploaded_at

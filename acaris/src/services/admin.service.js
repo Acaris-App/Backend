@@ -536,7 +536,8 @@ exports.getDocumentStats = async ({ user }) => {
     total_mahasiswa:  parseInt(stats.total_mahasiswa),
     total_krs:        parseInt(stats.total_krs),
     total_khs:        parseInt(stats.total_khs),
-    total_transkrip:  parseInt(stats.total_transkrip)
+    total_transkrip:  parseInt(stats.total_transkrip),
+    total_kalender:   parseInt(stats.total_kalender)
   };
 };
 

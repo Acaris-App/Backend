@@ -164,7 +164,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
 
   const { document_type, semester } = body;
 
-  const allowedTypes = ['krs', 'khs', 'transkrip'];
+  const allowedTypes = ['krs', 'khs', 'transkrip', 'kalender'];
 
   if (!allowedTypes.includes(document_type)) {
       throw { status: 400, message: "document_type tidak valid" };
@@ -178,10 +178,10 @@ exports.uploadDocument = async ({ user, body, file }) => {
 
   const currentSemester = profile.current_semester;
 
-  // transkrip tidak butuh semester, gunakan 0 agar tidak violate NOT NULL constraint
+  // transkrip dan kalender tidak butuh semester, gunakan 0 agar tidak violate NOT NULL constraint
   let semesterInt = 0;
 
-  if (document_type !== 'transkrip') {
+  if (document_type !== 'transkrip' && document_type !== 'kalender') {
 
       if (!semester) {
         throw { status: 400, message: "Semester wajib diisi" };
@@ -220,7 +220,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
 
   let newFilename = '';
 
-  if (document_type === 'transkrip') {
+  if (document_type === 'transkrip' || document_type === 'kalender') {
       newFilename = `${safeName}-${document_type}-${date}-${unique}.pdf`;
   } else {
       newFilename = `${safeName}-${document_type}-semester-${semesterInt}-${date}-${unique}.pdf`;
@@ -276,9 +276,9 @@ exports.getDocuments = async ({ user, query = {} }) => {
 
   const { document_type, semester } = query;
 
-  const allowedTypes = ['krs', 'khs', 'transkrip'];
+  const allowedTypes = ['krs', 'khs', 'transkrip', 'kalender'];
   if (document_type && !allowedTypes.includes(document_type)) {
-    throw { status: 400, message: "document_type tidak valid. Gunakan: krs, khs, atau transkrip" };
+    throw { status: 400, message: "document_type tidak valid. Gunakan: krs, khs, transkrip, atau kalender" };
   }
 
   if (semester && isNaN(parseInt(semester))) {
@@ -290,12 +290,15 @@ exports.getDocuments = async ({ user, query = {} }) => {
   const grouped = {
     krs: [],
     khs: [],
-    transkrip: null
+    transkrip: null,
+    kalender: null
   };
 
   for (const doc of docs) {
     if (doc.document_type === 'transkrip') {
       grouped.transkrip = doc;
+    } else if (doc.document_type === 'kalender') {
+      grouped.kalender = doc;
     } else {
       grouped[doc.document_type].push(doc);
     }

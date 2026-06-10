@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS dokumen_mahasiswa (
   isi_teks_dokumen TEXT,
   uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT dokumen_mahasiswa_document_type_check
-    CHECK (document_type IN ('krs', 'khs', 'transkrip')),
+    CHECK (document_type IN ('krs', 'khs', 'transkrip', 'kalender')),
   CONSTRAINT dokumen_mahasiswa_semester_check
     CHECK (semester IS NULL OR semester >= 1)
 );
