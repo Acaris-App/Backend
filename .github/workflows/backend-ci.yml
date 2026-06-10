@@ -34,15 +34,19 @@ jobs:
         with:
           node-version: 18
           cache: npm
+          cache-dependency-path: acaris/package-lock.json
 
       - name: Install dependencies
+        working-directory: acaris
         run: npm ci
 
       - name: Run backend checks
+        working-directory: acaris
         run: npm test
 
       - name: Write CI summary artifact
         if: always()
+        working-directory: acaris
         run: |
           mkdir -p test-results/ci
           {
@@ -66,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-ci-summary
-          path: test-results/ci/
+          path: acaris/test-results/ci/
           if-no-files-found: ignore
           retention-days: 30
 

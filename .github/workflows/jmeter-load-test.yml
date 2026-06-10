@@ -77,7 +77,7 @@ jobs:
           mkdir -p test-results/jmeter
           "$JMETER_HOME/bin/jmeter" \
             -n \
-            -t tests/load/acaris-health-load-test.jmx \
+            -t acaris/tests/load/acaris-health-load-test.jmx \
             -l test-results/jmeter/result.jtl \
             -e \
             -o test-results/jmeter/report \
