@@ -276,9 +276,9 @@ exports.getDocuments = async ({ user, query = {} }) => {
 
   const { document_type, semester } = query;
 
-  const allowedTypes = ['krs', 'khs', 'transkrip', 'kalender'];
+  const allowedTypes = ['krs', 'khs', 'transkrip'];
   if (document_type && !allowedTypes.includes(document_type)) {
-    throw { status: 400, message: "document_type tidak valid. Gunakan: krs, khs, transkrip, atau kalender" };
+    throw { status: 400, message: "document_type tidak valid. Gunakan: krs, khs, atau transkrip" };
   }
 
   if (semester && isNaN(parseInt(semester))) {
@@ -290,15 +290,12 @@ exports.getDocuments = async ({ user, query = {} }) => {
   const grouped = {
     krs: [],
     khs: [],
-    transkrip: null,
-    kalender: null
+    transkrip: null
   };
 
   for (const doc of docs) {
     if (doc.document_type === 'transkrip') {
       grouped.transkrip = doc;
-    } else if (doc.document_type === 'kalender') {
-      grouped.kalender = doc;
     } else {
       grouped[doc.document_type].push(doc);
     }
@@ -380,9 +377,6 @@ exports.deleteDocument = async ({ user, documentId }) => {
     throw { status: 404, message: "Dokumen tidak ditemukan" };
   }
 
-  if (existing.document_type === 'kalender') {
-    throw { status: 403, message: "Dokumen bertipe kalender hanya dapat dihapus oleh admin" };
-  }
 
   await documentRepository.deleteDocument(documentId, user.id);
   await notifyDocumentDeletionWebhook({
@@ -418,10 +412,6 @@ exports.updateDocument = async ({ user, documentId, file }) => {
   const existing = await documentRepository.findById(documentId, user.id);
   if (!existing) {
     throw { status: 404, message: "Dokumen tidak ditemukan" };
-  }
-
-  if (existing.document_type === 'kalender') {
-    throw { status: 403, message: "Dokumen bertipe kalender hanya dapat diubah oleh admin" };
   }
 
   const safeName = (user.name || 'user')

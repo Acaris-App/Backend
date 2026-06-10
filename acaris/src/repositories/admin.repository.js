@@ -451,8 +451,7 @@ exports.getDocumentStats = async () => {
        COUNT(DISTINCT d.user_id)                              AS total_mahasiswa,
        COUNT(CASE WHEN d.document_type = 'krs' THEN 1 END)   AS total_krs,
        COUNT(CASE WHEN d.document_type = 'khs' THEN 1 END)   AS total_khs,
-       COUNT(CASE WHEN d.document_type = 'transkrip' THEN 1 END) AS total_transkrip,
-       COUNT(CASE WHEN d.document_type = 'kalender' THEN 1 END) AS total_kalender
+       COUNT(CASE WHEN d.document_type = 'transkrip' THEN 1 END) AS total_transkrip
      FROM dokumen_mahasiswa d`
   );
   return result.rows[0];

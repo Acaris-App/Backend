@@ -188,7 +188,6 @@ const profileSchema = {
         krs: { type: "array", items: anyObjectSchema },
         khs: { type: "array", items: anyObjectSchema },
         transkrip: nullableObjectSchema,
-        kalender: nullableObjectSchema,
       },
     },
   },
@@ -227,10 +226,6 @@ const groupedDocumentsSchema = {
         krs: { type: "array", items: documentSchema },
         khs: { type: "array", items: documentSchema },
         transkrip: {
-          ...documentSchema,
-          nullable: true,
-        },
-        kalender: {
           ...documentSchema,
           nullable: true,
         },

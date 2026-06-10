@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS dokumen_mahasiswa (
   isi_teks_dokumen TEXT,
   uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT dokumen_mahasiswa_document_type_check
-    CHECK (document_type IN ('krs', 'khs', 'transkrip', 'kalender')),
+    CHECK (document_type IN ('krs', 'khs', 'transkrip')),
   CONSTRAINT dokumen_mahasiswa_semester_check
     CHECK (semester IS NULL OR semester >= 1)
 );
@@ -157,7 +157,8 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
       'Jadwal',
       'Kurikulum',
       'Peraturan Rektor',
-      'KKNI'
+      'KKNI',
+      'Kalender Akademik'
     )
   )
 );
