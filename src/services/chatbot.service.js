@@ -5,7 +5,7 @@ const DEFAULT_N8N_BASE_URL = 'http://34.101.47.211:5678';
 const DEFAULT_GENERATE_SUMMARY_WEBHOOK_ID = 'e2c93a91-e5d7-43eb-a568-d4e13f2e467b';
 const DEFAULT_CLOSE_SESSION_WEBHOOK_ID = 'fedcc9f9-ea54-4a61-832b-8d5b9c2f69b0';
 const DEFAULT_CHATBOT_WEBHOOK_URL = 'http://34.101.47.211:5678/webhook/chat-aca';
-const CHATBOT_TIMEOUT_MS = parseInt(process.env.N8N_CHATBOT_TIMEOUT_MS, 10) || 30000;
+const CHATBOT_TIMEOUT_MS = parseInt(process.env.N8N_CHATBOT_TIMEOUT_MS, 10) || 60000;
 
 const joinWebhookUrl = (baseUrl, webhookId, path) => {
   const normalizedBaseUrl = String(baseUrl || DEFAULT_N8N_BASE_URL).replace(/\/+$/, '');
