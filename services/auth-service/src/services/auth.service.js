@@ -95,14 +95,11 @@ exports.validateKodeKelas = async ({ kode_kelas }) => {
 };
 
 // ================= LOGIN =================
-exports.login = async ({ email, password, ip }) => {
+exports.login = async ({ email, password, ip, isBypass }) => {
 
   if (!email || !password) {
     throw { status: 400, message: "Email dan password wajib diisi" };
   }
-
-  const userIP = ip || 'unknown';
-  await checkLoginLimit(userIP);
 
   const user = await userRepository.findByEmail(email);
   if (!user) {
@@ -115,7 +112,7 @@ exports.login = async ({ email, password, ip }) => {
   }
 
   if (!user.is_verified) {
-    throw { status: 403, message: "Akun Anda nonaktif, silakan hubungi admin." };
+    throw { status: 403, message: "Akun Anda belum diverifikasi atau telah dinonaktifkan. Silakan cek email atau hubungi admin." };
   }
 
   const profileData = await buildProfileData(user);
@@ -173,41 +170,63 @@ exports.registerMahasiswa = async (payload, file) => {
       throw { status: 400, message: "Semester tidak valid" };
     }
 
-    const existingEmail = await userRepository.findByEmail(email);
-    if (existingEmail) {
-      if (existingEmail.is_verified) {
+    const existingEmail = await client.query(
+      'SELECT id, is_verified FROM users WHERE email = $1 LIMIT 1', [email]
+    );
+    const existingEmailRow = existingEmail.rows[0];
+    if (existingEmailRow) {
+      if (existingEmailRow.is_verified) {
         throw { status: 400, message: "Email sudah digunakan" };
       }
-      await userRepository.deleteUnverifiedUser(existingEmail.id);
+      await client.query('DELETE FROM users WHERE id = $1 AND is_verified = FALSE', [existingEmailRow.id]);
     }
 
-    const existingNPM = await userRepository.findByNpm(npm_nip);
-    if (existingNPM) {
-      if (existingNPM.is_verified) {
+    const existingNPM = await client.query(
+      'SELECT id, is_verified FROM users WHERE npm_nip = $1 LIMIT 1', [npm_nip]
+    );
+    const existingNPMRow = existingNPM.rows[0];
+    if (existingNPMRow) {
+      if (existingNPMRow.is_verified) {
         throw { status: 400, message: "NPM sudah digunakan" };
       }
-      await userRepository.deleteUnverifiedUser(existingNPM.id);
+      await client.query('DELETE FROM users WHERE id = $1 AND is_verified = FALSE', [existingNPMRow.id]);
+    }
+
+    const dosen = await profileRepository.findDosenByKode(kode_kelas);
+    if (!dosen) {
+      throw { status: 400, message: "Kode kelas tidak valid" };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Upload foto HANYA setelah semua validasi lolos
     let profilePictureUrl = null;
     if (file) {
       profilePictureUrl = await uploadProfilePicture(file, npm_nip);
     }
 
-    const user = await userRepository.createUserTx(client, {
-      name,
-      email,
-      password: hashedPassword,
-      role: 'mahasiswa',
-      npm_nip,
-      profile_picture: profilePictureUrl
-    });
-
-    const dosen = await profileRepository.findDosenByKode(kode_kelas);
-    if (!dosen) {
-      throw { status: 400, message: "Kode kelas tidak valid" };
+    let user;
+    try {
+      user = await userRepository.createUserTx(client, {
+        name,
+        email,
+        password: hashedPassword,
+        role: 'mahasiswa',
+        npm_nip,
+        profile_picture: profilePictureUrl
+      });
+    } catch (dbErr) {
+      // Jika DB insert gagal, hapus foto yang sudah terupload ke GCS
+      if (profilePictureUrl) {
+        try {
+          const url = new URL(profilePictureUrl);
+          const objectPath = url.pathname.split('/').slice(2).join('/');
+          await bucket.file(objectPath).delete();
+        } catch (gcsErr) {
+          console.error('[GCS] Gagal hapus foto setelah DB error:', gcsErr.message);
+        }
+      }
+      throw dbErr;
     }
 
     await profileRepository.createMahasiswaTx(client, {
@@ -224,7 +243,12 @@ exports.registerMahasiswa = async (payload, file) => {
 
     await client.query('COMMIT');
 
-    await sendOTPEmail(email, code, 'register');
+    try {
+      await sendOTPEmail(email, code, 'register');
+    } catch (emailErr) {
+      console.error('[Email] Gagal kirim OTP registrasi mahasiswa:', emailErr.message);
+      // Tidak throw — user sudah terdaftar, bisa resend OTP
+    }
 
     return {
       message: "Registrasi mahasiswa berhasil, OTP telah dikirim ke email"
@@ -255,20 +279,26 @@ exports.registerDosen = async (payload, file) => {
 
     const { name, email, password, npm_nip } = payload;
 
-    const existingEmail = await userRepository.findByEmail(email);
-    if (existingEmail) {
-      if (existingEmail.is_verified) {
+    const existingEmailQ = await client.query(
+      'SELECT id, is_verified FROM users WHERE email = $1 LIMIT 1', [email]
+    );
+    const existingEmailRow = existingEmailQ.rows[0];
+    if (existingEmailRow) {
+      if (existingEmailRow.is_verified) {
         throw { status: 400, message: "Email sudah digunakan" };
       }
-      await userRepository.deleteUnverifiedUser(existingEmail.id);
+      await client.query('DELETE FROM users WHERE id = $1 AND is_verified = FALSE', [existingEmailRow.id]);
     }
 
-    const existingNIP = await userRepository.findByNpm(npm_nip);
-    if (existingNIP) {
-      if (existingNIP.is_verified) {
+    const existingNIPQ = await client.query(
+      'SELECT id, is_verified FROM users WHERE npm_nip = $1 LIMIT 1', [npm_nip]
+    );
+    const existingNIPRow = existingNIPQ.rows[0];
+    if (existingNIPRow) {
+      if (existingNIPRow.is_verified) {
         throw { status: 400, message: "NIP sudah digunakan" };
       }
-      await userRepository.deleteUnverifiedUser(existingNIP.id);
+      await client.query('DELETE FROM users WHERE id = $1 AND is_verified = FALSE', [existingNIPRow.id]);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -278,14 +308,29 @@ exports.registerDosen = async (payload, file) => {
       profilePictureUrl = await uploadProfilePicture(file, npm_nip);
     }
 
-    const user = await userRepository.createUserTx(client, {
-      name,
-      email,
-      password: hashedPassword,
-      role: 'dosen',
-      npm_nip,
-      profile_picture: profilePictureUrl
-    });
+    let user;
+    try {
+      user = await userRepository.createUserTx(client, {
+        name,
+        email,
+        password: hashedPassword,
+        role: 'dosen',
+        npm_nip,
+        profile_picture: profilePictureUrl
+      });
+    } catch (dbErr) {
+      // Jika DB insert gagal, hapus foto yang sudah terupload ke GCS
+      if (profilePictureUrl) {
+        try {
+          const url = new URL(profilePictureUrl);
+          const objectPath = url.pathname.split('/').slice(2).join('/');
+          await bucket.file(objectPath).delete();
+        } catch (gcsErr) {
+          console.error('[GCS] Gagal hapus foto setelah DB error:', gcsErr.message);
+        }
+      }
+      throw dbErr;
+    }
 
     // kode_kelas di-generate setelah OTP sukses
     await profileRepository.createDosenTx(client, {
@@ -299,7 +344,12 @@ exports.registerDosen = async (payload, file) => {
 
     await client.query('COMMIT');
 
-    await sendOTPEmail(email, code, 'register');
+    // Email dikirim SETELAH commit
+    try {
+      await sendOTPEmail(email, code, 'register');
+    } catch (emailErr) {
+      console.error('[Email] Gagal kirim OTP registrasi dosen:', emailErr.message);
+    }
 
     return {
       message: "Registrasi dosen berhasil, OTP telah dikirim ke email"
@@ -379,7 +429,7 @@ exports.resendOTP = async ({ email, type }) => {
 
   const user = await userRepository.findByEmail(email);
   if (!user) {
-    throw { status: 404, message: "User tidak ditemukan" };
+    return { message: "Jika email terdaftar, OTP akan dikirim ulang" };
   }
 
   if (!['register', 'reset_password'].includes(type)) {
@@ -393,10 +443,14 @@ exports.resendOTP = async ({ email, type }) => {
 
   await otpRepository.createOTP(user.id, code, type, expiresAt);
 
-  await sendOTPEmail(user.email, code, type);
+  try {
+    await sendOTPEmail(user.email, code, type);
+  } catch (emailErr) {
+    console.error('[Email] Gagal kirim ulang OTP:', emailErr.message);
+  }
 
   return {
-    message: "OTP berhasil dikirim ulang"
+    message: "Jika email terdaftar, OTP akan dikirim ulang"
   };
 };
 
@@ -409,7 +463,7 @@ exports.forgotPassword = async ({ email }) => {
 
   const user = await userRepository.findByEmail(email);
   if (!user) {
-    throw { status: 404, message: "Email tidak terdaftar" };
+    return { message: "Jika email terdaftar, OTP akan dikirim ke email" };
   }
 
   await otpRepository.invalidateOTP(user.id, 'reset_password');
@@ -419,13 +473,16 @@ exports.forgotPassword = async ({ email }) => {
 
   await otpRepository.createOTP(user.id, code, 'reset_password', expiresAt);
 
-  await sendOTPEmail(user.email, code, 'reset_password');
+  try {
+    await sendOTPEmail(user.email, code, 'reset_password');
+  } catch (emailErr) {
+    console.error('[Email] Gagal kirim OTP forgot password:', emailErr.message);
+  }
 
-  return { message: "OTP berhasil dikirim ke email" };
+  return { message: "Jika email terdaftar, OTP akan dikirim ke email" };
 };
 
 // ================= VERIFY RESET OTP =================
-// Hanya validasi OTP, tidak markAsUsed — OTP masih dibutuhkan di /reset-password
 exports.verifyResetOTP = async ({ email, code }) => {
 
   if (!email || !code) {

@@ -56,7 +56,7 @@ emailQueue.process(async (job) => {
     `;
 
     const info = await transporter.sendMail({
-      from: `"Acaris System" <${process.env.EMAIL_USER}>`,
+      from: `"Acaris System" <no-reply@acaris.my.id>`,
       to,
       subject,
       html: htmlContent

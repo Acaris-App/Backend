@@ -5,13 +5,7 @@ require('dotenv').config({
     : '.env.local'
 });
 
-// 🚧 DEV MODE: Skip load email job worker jika DISABLE_QUEUE=true
-// Ini mencegah Bull Queue connect ke Upstash dan spam polling
-if (process.env.DISABLE_QUEUE !== 'true') {
-  require('./jobs/email.job');
-} else {
-  console.log('📭 [DEV MODE] Email job worker dinonaktifkan (DISABLE_QUEUE=true)');
-}
+// No email job loaded for this service.
 
 const express = require('express');
 

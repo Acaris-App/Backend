@@ -21,8 +21,9 @@ exports.errorHandler = (err, req, res, next) => {
     return res.status(400).json({ status: "error", message: err.message });
   }
 
+  const isOperational = err.status && err.status < 500;
   return res.status(err.status || 500).json({
     status: "error",
-    message: err.message || "Internal Server Error"
+    message: isOperational ? (err.message || "Terjadi kesalahan") : "Internal Server Error"
   });
 };

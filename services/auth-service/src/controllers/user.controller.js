@@ -33,13 +33,14 @@ const isDokumenLengkap = ({ currentSemester, documents }) => {
   const hasTranskrip = Boolean(documents.transkrip);
   const krsSemesters = new Set(documents.krs.map(doc => parseInt(doc.semester)));
   const khsSemesters = new Set(documents.khs.map(doc => parseInt(doc.semester)));
-  const completedSemesters = Math.max(semester - 1, 0);
-  const hasRequiredKrs = Array.from({ length: completedSemesters }, (_, index) => index + 1)
-    .every(requiredSemester => krsSemesters.has(requiredSemester));
-  const hasRequiredKhs = Array.from({ length: completedSemesters }, (_, index) => index + 1)
-    .every(requiredSemester => khsSemesters.has(requiredSemester));
 
-  return hasTranskrip && hasRequiredKrs && hasRequiredKhs;
+  const completedSemesters = Math.max(semester - 1, 0);
+
+  // Wajib memiliki KRS atau KHS untuk setiap semester dari 1 s.d. semester_berjalan - 1
+  const hasRequiredDocs = Array.from({ length: completedSemesters }, (_, index) => index + 1)
+    .every(requiredSemester => krsSemesters.has(requiredSemester) || khsSemesters.has(requiredSemester));
+
+  return hasTranskrip && hasRequiredDocs;
 };
 
 const buildProfileResponse = async (userId, role) => {

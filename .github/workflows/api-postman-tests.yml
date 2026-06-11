@@ -1,0 +1,110 @@
+name: API Postman Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_fail:
+        description: 'Force failure'
+        required: false
+        default: 'false'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  POSTMAN_COLLECTION_ID: "39627887-03e24210-2d9e-450b-a105-8a1fbecab839"
+  POSTMAN_ENVIRONMENT_ID: "39627887-75f9d975-6fdd-4233-a8bd-beebb063b5eb"
+  POSTMAN_RESULTS_DIR: data/postman-actions
+
+jobs:
+  automated-api-tests:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare result folder
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path $env:POSTMAN_RESULTS_DIR -Force | Out-Null
+
+      - name: Check Postman API key
+        id: postman_key
+        shell: pwsh
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:POSTMAN_API_KEY)) {
+            "configured=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            @(
+              "# Postman API Test Summary"
+              ""
+              "- Status: skipped"
+              "- Reason: GitHub Secret POSTMAN_API_KEY belum dikonfigurasi."
+              "- Collection File: tests/postman/Acaris_Role_Functional_Tests.postman_collection.json"
+              "- Commit: $env:GITHUB_SHA"
+            ) | Set-Content -Path "$env:POSTMAN_RESULTS_DIR/postman-cli-summary.md" -Encoding UTF8
+            Get-Content "$env:POSTMAN_RESULTS_DIR/postman-cli-summary.md" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            exit 0
+          }
+
+          "configured=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Install Postman CLI
+        if: steps.postman_key.outputs.configured == 'true'
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -InputFormat None -ExecutionPolicy AllSigned -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://dl-cli.pstmn.io/install/win64.ps1'))"
+
+      - name: Login to Postman CLI
+        if: steps.postman_key.outputs.configured == 'true'
+        shell: pwsh
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+        run: |
+          postman login --with-api-key "$env:POSTMAN_API_KEY"
+
+      - name: Run API tests
+        if: steps.postman_key.outputs.configured == 'true'
+        shell: pwsh
+        run: |
+          $outputPath = "$env:POSTMAN_RESULTS_DIR/postman-cli-output.txt"
+          $summaryPath = "$env:POSTMAN_RESULTS_DIR/postman-cli-summary.md"
+
+          $runOutput = & postman collection run tests/postman/Acaris_Role_Functional_Tests.postman_collection.json 2>&1
+          $exitCode = $LASTEXITCODE
+
+          $runOutput | Tee-Object -FilePath $outputPath
+
+          @(
+            "# Postman API Test Summary"
+            ""
+            "- Status: $(if ($exitCode -eq 0) { 'success' } else { 'failed' })"
+            "- Exit code: $exitCode"
+            "- Collection File: tests/postman/Acaris_Role_Functional_Tests.postman_collection.json"
+            "- Commit: $env:GITHUB_SHA"
+            "- Run ID: $env:GITHUB_RUN_ID"
+            "- Generated at: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz')"
+            ""
+            "## Output File"
+            ""
+            "- postman-cli-output.txt"
+          ) | Set-Content -Path $summaryPath -Encoding UTF8
+
+          Get-Content $summaryPath | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+          if ($exitCode -ne 0) {
+            exit $exitCode
+          }
+
+      - name: Upload Postman artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: postman-api-test-results
+          path: data/postman-actions
+          if-no-files-found: error
+
+
+
+
+
+

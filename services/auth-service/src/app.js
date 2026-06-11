@@ -16,9 +16,16 @@ if (process.env.DISABLE_QUEUE !== 'true') {
 const express = require('express');
 
 const app = express();
+// Minta Express untuk mempercayai header X-Forwarded-For dari Reverse Proxy (Nginx/GCP)
+// Ini sangat penting agar Rate Limiter mendeteksi IP Client asli, bukan IP Proxy.
+app.set('trust proxy', 1);
 
 // ================= MIDDLEWARE =================
 app.use(express.json({ limit: '50mb' }));
+app.use((req, res, next) => {
+  console.log(`[DEBUG] Request ${req.method} ${req.url} - Headers:`, JSON.stringify(req.headers));
+  next();
+});
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const { errorHandler } = require('./middlewares/error.middleware');
 

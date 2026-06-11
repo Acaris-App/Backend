@@ -3,8 +3,9 @@ const profileRepository = require('../repositories/profile.repository');
 const userRepository = require('../repositories/user.repository');
 const { bucket } = require('../config/gcs');
 
-const DEFAULT_DOCUMENT_EXTRACT_WEBHOOK_URL = 'http://34.101.47.211:5678/webhook/mahasiswa/ekstrak-dokumen';
 const DOCUMENT_EXTRACT_TIMEOUT_MS = parseInt(process.env.N8N_DOCUMENT_EXTRACT_TIMEOUT_MS, 10) || 30000;
+
+const DEFAULT_DOCUMENT_EXTRACT_WEBHOOK_URL = 'http://34.101.47.211:5678/webhook/mahasiswa/ekstrak-dokumen';
 
 const getDocumentExtractWebhookUrl = () => (
   process.env.N8N_DOCUMENT_EXTRACT_WEBHOOK_URL || DEFAULT_DOCUMENT_EXTRACT_WEBHOOK_URL
@@ -211,7 +212,8 @@ exports.uploadDocument = async ({ user, body, file }) => {
       semesterInt
   );
 
-  const safeName = (user.name || 'user')
+  const fullUser = await userRepository.findById(user.id);
+  const safeName = (fullUser?.name || 'user')
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-');
 
@@ -340,7 +342,7 @@ exports.checkCompleteness = async (user) => {
     }
 
     const missingSemesterKRS = [];
-    for (let s = 1; s <= currentSemester; s++) {
+    for (let s = 1; s < currentSemester; s++) {
       if (!uploaded.krs.includes(s)) missingSemesterKRS.push(s);
     }
 
@@ -349,9 +351,14 @@ exports.checkCompleteness = async (user) => {
       if (!uploaded.khs.includes(s)) missingSemesterKHS.push(s);
     }
 
-    const isComplete =
-      missingSemesterKRS.length === 0 &&
-      missingSemesterKHS.length === 0;
+    // Wajib memiliki KRS atau KHS untuk setiap semester dari 1 s.d. currentSemester - 1
+    let isComplete = uploaded.transkrip;
+    for (let s = 1; s < currentSemester; s++) {
+      if (!uploaded.krs.includes(s) && !uploaded.khs.includes(s)) {
+        isComplete = false;
+        break;
+      }
+    }
 
     return {
       current_semester: currentSemester,
@@ -414,7 +421,9 @@ exports.updateDocument = async ({ user, documentId, file }) => {
     throw { status: 404, message: "Dokumen tidak ditemukan" };
   }
 
-  const safeName = (user.name || 'user')
+  // Bug 3 fix: user dari JWT hanya {id, role}, tidak punya name. Fetch user lengkap dari DB.
+  const fullUser = await userRepository.findById(user.id);
+  const safeName = (fullUser?.name || 'user')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '-');
 

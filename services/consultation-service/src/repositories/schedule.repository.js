@@ -159,6 +159,45 @@ exports.deleteScheduleWithBookings = async (scheduleId) => {
   }
 };
 
+// ================= CEK BOOKING DUPLIKAT (transactional) =================
+exports.findBookingByUserAndScheduleTx = async (client, userId, scheduleId) => {
+  const result = await client.query(
+    `SELECT * FROM booking_bimbingan
+     WHERE mahasiswa_id = $1 AND jadwal_id = $2 AND status = 'terkonfirmasi'`,
+    [userId, scheduleId]
+  );
+  return result.rows[0];
+};
+
+// ================= CEK BOOKING PER HARI (transactional) =================
+exports.findBookingByUserAndDateTx = async (client, userId, date) => {
+  const result = await client.query(
+    `SELECT b.id FROM booking_bimbingan b
+     JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+     WHERE b.mahasiswa_id = $1
+       AND j.tanggal = $2
+       AND b.status = 'terkonfirmasi'
+     LIMIT 1`,
+    [userId, date]
+  );
+  return result.rows[0];
+};
+
+// ================= LOCK JADWAL FOR UPDATE (mencegah race condition) =================
+exports.findByIdForUpdate = async (client, scheduleId) => {
+  const result = await client.query(
+    `SELECT s.id, s.dosen_id, s.tanggal, s.waktu_mulai, s.waktu_selesai,
+            s.kuota, s.kuota_tersisa, s.keterangan, s.status,
+            u.name AS nama_dosen
+     FROM jadwal_bimbingan s
+     JOIN users u ON s.dosen_id = u.id
+     WHERE s.id = $1
+     FOR UPDATE`,
+    [scheduleId]
+  );
+  return result.rows[0];
+};
+
 // ================= CEK BOOKING DUPLIKAT =================
 exports.findBookingByUserAndSchedule = async (userId, scheduleId) => {
   const result = await db.query(
@@ -180,9 +219,34 @@ exports.createBooking = async (data) => {
   return result.rows[0];
 };
 
+// ================= BOOKING (transactional) =================
+exports.createBookingTx = async (client, data) => {
+  const result = await client.query(
+    `INSERT INTO booking_bimbingan (mahasiswa_id, jadwal_id, catatan, status)
+     VALUES ($1, $2, $3, 'terkonfirmasi')
+     RETURNING *`,
+    [data.mahasiswa_id, data.jadwal_id, data.catatan || null]
+  );
+  return result.rows[0];
+};
+
 // ================= KURANGI KUOTA (atomic) =================
 exports.decrementKuota = async (scheduleId) => {
   const result = await db.query(
+    `UPDATE jadwal_bimbingan
+     SET kuota_tersisa = kuota_tersisa - 1,
+         status = CASE WHEN kuota_tersisa - 1 <= 0 THEN 'penuh' ELSE 'tersedia' END,
+         updated_at = NOW()
+     WHERE id = $1 AND kuota_tersisa > 0
+     RETURNING *`,
+    [scheduleId]
+  );
+  return result.rows[0];
+};
+
+// ================= KURANGI KUOTA (transactional) =================
+exports.decrementKuotaTx = async (client, scheduleId) => {
+  const result = await client.query(
     `UPDATE jadwal_bimbingan
      SET kuota_tersisa = kuota_tersisa - 1,
          status = CASE WHEN kuota_tersisa - 1 <= 0 THEN 'penuh' ELSE 'tersedia' END,

@@ -24,12 +24,12 @@
     "test": "tests"
   },
   "scripts": {
-    "artifacts:ci": "powershell -ExecutionPolicy Bypass -File scripts/download-ci-artifacts.ps1",
-    "artifacts:jmeter": "powershell -ExecutionPolicy Bypass -File scripts/download-jmeter-artifacts.ps1",
-    "artifacts:postman": "powershell -ExecutionPolicy Bypass -File scripts/download-postman-artifacts.ps1",
-    "check:postman": "node scripts/check-postman-collections.js",
-    "check:syntax": "node scripts/check-syntax.js",
-    "jmeter:local:smoke": "powershell -ExecutionPolicy Bypass -File scripts/run-local-jmeter.ps1",
+    "artifacts:ci": "powershell -ExecutionPolicy Bypass -File ../../tests/utils/download-ci-artifacts.ps1",
+    "artifacts:jmeter": "powershell -ExecutionPolicy Bypass -File ../../tests/load/download-jmeter-artifacts.ps1",
+    "artifacts:postman": "powershell -ExecutionPolicy Bypass -File ../../tests/postman/download-postman-artifacts.ps1",
+    "check:postman": "node ../../tests/postman/check-postman-collections.js",
+    "check:syntax": "node ../../tests/utils/check-syntax.js",
+    "jmeter:local:smoke": "powershell -ExecutionPolicy Bypass -File ../../tests/load/run-local-jmeter.ps1",
     "test": "npm run check:syntax && npm run check:postman",
     "dev": "nodemon src/app.js",
     "worker": "node src/jobs/email.job.js"

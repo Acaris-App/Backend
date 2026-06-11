@@ -244,7 +244,7 @@ exports.getAllUsers = async (filters = {}) => {
   }
 
   if (search) {
-    conditions.push(`(u.name ILIKE $${idx} OR u.email ILIKE $${idx} OR u.npm_nip ILIKE $${idx} OR pa_search.name ILIKE $${idx})`);
+    conditions.push(`(u.name ILIKE $${idx} OR u.email ILIKE $${idx} OR u.npm_nip ILIKE $${idx} OR pa_search.name ILIKE $${idx} OR m.angkatan::text ILIKE $${idx})`);
     values.push(`%${search}%`);
     idx++;
   }

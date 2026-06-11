@@ -331,33 +331,23 @@ exports.createAdmin = async ({ user, body, file }) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  let profile_picture_url = null;
-  if (file) {
-    profile_picture_url = await uploadProfilePicture(file, 'tmp');
-  }
-
   const created = await adminRepository.createAdmin({
     name:            name.trim(),
     email:           email.trim(),
     password:        hashedPassword,
     identifier:      identifier.trim(),
-    profile_picture: profile_picture_url
+    profile_picture: null  // sementara null, akan di-update setelah upload
   });
 
-  // Update GCS path pakai ID yang benar jika ada foto
-  if (file && profile_picture_url) {
-    const ext = file.originalname.split('.').pop().toLowerCase();
-    const newFilename = `profile-pictures/${created.id}-${Date.now()}.${ext}`;
-    const blob = bucket.file(newFilename);
-    const blobStream = blob.createWriteStream({ resumable: false, contentType: file.mimetype });
-    await new Promise((resolve, reject) => {
-      blobStream.on('finish', resolve);
-      blobStream.on('error', reject);
-      blobStream.end(file.buffer);
-    });
-    const newUrl = `https://storage.googleapis.com/${bucket.name}/${newFilename}`;
-    await adminRepository.updateUser(created.id, { profile_picture: newUrl });
-    await deleteFromGCS(profile_picture_url);
+  let profile_picture_url = null;
+  if (file) {
+    try {
+      profile_picture_url = await uploadProfilePicture(file, created.id);
+      await adminRepository.updateUser(created.id, { profile_picture: profile_picture_url });
+    } catch (gcsErr) {
+      // GCS gagal — admin tetap dibuat tapi tanpa foto
+      console.error('[GCS] Gagal upload foto admin:', gcsErr.message);
+    }
   }
 
   const full = await adminRepository.findUserById(created.id);
@@ -439,7 +429,14 @@ exports.updateUser = async ({ user, userId, body, file }) => {
 
   // Update kode_kelas untuk dosen
   if (target.role === 'dosen' && kode_kelas !== undefined) {
-    await adminRepository.updateKodeKelas(userId, 'dosen', kode_kelas.trim());
+    const trimmedKode = kode_kelas.trim();
+    if (trimmedKode) {
+      const existing = await adminRepository.findDosenPaByKode(trimmedKode);
+      if (existing && existing.user_id !== parseInt(userId)) {
+        throw { status: 400, message: `Kode kelas '${trimmedKode}' sudah digunakan oleh dosen lain` };
+      }
+    }
+    await adminRepository.updateKodeKelas(userId, 'dosen', trimmedKode);
   }
 
   const updated = await adminRepository.findUserById(userId);

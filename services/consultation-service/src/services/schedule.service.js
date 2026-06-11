@@ -1,3 +1,4 @@
+const db = require('../config/db');
 const scheduleRepository = require('../repositories/schedule.repository');
 const profileRepository = require('../repositories/profile.repository');
 
@@ -94,6 +95,10 @@ exports.createSchedule = async ({ user, body }) => {
     throw { status: 400, message: "Tanggal jadwal tidak boleh di masa lalu" };
   }
 
+  if (start_time >= end_time) {
+    throw { status: 400, message: "Waktu mulai harus sebelum waktu selesai" };
+  }
+
   const quotaInt = parseInt(quota);
   if (isNaN(quotaInt) || quotaInt < 1) {
     throw { status: 400, message: "Quota minimal 1" };
@@ -131,6 +136,14 @@ exports.updateSchedule = async ({ user, scheduleId, body }) => {
 
   if (!date || !start_time || !end_time || !quota) {
     throw { status: 400, message: "date, start_time, end_time, dan quota wajib diisi" };
+  }
+
+  if (isNaN(Date.parse(date))) {
+    throw { status: 400, message: "Format date tidak valid (gunakan YYYY-MM-DD)" };
+  }
+
+  if (start_time >= end_time) {
+    throw { status: 400, message: "Waktu mulai harus sebelum waktu selesai" };
   }
 
   const quotaInt = parseInt(quota);
@@ -199,47 +212,61 @@ exports.bookSchedule = async ({ user, body }) => {
     throw { status: 400, message: "jadwal_id wajib diisi" };
   }
 
-  const schedule = await scheduleRepository.findById(jadwal_id);
-  if (!schedule) throw { status: 404, message: "Jadwal tidak ditemukan" };
-
   const profile = await profileRepository.getMahasiswaProfile(user.id);
-  if (!profile || profile.dosen_pa_id !== schedule.dosen_id) {
-    throw { status: 403, message: "Anda hanya dapat booking jadwal dosen PA Anda" };
+
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+
+    const schedule = await scheduleRepository.findByIdForUpdate(client, jadwal_id);
+    if (!schedule) throw { status: 404, message: "Jadwal tidak ditemukan" };
+
+    if (!profile || profile.dosen_pa_id !== schedule.dosen_id) {
+      throw { status: 403, message: "Anda hanya dapat booking jadwal dosen PA Anda" };
+    }
+
+    if (schedule.status !== 'tersedia') {
+      throw { status: 400, message: "Jadwal sudah penuh atau tidak tersedia" };
+    }
+
+    if (schedule.kuota_tersisa <= 0) {
+      throw { status: 400, message: "Kuota jadwal sudah penuh" };
+    }
+
+    const duplikat = await scheduleRepository.findBookingByUserAndScheduleTx(client, user.id, jadwal_id);
+    if (duplikat) {
+      throw { status: 400, message: "Anda sudah melakukan booking untuk jadwal ini" };
+    }
+
+    const booking = await scheduleRepository.createBookingTx(client, {
+      mahasiswa_id: user.id,
+      jadwal_id,
+      catatan
+    });
+
+    const updatedSchedule = await scheduleRepository.decrementKuotaTx(client, jadwal_id);
+    if (!updatedSchedule) {
+      throw { status: 400, message: "Kuota jadwal sudah penuh" };
+    }
+
+    await client.query('COMMIT');
+
+    return {
+      booking_id:      booking.id,
+      jadwal_id:       schedule.id,
+      date:            schedule.tanggal,
+      start_time:      schedule.waktu_mulai,
+      end_time:        schedule.waktu_selesai,
+      status:          booking.status,
+      remaining_quota: updatedSchedule.kuota_tersisa
+    };
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
   }
-
-  if (schedule.status !== 'tersedia') {
-    throw { status: 400, message: "Jadwal sudah penuh atau tidak tersedia" };
-  }
-
-  if (schedule.kuota_tersisa <= 0) {
-    throw { status: 400, message: "Kuota jadwal sudah penuh" };
-  }
-
-  const duplikat = await scheduleRepository.findBookingByUserAndSchedule(user.id, jadwal_id);
-  if (duplikat) {
-    throw { status: 400, message: "Anda sudah melakukan booking untuk jadwal ini" };
-  }
-
-  const booking = await scheduleRepository.createBooking({
-    mahasiswa_id: user.id,
-    jadwal_id,
-    catatan
-  });
-
-  const updatedSchedule = await scheduleRepository.decrementKuota(jadwal_id);
-  if (!updatedSchedule) {
-    throw { status: 400, message: "Kuota jadwal sudah penuh" };
-  }
-
-  return {
-    booking_id:    booking.id,
-    jadwal_id:     schedule.id,
-    date:          schedule.tanggal,
-    start_time:    schedule.waktu_mulai,
-    end_time:      schedule.waktu_selesai,
-    status:        booking.status,
-    remaining_quota: updatedSchedule.kuota_tersisa
-  };
 };
 
 // ================= BATALKAN BOOKING =================
@@ -435,63 +462,77 @@ exports.mahasiswaBookSchedule = async ({ user, body }) => {
     throw { status: 403, message: "Hanya mahasiswa yang dapat booking jadwal" };
   }
 
-  const { schedule_id, agenda } = body;
+  const { schedule_id, agenda, jadwal_id, catatan } = body;
+  const final_schedule_id = schedule_id || jadwal_id;
+  const final_agenda = agenda || catatan;
 
-  if (!schedule_id) {
-    throw { status: 400, message: "schedule_id wajib diisi" };
+  if (!final_schedule_id) {
+    throw { status: 400, message: "schedule_id atau jadwal_id wajib diisi" };
   }
-
-  const schedule = await scheduleRepository.findById(schedule_id);
-  if (!schedule) throw { status: 404, message: "Jadwal tidak ditemukan" };
 
   const profile = await profileRepository.getMahasiswaProfile(user.id);
-  if (!profile || profile.dosen_pa_id !== schedule.dosen_id) {
-    throw { status: 403, message: "Anda hanya dapat booking jadwal dosen PA Anda" };
+
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+
+    const schedule = await scheduleRepository.findByIdForUpdate(client, final_schedule_id);
+    if (!schedule) throw { status: 404, message: "Jadwal tidak ditemukan" };
+
+    if (!profile || profile.dosen_pa_id !== schedule.dosen_id) {
+      throw { status: 403, message: "Anda hanya dapat booking jadwal dosen PA Anda" };
+    }
+
+    if (schedule.status !== 'tersedia') {
+      throw { status: 400, message: "Jadwal sudah penuh atau tidak tersedia" };
+    }
+
+    if (schedule.kuota_tersisa <= 0) {
+      throw { status: 400, message: "Kuota jadwal sudah penuh" };
+    }
+
+    const existingToday = await scheduleRepository.findBookingByUserAndDateTx(
+      client, user.id, schedule.tanggal
+    );
+    if (existingToday) {
+      throw { status: 400, message: "Anda sudah memiliki booking di tanggal ini, hanya 1 slot per hari yang diizinkan" };
+    }
+
+    const duplikat = await scheduleRepository.findBookingByUserAndScheduleTx(client, user.id, final_schedule_id);
+    if (duplikat) {
+      throw { status: 400, message: "Anda sudah melakukan booking untuk jadwal ini" };
+    }
+
+    const booking = await scheduleRepository.createBookingTx(client, {
+      mahasiswa_id: user.id,
+      jadwal_id: final_schedule_id,
+      catatan: final_agenda || null
+    });
+
+    const updatedSchedule = await scheduleRepository.decrementKuotaTx(client, final_schedule_id);
+    if (!updatedSchedule) {
+      throw { status: 400, message: "Kuota jadwal sudah penuh" };
+    }
+
+    await client.query('COMMIT');
+
+    return {
+      booking_id:      booking.id,
+      schedule_id:     schedule.id,
+      date:            schedule.tanggal,
+      start_time:      schedule.waktu_mulai,
+      end_time:        schedule.waktu_selesai,
+      status:          'booked',
+      mahasiswa_agenda: final_agenda || null,
+      remaining_quota: updatedSchedule.kuota_tersisa
+    };
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
   }
-
-  if (schedule.status !== 'tersedia') {
-    throw { status: 400, message: "Jadwal sudah penuh atau tidak tersedia" };
-  }
-
-  if (schedule.kuota_tersisa <= 0) {
-    throw { status: 400, message: "Kuota jadwal sudah penuh" };
-  }
-
-  // Validasi: 1 slot per hari
-  const existingToday = await scheduleRepository.findBookingByUserAndDate(
-    user.id, schedule.tanggal
-  );
-  if (existingToday) {
-    throw { status: 400, message: "Anda sudah memiliki booking di tanggal ini, hanya 1 slot per hari yang diizinkan" };
-  }
-
-  // Cek duplikat booking slot yang sama
-  const duplikat = await scheduleRepository.findBookingByUserAndSchedule(user.id, schedule_id);
-  if (duplikat) {
-    throw { status: 400, message: "Anda sudah melakukan booking untuk jadwal ini" };
-  }
-
-  const booking = await scheduleRepository.createBooking({
-    mahasiswa_id: user.id,
-    jadwal_id: schedule_id,
-    catatan: agenda || null
-  });
-
-  const updatedSchedule = await scheduleRepository.decrementKuota(schedule_id);
-  if (!updatedSchedule) {
-    throw { status: 400, message: "Kuota jadwal sudah penuh" };
-  }
-
-  return {
-    booking_id:      booking.id,
-    schedule_id:     schedule.id,
-    date:            schedule.tanggal,
-    start_time:      schedule.waktu_mulai,
-    end_time:        schedule.waktu_selesai,
-    status:          'booked',
-    mahasiswa_agenda: agenda || null,
-    remaining_quota: updatedSchedule.kuota_tersisa
-  };
 };
 
 // ================= MAHASISWA: HISTORY BOOKING =================

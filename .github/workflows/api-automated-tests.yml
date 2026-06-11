@@ -1,0 +1,41 @@
+name: API Automated Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_fail:
+        description: 'Force failure'
+        required: false
+        default: 'false'
+
+jobs:
+  api-testing:
+    name: Run Node.js API E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Force failure
+        if: github.event.inputs.force_fail == 'true'
+        run: exit 1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies for tests
+        working-directory: tests
+        run: npm install
+
+      - name: Execute Automated API Tests
+        working-directory: tests
+        run: node automated/automated_api_tests.js
+
+
+
+
+
+

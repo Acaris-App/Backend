@@ -61,7 +61,10 @@ exports.sendOTPEmail = async (to, code, type = 'login') => {
 
   try {
     const info = await transporter.sendMail({
-      from: `"Acaris System" <${process.env.EMAIL_USER}>`,
+      from: {
+        name: 'Acaris System',
+        address: 'no-reply@acaris.my.id'
+      },
       to,
       subject,
       html: generateOTPTemplate(code)

@@ -631,7 +631,7 @@ const app = new Elysia()
         forceDarkModeState: "dark",
         hideDarkModeToggle: true,
         hideDownloadButton: false,
-        hideTestRequestButton: true,
+        hideTestRequestButton: false,
         searchHotKey: "k",
       },
       documentation: {

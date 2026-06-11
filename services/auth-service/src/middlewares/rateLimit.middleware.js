@@ -7,8 +7,8 @@ exports.loginLimiter = rateLimit({
   store: new RedisStore({
     sendCommand: (...args) => redis.call(...args),
   }),
-  windowMs: 60 * 1000,
-  max: 5,
+  windowMs: 60 * 1000, 
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -23,7 +23,7 @@ exports.otpLimiter = rateLimit({
     sendCommand: (...args) => redis.call(...args),
   }),
   windowMs: 60 * 1000,
-  max: 8,
+  max: 10,
   message: {
     status: "error",
     message: "Terlalu banyak percobaan OTP"
@@ -36,7 +36,7 @@ exports.resendLimiter = rateLimit({
     sendCommand: (...args) => redis.call(...args),
   }),
   windowMs: 60 * 1000,
-  max: 3,
+  max: 10,
   message: {
     status: "error",
     message: "Terlalu sering meminta OTP"
