@@ -45,5 +45,5 @@ exports.validateRegister = (data) => {
     return adminSchema.validate(data);
   }
 
-  return { error: { message: "Role tidak valid" } };
+  return { error: { details: [{ message: "Role tidak valid" }] } };
 };

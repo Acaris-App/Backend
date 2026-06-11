@@ -272,27 +272,41 @@ exports.bookSchedule = async ({ user, body }) => {
 // ================= BATALKAN BOOKING =================
 exports.cancelBooking = async ({ user, bookingId }) => {
 
-  const booking = await scheduleRepository.findBookingById(bookingId);
-  if (!booking) throw { status: 404, message: "Booking tidak ditemukan" };
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
 
-  if (user.role === 'mahasiswa' && booking.mahasiswa_id !== user.id) {
-    throw { status: 403, message: "Akses ditolak" };
+    // Lock baris booking untuk mencegah race condition
+    const booking = await scheduleRepository.findBookingByIdForUpdate(client, bookingId);
+    if (!booking) throw { status: 404, message: "Booking tidak ditemukan" };
+
+    if (user.role === 'mahasiswa' && booking.mahasiswa_id !== user.id) {
+      throw { status: 403, message: "Akses ditolak" };
+    }
+
+    if (user.role === 'dosen' && booking.dosen_id !== user.id) {
+      throw { status: 403, message: "Akses ditolak" };
+    }
+
+    if (booking.status === 'dibatalkan') {
+      throw { status: 400, message: "Booking sudah dibatalkan sebelumnya" };
+    }
+
+    await scheduleRepository.updateBookingStatusTx(client, bookingId, 'dibatalkan');
+
+    // Kembalikan kuota + set status jadwal kembali 'tersedia'
+    await scheduleRepository.incrementKuotaTx(client, booking.jadwal_id);
+
+    await client.query('COMMIT');
+
+    return { message: "Booking berhasil dibatalkan, kuota jadwal telah dikembalikan" };
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
   }
-
-  if (user.role === 'dosen' && booking.dosen_id !== user.id) {
-    throw { status: 403, message: "Akses ditolak" };
-  }
-
-  if (booking.status === 'dibatalkan') {
-    throw { status: 400, message: "Booking sudah dibatalkan sebelumnya" };
-  }
-
-  await scheduleRepository.updateBookingStatus(bookingId, 'dibatalkan');
-
-  // Kembalikan kuota + set status jadwal kembali 'tersedia'
-  await scheduleRepository.incrementKuota(booking.jadwal_id);
-
-  return { message: "Booking berhasil dibatalkan, kuota jadwal telah dikembalikan" };
 };
 
 // ================= GET DAFTAR BOOKING (Dosen) =================

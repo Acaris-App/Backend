@@ -319,23 +319,28 @@ exports.createAdmin = async ({ user, body, file }) => {
     throw { status: 400, message: "name, email, password, dan identifier wajib diisi" };
   }
 
+  // Sanitasi: pastikan semua field bertipe string sebelum .trim()
+  const safeName = String(name).trim();
+  const safeEmail = String(email).trim();
+  const safeIdentifier = String(identifier).trim();
+
   if (password.length < 6) {
     throw { status: 400, message: "Password minimal 6 karakter" };
   }
 
-  const existingEmail = await adminRepository.findUserByEmail(email);
+  const existingEmail = await adminRepository.findUserByEmail(safeEmail);
   if (existingEmail) throw { status: 400, message: "Email sudah terdaftar pada akun lain." };
 
-  const existingNip = await adminRepository.findUserByNpm(identifier.trim());
+  const existingNip = await adminRepository.findUserByNpm(safeIdentifier);
   if (existingNip) throw { status: 400, message: "Identifier sudah terdaftar pada akun lain." };
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const created = await adminRepository.createAdmin({
-    name:            name.trim(),
-    email:           email.trim(),
+    name:            safeName,
+    email:           safeEmail,
     password:        hashedPassword,
-    identifier:      identifier.trim(),
+    identifier:      safeIdentifier,
     profile_picture: null  // sementara null, akan di-update setelah upload
   });
 
@@ -370,6 +375,11 @@ exports.updateUser = async ({ user, userId, body, file }) => {
     throw { status: 400, message: "name, email, dan identifier wajib diisi" };
   }
 
+  // Sanitasi: pastikan semua field bertipe string sebelum .trim()
+  const safeName = String(name).trim();
+  const safeEmail = String(email).trim();
+  const safeIdentifier = String(identifier).trim();
+
   const target = await adminRepository.findUserById(userId);
   if (!target) throw { status: 404, message: "User tidak ditemukan" };
 
@@ -392,9 +402,9 @@ exports.updateUser = async ({ user, userId, body, file }) => {
   }
 
   await adminRepository.updateUser(userId, {
-    name:            name.trim(),
-    email:           email.trim(),
-    npm_nip:         identifier.trim(),
+    name:            safeName,
+    email:           safeEmail,
+    npm_nip:         safeIdentifier,
     profile_picture
   });
 
@@ -572,12 +582,19 @@ exports.createDocumentAdmin = async ({ user, userId, body, file }) => {
 
   const { file_name, file_url } = await uploadToGCS(file, userId);
 
-  const doc = await documentRepository.createDocumentAdmin({
-    user_id:       userId,
-    document_type,
-    semester:      semesterInt,
-    file_path:     file_url,
-  });
+  let doc;
+  try {
+    doc = await documentRepository.createDocumentAdmin({
+      user_id:       userId,
+      document_type,
+      semester:      semesterInt,
+      file_path:     file_url,
+    });
+  } catch (dbErr) {
+    // DB gagal → rollback file dari GCS
+    await deleteFromGCS(file_url);
+    throw dbErr;
+  }
 
   return doc;
 };

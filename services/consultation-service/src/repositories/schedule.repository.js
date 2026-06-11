@@ -296,6 +296,45 @@ exports.updateBookingStatus = async (bookingId, status) => {
   return result.rows[0];
 };
 
+// ================= LOCK BOOKING FOR UPDATE (mencegah race condition cancel) =================
+exports.findBookingByIdForUpdate = async (client, bookingId) => {
+  const result = await client.query(
+    `SELECT b.*, j.dosen_id, j.kuota_tersisa
+     FROM booking_bimbingan b
+     JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
+     WHERE b.id = $1
+     FOR UPDATE OF b`,
+    [bookingId]
+  );
+  return result.rows[0];
+};
+
+// ================= UPDATE STATUS BOOKING (transactional) =================
+exports.updateBookingStatusTx = async (client, bookingId, status) => {
+  const result = await client.query(
+    `UPDATE booking_bimbingan
+     SET status = $1
+     WHERE id = $2
+     RETURNING *`,
+    [status, bookingId]
+  );
+  return result.rows[0];
+};
+
+// ================= TAMBAH KUOTA KEMBALI (transactional) =================
+exports.incrementKuotaTx = async (client, scheduleId) => {
+  const result = await client.query(
+    `UPDATE jadwal_bimbingan
+     SET kuota_tersisa = kuota_tersisa + 1,
+         status = 'tersedia',
+         updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [scheduleId]
+  );
+  return result.rows[0];
+};
+
 // ================= GET BOOKING BY DOSEN =================
 exports.getBookingsByDosen = async (dosenId, scheduleId = null) => {
   const conditions = ['j.dosen_id = $1'];

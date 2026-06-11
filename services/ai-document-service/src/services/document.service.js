@@ -447,6 +447,18 @@ exports.updateDocument = async ({ user, documentId, file }) => {
     throw dbErr;
   }
 
+  // Hapus file lama dari GCS setelah DB update berhasil (mencegah storage leak)
+  if (existing.file_path) {
+    try {
+      const oldUrl = new URL(existing.file_path);
+      const oldObjectPath = oldUrl.pathname.split('/').slice(2).join('/');
+      await bucket.file(oldObjectPath).delete();
+      console.log(`[GCS] File lama dihapus saat update: ${oldObjectPath}`);
+    } catch (err) {
+      console.error(`[GCS] Gagal hapus file lama saat update: ${err.message}`);
+    }
+  }
+
   await notifyDocumentExtractionWebhook({
     document: updated,
     user,

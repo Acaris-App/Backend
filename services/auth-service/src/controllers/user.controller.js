@@ -131,13 +131,13 @@ exports.updateProfileText = async (req, res, next) => {
       return res.status(400).json({ status: "error", message: "Tidak ada data yang dikirim" });
     }
 
-    if (name !== undefined && (!name || !name.trim())) {
-      return res.status(400).json({ status: "error", message: "name tidak boleh kosong" });
+    if (name !== undefined && (typeof name !== 'string' || !name.trim())) {
+      return res.status(400).json({ status: "error", message: "name tidak boleh kosong dan harus berupa teks" });
     }
 
     if (npm_nip !== undefined) {
-      if (!npm_nip || !npm_nip.trim()) {
-        return res.status(400).json({ status: "error", message: "npm_nip tidak boleh kosong" });
+      if (typeof npm_nip !== 'string' || !npm_nip.trim()) {
+        return res.status(400).json({ status: "error", message: "npm_nip tidak boleh kosong dan harus berupa teks" });
       }
       const existing = await userRepository.findByNpm(npm_nip.trim());
       if (existing && existing.id !== id) {
