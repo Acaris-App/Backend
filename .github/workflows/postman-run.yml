@@ -1,4 +1,4 @@
-name: API Postman Tests
+name: Acaris - Postman API
 
 on:
   workflow_dispatch:
@@ -19,6 +19,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - name: Force failure
+        if: github.event.inputs.force_fail == 'true'
+        run: exit 1
       - uses: actions/checkout@v4
 
       - name: Prepare result folder

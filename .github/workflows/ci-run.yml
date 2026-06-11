@@ -1,4 +1,4 @@
-name: CI Backend
+name: Acaris - CI Test
 
 on:
   workflow_dispatch:
@@ -7,12 +7,7 @@ on:
         description: 'Force failure'
         required: false
         default: 'false'
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+
 
 permissions:
   contents: read

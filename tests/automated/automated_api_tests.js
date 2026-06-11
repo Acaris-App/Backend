@@ -370,6 +370,15 @@ async function main() {
   await testAuthTearDown();
 
   await pool.end();
+
+  // Delete temporary test PDFs if they exist
+  try {
+    if (fs.existsSync('test_doc.pdf')) fs.unlinkSync('test_doc.pdf');
+    if (fs.existsSync('kb_doc.pdf')) fs.unlinkSync('kb_doc.pdf');
+    console.log("🧹 Cleaned up temporary test PDF files.");
+  } catch (e) {
+    console.error('Error deleting temp PDFs:', e.message);
+  }
   
   const failed = testResults.filter(t => t.status === 'FAIL').length;
   console.log(`\n🏁 TEST RUN COMPLETE. Passed: ${testResults.length - failed}, Failed: ${failed}`);
