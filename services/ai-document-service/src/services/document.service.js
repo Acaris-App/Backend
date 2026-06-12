@@ -5,11 +5,10 @@ const { bucket } = require('../config/gcs');
 
 const DOCUMENT_EXTRACT_TIMEOUT_MS = parseInt(process.env.N8N_DOCUMENT_EXTRACT_TIMEOUT_MS, 10) || 30000;
 
-const DEFAULT_DOCUMENT_EXTRACT_WEBHOOK_URL = 'http://34.101.47.211:5678/webhook/mahasiswa/ekstrak-dokumen';
-
-const getDocumentExtractWebhookUrl = () => (
-  process.env.N8N_DOCUMENT_EXTRACT_WEBHOOK_URL || DEFAULT_DOCUMENT_EXTRACT_WEBHOOK_URL
-);
+const getDocumentExtractWebhookUrl = () => {
+  if (!process.env.N8N_DOCUMENT_EXTRACT_WEBHOOK_URL) throw new Error("N8N_DOCUMENT_EXTRACT_WEBHOOK_URL is not configured.");
+  return process.env.N8N_DOCUMENT_EXTRACT_WEBHOOK_URL;
+};
 
 const parseWebhookResponse = async (response) => {
   const text = await response.text();

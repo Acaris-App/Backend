@@ -1,36 +1,44 @@
 const userRepository = require('../repositories/user.repository');
 const chatbotRepository = require('../repositories/chatbot.repository');
 
-const DEFAULT_N8N_BASE_URL = 'http://34.101.47.211:5678';
-const DEFAULT_GENERATE_SUMMARY_WEBHOOK_ID = 'e2c93a91-e5d7-43eb-a568-d4e13f2e467b';
-const DEFAULT_CLOSE_SESSION_WEBHOOK_ID = 'fedcc9f9-ea54-4a61-832b-8d5b9c2f69b0';
-const DEFAULT_CHATBOT_WEBHOOK_URL = 'http://34.101.47.211:5678/webhook/chat-aca';
 const CHATBOT_TIMEOUT_MS = parseInt(process.env.N8N_CHATBOT_TIMEOUT_MS, 10) || 60000;
 
 const joinWebhookUrl = (baseUrl, webhookId, path) => {
-  const normalizedBaseUrl = String(baseUrl || DEFAULT_N8N_BASE_URL).replace(/\/+$/, '');
+  const normalizedBaseUrl = String(baseUrl || '').replace(/\/+$/, '');
   const normalizedWebhookId = String(webhookId || '').replace(/^\/+|\/+$/g, '');
   return `${normalizedBaseUrl}/webhook/${normalizedWebhookId}${path}`;
 };
 
-const getWebhookUrl = () => process.env.N8N_CHATBOT_WEBHOOK_URL || DEFAULT_CHATBOT_WEBHOOK_URL;
-const getN8nBaseUrl = () => process.env.N8N_BASE_URL || DEFAULT_N8N_BASE_URL;
-const getSummaryWebhookUrl = () => (
-  process.env.N8N_CHATBOT_SUMMARY_WEBHOOK_URL
-  || joinWebhookUrl(
+const getWebhookUrl = () => {
+  if (!process.env.N8N_CHATBOT_WEBHOOK_URL) throw new Error("N8N_CHATBOT_WEBHOOK_URL is not configured.");
+  return process.env.N8N_CHATBOT_WEBHOOK_URL;
+};
+
+const getN8nBaseUrl = () => {
+  if (!process.env.N8N_BASE_URL) throw new Error("N8N_BASE_URL is not configured.");
+  return process.env.N8N_BASE_URL;
+};
+
+const getSummaryWebhookUrl = () => {
+  if (process.env.N8N_CHATBOT_SUMMARY_WEBHOOK_URL) return process.env.N8N_CHATBOT_SUMMARY_WEBHOOK_URL;
+  if (!process.env.N8N_GENERATE_SUMMARY_WEBHOOK_ID) throw new Error("N8N_GENERATE_SUMMARY_WEBHOOK_ID is not configured.");
+  return joinWebhookUrl(
     getN8nBaseUrl(),
-    process.env.N8N_GENERATE_SUMMARY_WEBHOOK_ID || DEFAULT_GENERATE_SUMMARY_WEBHOOK_ID,
+    process.env.N8N_GENERATE_SUMMARY_WEBHOOK_ID,
     '/chatbot/session/{{session_id}}/generate-summary'
-  )
-);
-const getCloseSessionWebhookUrl = () => (
-  process.env.N8N_CHATBOT_CLOSE_SESSION_WEBHOOK_URL
-  || joinWebhookUrl(
+  );
+};
+
+const getCloseSessionWebhookUrl = () => {
+  if (process.env.N8N_CHATBOT_CLOSE_SESSION_WEBHOOK_URL) return process.env.N8N_CHATBOT_CLOSE_SESSION_WEBHOOK_URL;
+  if (!process.env.N8N_CLOSE_SESSION_WEBHOOK_ID) throw new Error("N8N_CLOSE_SESSION_WEBHOOK_ID is not configured.");
+  return joinWebhookUrl(
     getN8nBaseUrl(),
-    process.env.N8N_CLOSE_SESSION_WEBHOOK_ID || DEFAULT_CLOSE_SESSION_WEBHOOK_ID,
+    process.env.N8N_CLOSE_SESSION_WEBHOOK_ID,
     '/chatbot/session/{{session_id}}/close'
-  )
-);
+  );
+};
+
 const resolveSessionWebhookUrl = (url, sessionId) => url.replace('{{session_id}}', encodeURIComponent(sessionId));
 
 const parseResponseBody = async (response) => {
