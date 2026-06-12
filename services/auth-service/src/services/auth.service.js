@@ -95,7 +95,7 @@ exports.validateKodeKelas = async ({ kode_kelas }) => {
 };
 
 // ================= LOGIN =================
-exports.login = async ({ email, password, ip, isBypass }) => {
+exports.login = async ({ email, password, ip }) => {
 
   if (!email || !password) {
     throw { status: 400, message: "Email dan password wajib diisi" };
