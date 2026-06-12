@@ -2,11 +2,11 @@ FROM oven/bun:1.3.14-alpine
 
 WORKDIR /app
 
-COPY docs/package.json docs/bun.lockb ./
+COPY src/package.json src/bun.lockb ./
 RUN bun install --production --frozen-lockfile
 
-COPY docs/src ./src
-COPY docs/tsconfig.json ./tsconfig.json
+COPY src/src ./src
+COPY src/tsconfig.json ./tsconfig.json
 
 ENV NODE_ENV=production
 ENV PORT=8080

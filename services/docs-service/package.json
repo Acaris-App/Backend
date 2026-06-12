@@ -4,8 +4,8 @@
   "private": true,
   "description": "Scalar-style API documentation website for Acaris.",
   "scripts": {
-    "dev": "cd docs && bun run dev",
-    "start": "cd docs && bun run start",
-    "check": "cd docs && bun run check"
+    "dev": "cd src && bun run dev",
+    "start": "cd src && bun run start",
+    "check": "cd src && bun run check"
   }
 }

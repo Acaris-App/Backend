@@ -4,7 +4,7 @@ steps:
       - build
       - -t
       - asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/acaris-docs:$SHORT_SHA
-      - docs
+      - services/docs-service
 
   - name: gcr.io/cloud-builders/docker
     args:
