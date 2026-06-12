@@ -3,10 +3,6 @@ name: Acaris - Performance Test
 on:
   workflow_dispatch:
     inputs:
-      force_fail:
-        description: 'Force failure'
-        required: false
-        default: 'false'
       target_url:
         description: Full URL to test, for example https://service-url/health
         required: false
@@ -44,9 +40,6 @@ jobs:
       TARGET_URL: ${{ inputs.target_url }}
 
     steps:
-      - name: Force failure
-        if: github.event.inputs.force_fail == 'true'
-        run: exit 1
       - name: Checkout Repository
         uses: actions/checkout@v4
 

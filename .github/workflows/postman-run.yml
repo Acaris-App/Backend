@@ -2,11 +2,6 @@ name: Acaris - Postman API
 
 on:
   workflow_dispatch:
-    inputs:
-      force_fail:
-        description: 'Force failure'
-        required: false
-        default: 'false'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -19,9 +14,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Force failure
-        if: github.event.inputs.force_fail == 'true'
-        run: exit 1
       - uses: actions/checkout@v4
 
       - name: Prepare result folder

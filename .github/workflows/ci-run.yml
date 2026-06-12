@@ -1,12 +1,11 @@
 name: Acaris - CI Test
 
 on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
-    inputs:
-      force_fail:
-        description: 'Force failure'
-        required: false
-        default: 'false'
 
 
 permissions:
@@ -23,9 +22,6 @@ jobs:
         service: [auth-service, consultation-service, ai-document-service]
 
     steps:
-      - name: Force failure
-        if: github.event.inputs.force_fail == 'true'
-        run: exit 1
       - name: Checkout repository
         uses: actions/checkout@v4
 

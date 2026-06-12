@@ -2,11 +2,6 @@ name: Acaris - E2E Tests
 
 on:
   workflow_dispatch:
-    inputs:
-      force_fail:
-        description: 'Force failure'
-        required: false
-        default: 'false'
 
 jobs:
   api-testing:
@@ -15,9 +10,6 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Force failure
-        if: github.event.inputs.force_fail == 'true'
-        run: exit 1
       - name: Checkout repository
         uses: actions/checkout@v4
 
