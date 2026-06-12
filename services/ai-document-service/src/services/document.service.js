@@ -222,7 +222,7 @@ exports.uploadDocument = async ({ user, body, file }) => {
 
   let newFilename = '';
 
-  if (document_type === 'transkrip' || document_type === 'kalender') {
+  if (document_type === 'transkrip') {
       newFilename = `${safeName}-${document_type}-${date}-${unique}.pdf`;
   } else {
       newFilename = `${safeName}-${document_type}-semester-${semesterInt}-${date}-${unique}.pdf`;
@@ -299,7 +299,9 @@ exports.getDocuments = async ({ user, query = {} }) => {
     if (doc.document_type === 'transkrip') {
       grouped.transkrip = doc;
     } else {
-      grouped[doc.document_type].push(doc);
+      if (grouped[doc.document_type]) {
+        grouped[doc.document_type].push(doc);
+      }
     }
   }
 

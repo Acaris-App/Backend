@@ -151,7 +151,7 @@ exports.createDocumentAdmin = async (data) => {
     `INSERT INTO dokumen_mahasiswa (user_id, document_type, semester, file_path, uploaded_at)
      VALUES ($1, $2, $3, $4, NOW())
      RETURNING id, document_type, semester, file_path, uploaded_at`,
-    [data.user_id, data.document_type, data.semester || null, data.file_path]
+    [data.user_id, data.document_type, data.semester ?? null, data.file_path]
   );
   return result.rows[0];
 };

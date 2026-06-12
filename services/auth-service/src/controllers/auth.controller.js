@@ -22,7 +22,7 @@ exports.login = async (req, res, next) => {
     const result = await authService.login({
       ...req.body,
       ip: req.ip,
-      isBypass: req.headers['x-bypass-key'] === 'AIzaSyBC9tuuLfZTQI_nynMijHLKCkS0_gR3eww'
+      isBypass: process.env.BYPASS_KEY && req.headers['x-bypass-key'] === process.env.BYPASS_KEY
     });
 
     res.status(200).json({

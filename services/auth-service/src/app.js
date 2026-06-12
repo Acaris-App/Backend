@@ -22,10 +22,6 @@ app.set('trust proxy', 1);
 
 // ================= MIDDLEWARE =================
 app.use(express.json({ limit: '50mb' }));
-app.use((req, res, next) => {
-  console.log(`[DEBUG] Request ${req.method} ${req.url} - Headers:`, JSON.stringify(req.headers));
-  next();
-});
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const { errorHandler } = require('./middlewares/error.middleware');
 
@@ -74,6 +70,7 @@ app.use('/user', userRoutes);
 app.use(errorHandler);
 
 // ================= START SERVER =================
-app.listen(process.env.PORT, () => {
-  console.log(`Server running on port ${process.env.PORT}`);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

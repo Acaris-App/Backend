@@ -188,7 +188,6 @@ exports.updateKnowledgeBase = async ({ user, id, body, file }) => {
     const uploaded = await uploadToGCS(file, user.id);
     file_name = uploaded.file_name;
     file_url  = uploaded.file_url;
-    await deleteFromGCS(existing.file_url);
   }
 
   const updated = await adminRepository.updateKnowledgeBase(id, {
@@ -197,6 +196,11 @@ exports.updateKnowledgeBase = async ({ user, id, body, file }) => {
     file_name,
     file_url
   });
+
+  // Hapus file lama dari GCS SETELAH DB update berhasil (mencegah data loss)
+  if (file && existing.file_url) {
+    await deleteFromGCS(existing.file_url);
+  }
 
   return {
     id:          updated.id,
@@ -383,12 +387,12 @@ exports.updateUser = async ({ user, userId, body, file }) => {
   const target = await adminRepository.findUserById(userId);
   if (!target) throw { status: 404, message: "User tidak ditemukan" };
 
-  const existingEmail = await adminRepository.findUserByEmail(email);
+  const existingEmail = await adminRepository.findUserByEmail(safeEmail);
   if (existingEmail && existingEmail.id !== parseInt(userId)) {
     throw { status: 400, message: "Email sudah terdaftar pada akun lain." };
   }
 
-  const existingNpm = await adminRepository.findUserByNpm(identifier);
+  const existingNpm = await adminRepository.findUserByNpm(safeIdentifier);
   if (existingNpm && existingNpm.id !== parseInt(userId)) {
     throw { status: 400, message: "Identifier sudah terdaftar pada akun lain." };
   }
@@ -573,6 +577,12 @@ exports.createDocumentAdmin = async ({ user, userId, body, file }) => {
   const { document_type, semester } = body;
 
   if (!document_type) throw { status: 400, message: 'document_type wajib diisi' };
+
+  const allowedTypes = ['krs', 'khs', 'transkrip'];
+  if (!allowedTypes.includes(document_type)) {
+    throw { status: 400, message: `document_type tidak valid. Pilihan: ${allowedTypes.join(', ')}` };
+  }
+
   if (!file)          throw { status: 400, message: 'File wajib diupload' };
 
   // Parse semester: default 0 jika kosong (konsisten dengan DEFAULT DB)
@@ -580,7 +590,7 @@ exports.createDocumentAdmin = async ({ user, userId, body, file }) => {
     ? parseInt(semester)
     : 0;
 
-  const { file_name, file_url } = await uploadToGCS(file, userId);
+  const { file_url } = await uploadToGCS(file, userId);
 
   let doc;
   try {
@@ -619,7 +629,6 @@ exports.updateDocumentAdmin = async ({ user, documentId, body, file }) => {
   if (file) {
     const { file_url } = await uploadToGCS(file, existing.user_id);
     updateData.file_path = file_url;
-    await deleteFromGCS(existing.file_path);
   }
 
   if (Object.keys(updateData).length === 0) {
@@ -627,6 +636,12 @@ exports.updateDocumentAdmin = async ({ user, documentId, body, file }) => {
   }
 
   const updated = await documentRepository.updateDocumentAdmin(documentId, updateData);
+
+  // Hapus file lama dari GCS SETELAH DB update berhasil (mencegah data loss)
+  if (file && existing.file_path) {
+    await deleteFromGCS(existing.file_path);
+  }
+
   return updated;
 };
 

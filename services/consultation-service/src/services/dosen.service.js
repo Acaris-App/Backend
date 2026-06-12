@@ -84,7 +84,7 @@ exports.getRiwayatBimbingan = async ({ user, mahasiswaId }) => {
     }
 
     // Format time: "09:00 - 10:00"
-    const time = `${row.waktu_mulai.slice(0, 5)} - ${row.waktu_selesai.slice(0, 5)}`;
+    const time = `${row.waktu_mulai?.slice(0, 5) || '??:??'} - ${row.waktu_selesai?.slice(0, 5) || '??:??'}`;
 
     return {
       id:               row.booking_id,

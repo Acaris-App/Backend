@@ -212,6 +212,17 @@ exports.updateProfilePhoto = async (req, res, next) => {
     const profilePictureUrl = await uploadProfilePicture(file, currentUser.npm_nip);
     await userRepository.updateProfilePhoto(id, profilePictureUrl);
 
+    // Hapus foto lama dari GCS (mencegah storage leak)
+    if (currentUser.profile_picture) {
+      try {
+        const oldUrl = new URL(currentUser.profile_picture);
+        const oldObjectPath = oldUrl.pathname.split('/').slice(2).join('/');
+        await bucket.file(oldObjectPath).delete();
+      } catch (gcsErr) {
+        console.error('[GCS] Gagal hapus foto lama:', gcsErr.message);
+      }
+    }
+
     const responseData = await buildProfileResponse(id, role);
 
     res.json({

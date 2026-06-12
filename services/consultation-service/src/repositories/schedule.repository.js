@@ -198,27 +198,6 @@ exports.findByIdForUpdate = async (client, scheduleId) => {
   return result.rows[0];
 };
 
-// ================= CEK BOOKING DUPLIKAT =================
-exports.findBookingByUserAndSchedule = async (userId, scheduleId) => {
-  const result = await db.query(
-    `SELECT * FROM booking_bimbingan
-     WHERE mahasiswa_id = $1 AND jadwal_id = $2 AND status = 'terkonfirmasi'`,
-    [userId, scheduleId]
-  );
-  return result.rows[0];
-};
-
-// ================= ✅ BOOKING (langsung terkonfirmasi, tidak ada menunggu) =================
-exports.createBooking = async (data) => {
-  const result = await db.query(
-    `INSERT INTO booking_bimbingan (mahasiswa_id, jadwal_id, catatan, status)
-     VALUES ($1, $2, $3, 'terkonfirmasi')
-     RETURNING *`,
-    [data.mahasiswa_id, data.jadwal_id, data.catatan || null]
-  );
-  return result.rows[0];
-};
-
 // ================= BOOKING (transactional) =================
 exports.createBookingTx = async (client, data) => {
   const result = await client.query(
@@ -226,20 +205,6 @@ exports.createBookingTx = async (client, data) => {
      VALUES ($1, $2, $3, 'terkonfirmasi')
      RETURNING *`,
     [data.mahasiswa_id, data.jadwal_id, data.catatan || null]
-  );
-  return result.rows[0];
-};
-
-// ================= KURANGI KUOTA (atomic) =================
-exports.decrementKuota = async (scheduleId) => {
-  const result = await db.query(
-    `UPDATE jadwal_bimbingan
-     SET kuota_tersisa = kuota_tersisa - 1,
-         status = CASE WHEN kuota_tersisa - 1 <= 0 THEN 'penuh' ELSE 'tersedia' END,
-         updated_at = NOW()
-     WHERE id = $1 AND kuota_tersisa > 0
-     RETURNING *`,
-    [scheduleId]
   );
   return result.rows[0];
 };
@@ -254,44 +219,6 @@ exports.decrementKuotaTx = async (client, scheduleId) => {
      WHERE id = $1 AND kuota_tersisa > 0
      RETURNING *`,
     [scheduleId]
-  );
-  return result.rows[0];
-};
-
-// ================= ✅ TAMBAH KUOTA KEMBALI (saat booking dibatalkan) =================
-exports.incrementKuota = async (scheduleId) => {
-  const result = await db.query(
-    `UPDATE jadwal_bimbingan
-     SET kuota_tersisa = kuota_tersisa + 1,
-         status = 'tersedia',
-         updated_at = NOW()
-     WHERE id = $1
-     RETURNING *`,
-    [scheduleId]
-  );
-  return result.rows[0];
-};
-
-// ================= GET BOOKING BY ID =================
-exports.findBookingById = async (bookingId) => {
-  const result = await db.query(
-    `SELECT b.*, j.dosen_id, j.kuota_tersisa
-     FROM booking_bimbingan b
-     JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
-     WHERE b.id = $1`,
-    [bookingId]
-  );
-  return result.rows[0];
-};
-
-// ================= ✅ UPDATE STATUS BOOKING =================
-exports.updateBookingStatus = async (bookingId, status) => {
-  const result = await db.query(
-    `UPDATE booking_bimbingan
-     SET status = $1
-     WHERE id = $2
-     RETURNING *`,
-    [status, bookingId]
   );
   return result.rows[0];
 };
@@ -321,11 +248,11 @@ exports.updateBookingStatusTx = async (client, bookingId, status) => {
   return result.rows[0];
 };
 
-// ================= TAMBAH KUOTA KEMBALI (transactional) =================
+// ================= TAMBAH KUOTA KEMBALI (transactional, dengan guard overflow) =================
 exports.incrementKuotaTx = async (client, scheduleId) => {
   const result = await client.query(
     `UPDATE jadwal_bimbingan
-     SET kuota_tersisa = kuota_tersisa + 1,
+     SET kuota_tersisa = LEAST(kuota_tersisa + 1, kuota),
          status = 'tersedia',
          updated_at = NOW()
      WHERE id = $1
@@ -450,21 +377,6 @@ exports.getDailySlots = async (dosenId, date, includeBookings = false) => {
     ...slot,
     bookings: bookingMap[slot.id] || []
   }));
-};
-
-// ================= CEK BOOKING MAHASISWA DI TANGGAL TERTENTU =================
-// Validasi: mahasiswa hanya boleh 1 slot per hari
-exports.findBookingByUserAndDate = async (userId, date) => {
-  const result = await db.query(
-    `SELECT b.id FROM booking_bimbingan b
-     JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
-     WHERE b.mahasiswa_id = $1
-       AND j.tanggal = $2
-       AND b.status = 'terkonfirmasi'
-     LIMIT 1`,
-    [userId, date]
-  );
-  return result.rows[0];
 };
 
 // ================= GET DAILY SLOTS MAHASISWA (dengan status booking milik mahasiswa tsb) =================

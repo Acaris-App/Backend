@@ -130,11 +130,22 @@ exports.countBimbinganSemesterIni = async (dosenId) => {
     JOIN jadwal_bimbingan j ON b.jadwal_id = j.id
     WHERE j.dosen_id = $1
       AND b.status NOT IN ('dibatalkan')
-      AND EXTRACT(YEAR  FROM j.tanggal) = EXTRACT(YEAR  FROM NOW())
-      AND EXTRACT(MONTH FROM j.tanggal) BETWEEN
-          CASE WHEN EXTRACT(MONTH FROM NOW()) >= 8 THEN 8 ELSE 2 END
+      AND j.tanggal BETWEEN
+          CASE
+            WHEN EXTRACT(MONTH FROM NOW()) >= 8
+              THEN DATE_TRUNC('month', DATE_TRUNC('year', NOW()) + INTERVAL '7 months')
+            WHEN EXTRACT(MONTH FROM NOW()) <= 1
+              THEN DATE_TRUNC('month', DATE_TRUNC('year', NOW()) - INTERVAL '5 months')
+            ELSE DATE_TRUNC('month', DATE_TRUNC('year', NOW()) + INTERVAL '1 month')
+          END
           AND
-          CASE WHEN EXTRACT(MONTH FROM NOW()) >= 8 THEN 12 ELSE 7 END
+          CASE
+            WHEN EXTRACT(MONTH FROM NOW()) >= 8
+              THEN DATE_TRUNC('month', DATE_TRUNC('year', NOW()) + INTERVAL '13 months') - INTERVAL '1 day'
+            WHEN EXTRACT(MONTH FROM NOW()) <= 1
+              THEN DATE_TRUNC('month', DATE_TRUNC('year', NOW()) + INTERVAL '1 month') - INTERVAL '1 day'
+            ELSE DATE_TRUNC('month', DATE_TRUNC('year', NOW()) + INTERVAL '7 months') - INTERVAL '1 day'
+          END
   `, [dosenId]);
   return parseInt(result.rows[0].total) || 0;
 };
