@@ -36,9 +36,9 @@ const isDokumenLengkap = ({ currentSemester, documents }) => {
 
   const completedSemesters = Math.max(semester - 1, 0);
 
-  // Wajib memiliki KRS atau KHS untuk setiap semester dari 1 s.d. semester_berjalan - 1
+  // Wajib memiliki KRS dan KHS untuk setiap semester dari 1 s.d. semester_berjalan - 1
   const hasRequiredDocs = Array.from({ length: completedSemesters }, (_, index) => index + 1)
-    .every(requiredSemester => krsSemesters.has(requiredSemester) || khsSemesters.has(requiredSemester));
+    .every(requiredSemester => krsSemesters.has(requiredSemester) && khsSemesters.has(requiredSemester));
 
   return hasTranskrip && hasRequiredDocs;
 };

@@ -352,10 +352,10 @@ exports.checkCompleteness = async (user) => {
       if (!uploaded.khs.includes(s)) missingSemesterKHS.push(s);
     }
 
-    // Wajib memiliki KRS atau KHS untuk setiap semester dari 1 s.d. currentSemester - 1
+    // Wajib memiliki KRS dan KHS untuk setiap semester dari 1 s.d. currentSemester - 1
     let isComplete = uploaded.transkrip;
     for (let s = 1; s < currentSemester; s++) {
-      if (!uploaded.krs.includes(s) && !uploaded.khs.includes(s)) {
+      if (!uploaded.krs.includes(s) || !uploaded.khs.includes(s)) {
         isComplete = false;
         break;
       }
