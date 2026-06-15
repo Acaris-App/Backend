@@ -63,12 +63,10 @@ exports.countBimbinganKeseluruhan = async (userId) => {
 exports.countChatbotBulanIni = async (userId) => {
   const result = await db.query(`
     SELECT COUNT(*) AS total
-    FROM chatbot_messages cm
-    JOIN chatbot_sessions cs ON cs.id = cm.session_id
+    FROM chatbot_sessions cs
     WHERE cs.mahasiswa_id = $1
-      AND cm.sender = 'user'
-      AND cm.created_at >= date_trunc('month', NOW())
-      AND cm.created_at < date_trunc('month', NOW()) + INTERVAL '1 month'
+      AND cs.created_at >= date_trunc('month', NOW())
+      AND cs.created_at < date_trunc('month', NOW()) + INTERVAL '1 month'
   `, [userId]);
 
   return parseInt(result.rows[0].total) || 0;
