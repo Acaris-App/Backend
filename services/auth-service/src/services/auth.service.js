@@ -429,7 +429,7 @@ exports.resendOTP = async ({ email, type }) => {
 
   const user = await userRepository.findByEmail(email);
   if (!user) {
-    return { message: "Jika email terdaftar, OTP akan dikirim ulang" };
+    throw { status: 404, message: "Email tidak terdaftar" };
   }
 
   if (!['register', 'reset_password'].includes(type)) {
@@ -463,7 +463,7 @@ exports.forgotPassword = async ({ email }) => {
 
   const user = await userRepository.findByEmail(email);
   if (!user) {
-    return { message: "Jika email terdaftar, OTP akan dikirim ke email" };
+    throw { status: 404, message: "Email tidak terdaftar" };
   }
 
   await otpRepository.invalidateOTP(user.id, 'reset_password');
