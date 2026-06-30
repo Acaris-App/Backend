@@ -1169,7 +1169,7 @@ const app = new Elysia()
           summary: "Riwayat chatbot mahasiswa",
           description: "Melihat daftar sesi chatbot yang dilakukan oleh mahasiswa bimbingan tertentu.",
           security: authSecurity,
-          responses: adminUserChatbotResponses,
+          responses: chatbotSessionResponses,
         },
       })
       .get("/mahasiswa/:mahasiswaId/chatbot/:sessionId", () => ({}), {
@@ -1182,7 +1182,7 @@ const app = new Elysia()
           summary: "Detail chatbot mahasiswa",
           description: "Melihat detail riwayat pesan obrolan dalam sesi chatbot mahasiswa bimbingan.",
           security: authSecurity,
-          responses: adminUserChatbotDetailResponses,
+          responses: chatbotMessageResponses,
         },
       })
   )
