@@ -162,18 +162,18 @@ const userSchema = {
   type: "object",
   properties: {
     id: { type: "integer", example: 1 },
-    name: { type: "string", example: "M Arifin Syam" },
-    email: { type: "string", example: "user@example.com" },
-    npm_nip: { type: "string", example: "2200012345" },
+    name: { type: "string", example: "Mahasiswa Dummy" },
+    email: { type: "string", example: "mahasiswa@dummy.com" },
+    npm_nip: { type: "string", example: "DUMMYMAHASISWA" },
     role: { type: "string", example: "mahasiswa" },
-    profile_picture: stringOrNullSchema("https://storage.googleapis.com/bucket/profile.jpg"),
-    angkatan: { type: "integer", example: 2022 },
-    ipk: numberOrNullSchema(3.75),
-    current_semester: { type: "integer", example: 6 },
+    profile_picture: stringOrNullSchema("https://marslabs.my.id/api/auth/uploads/profile-pictures/mahasiswa.jpg"),
+    angkatan: { type: "integer", example: 2020 },
+    ipk: numberOrNullSchema(3.82),
+    current_semester: { type: "integer", example: 8 },
     dosen_pa_id: { type: "integer", nullable: true, example: 2 },
-    nama_dosen_pa: stringOrNullSchema("Dr. Ahmad"),
-    nip_dosen_pa: stringOrNullSchema("198001012010011001"),
-    foto_dosen_pa: stringOrNullSchema("https://storage.googleapis.com/bucket/dosen.jpg"),
+    nama_dosen_pa: stringOrNullSchema("Dosen Dummy"),
+    nip_dosen_pa: stringOrNullSchema("DUMMYDOSEN"),
+    foto_dosen_pa: stringOrNullSchema("https://marslabs.my.id/api/auth/uploads/profile-pictures/dosen.jpg"),
     kode_kelas: stringOrNullSchema("DSN-ABCD"),
   },
 };
@@ -357,9 +357,9 @@ const classCodeSchema = {
   type: "object",
   properties: {
     id: { type: "integer", example: 2 },
-    name: { type: "string", example: "Dr. Ahmad" },
-    email: { type: "string", example: "ahmad@example.com" },
-    npm_nip: { type: "string", example: "198001012010011001" },
+    name: { type: "string", example: "Dosen Dummy" },
+    email: { type: "string", example: "dosen@dummy.com" },
+    npm_nip: { type: "string", example: "DUMMYDOSEN" },
     kode_kelas: { type: "string", example: "DSN-ABCD" },
   },
   additionalProperties: true,
@@ -699,7 +699,7 @@ const app = new Elysia()
     auth
       .post("/login", () => ({}), {
         body: t.Object({
-          email: t.String({ example: "admin@gmail.com" }),
+          email: t.String({ example: "admin@dummy.com" }),
           password: t.String({ example: "password123" }),
         }),
         detail: {
@@ -711,7 +711,7 @@ const app = new Elysia()
       })
       .post("/validate-kode-kelas", () => ({}), {
         body: t.Object({
-          kode_kelas: t.String({ example: "IF-2026-A" }),
+          kode_kelas: t.String({ example: "DSN-ABCD" }),
         }),
         detail: {
           tags: ["Auth"],
@@ -721,24 +721,42 @@ const app = new Elysia()
         },
       })
       .post("/register/mahasiswa", () => ({}), {
+        body: t.Object({
+          name: t.String({ example: "Mahasiswa Dummy" }),
+          email: t.String({ example: "mahasiswa@dummy.com" }),
+          password: t.String({ example: "password123" }),
+          npm_nip: t.String({ example: "DUMMYMAHASISWA" }),
+          angkatan: t.Number({ example: 2020 }),
+          kode_kelas: t.String({ example: "DSN-ABCD" }),
+          ipk: t.Number({ example: 3.82 }),
+          current_semester: t.Number({ example: 8 }),
+          profile_picture: t.Optional(t.String({ format: "binary", description: "Berkas foto profil (jpeg/png)" }))
+        }),
         detail: {
           tags: ["Auth"],
           summary: "Registrasi mahasiswa",
-          description: "Registrasi akun mahasiswa. Endpoint aktual mendukung multipart untuk foto profil.",
+          description: "Registrasi akun mahasiswa. Mendukung multipart/form-data untuk unggah foto profil.",
           responses: registerResponses,
         },
       })
       .post("/register/dosen", () => ({}), {
+        body: t.Object({
+          name: t.String({ example: "Dosen Dummy" }),
+          email: t.String({ example: "dosen@dummy.com" }),
+          password: t.String({ example: "password123" }),
+          npm_nip: t.String({ example: "DUMMYDOSEN" }),
+          profile_picture: t.Optional(t.String({ format: "binary", description: "Berkas foto profil (jpeg/png)" }))
+        }),
         detail: {
           tags: ["Auth"],
           summary: "Registrasi dosen",
-          description: "Registrasi akun dosen. Endpoint aktual mendukung multipart untuk foto profil.",
+          description: "Registrasi akun dosen. Mendukung multipart/form-data untuk unggah foto profil.",
           responses: registerDosenResponses,
         },
       })
       .post("/verify-register-otp", () => ({}), {
         body: t.Object({
-          email: t.String({ example: "user@example.com" }),
+          email: t.String({ example: "mahasiswa@dummy.com" }),
           otp: t.String({ example: "123456" }),
         }),
         detail: {
@@ -749,7 +767,7 @@ const app = new Elysia()
       })
       .post("/resend-otp", () => ({}), {
         body: t.Object({
-          email: t.String({ example: "user@example.com" }),
+          email: t.String({ example: "mahasiswa@dummy.com" }),
         }),
         detail: {
           tags: ["Auth"],
@@ -759,7 +777,7 @@ const app = new Elysia()
       })
       .post("/forgot-password", () => ({}), {
         body: t.Object({
-          email: t.String({ example: "user@example.com" }),
+          email: t.String({ example: "mahasiswa@dummy.com" }),
         }),
         detail: {
           tags: ["Auth"],
@@ -769,7 +787,7 @@ const app = new Elysia()
       })
       .post("/verify-reset-otp", () => ({}), {
         body: t.Object({
-          email: t.String({ example: "user@example.com" }),
+          email: t.String({ example: "mahasiswa@dummy.com" }),
           otp: t.String({ example: "123456" }),
         }),
         detail: {
@@ -780,7 +798,7 @@ const app = new Elysia()
       })
       .post("/reset-password", () => ({}), {
         body: t.Object({
-          email: t.String({ example: "user@example.com" }),
+          email: t.String({ example: "mahasiswa@dummy.com" }),
           otp: t.String({ example: "123456" }),
           new_password: t.String({ example: "newPassword123" }),
         }),
@@ -835,6 +853,9 @@ const app = new Elysia()
         },
       })
       .post("/profile/photo", () => ({}), {
+        body: t.Object({
+          photo: t.String({ format: "binary", description: "Berkas foto profil (jpeg/png)" })
+        }),
         detail: {
           tags: ["User"],
           summary: "Update foto profile",
@@ -897,6 +918,11 @@ const app = new Elysia()
         },
       })
       .post("/upload", () => ({}), {
+        body: t.Object({
+          document_type: t.String({ example: "krs" }),
+          semester: t.Optional(t.Number({ example: 8 })),
+          file: t.String({ format: "binary", description: "Berkas PDF KRS/KHS/Transkrip" })
+        }),
         detail: {
           tags: ["Document"],
           summary: "Upload dokumen",
@@ -1281,6 +1307,11 @@ const app = new Elysia()
         },
       })
       .post("/knowledge-base", () => ({}), {
+        body: t.Object({
+          title: t.String({ example: "Kalender Akademik 2026" }),
+          category: t.String({ example: "Kalender Akademik" }),
+          file: t.String({ format: "binary", description: "Berkas PDF basis pengetahuan akademik" })
+        }),
         detail: {
           tags: ["Admin"],
           summary: "Upload knowledge base",
@@ -1291,6 +1322,11 @@ const app = new Elysia()
       })
       .put("/knowledge-base/:id", () => ({}), {
         params: t.Object({ id: t.String({ example: "1" }) }),
+        body: t.Object({
+          title: t.Optional(t.String({ example: "Kalender Akademik 2026 Terbaru" })),
+          category: t.Optional(t.String({ example: "Kalender Akademik" })),
+          file: t.Optional(t.String({ format: "binary", description: "Berkas PDF basis pengetahuan akademik" }))
+        }),
         detail: {
           tags: ["Admin"],
           summary: "Update knowledge base",
