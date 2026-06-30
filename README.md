@@ -5,8 +5,8 @@
 Dokumentasi API dan Endpoint Utama Acaris (Sistem Informasi & Bimbingan Akademik berbasis Cloud-Native dengan Integrasi AI):
 
 ### URL Cloud Run Aktif:
-- **Backend API**: `https://acaris-service-649442063927.asia-southeast2.run.app`
-- **API Documentation**: `https://acaris-docs-649442063927.asia-southeast2.run.app` (atau `/docs` setelah deploy)
+- **Backend API**: `https://acaris.my.id`
+- **API Documentation**: `https://acaris.my.id/docs`
 
 ---
 
@@ -16,9 +16,11 @@ Untuk mempermudah akses dan menyatukan seluruh layanan di bawah satu nama domain
 ```yaml
 Domain Utama    : acaris.my.id (atau acaris.id)
 Routing Paths   :
-  - /           -> Web/Mobile Frontend (Client)
-  - /api/*      -> acaris-service (Backend API di Cloud Run)
-  - /docs       -> acaris-docs (Dokumentasi API di Cloud Run)
+  - /                     -> Web/Mobile Frontend (Client)
+  - /api/auth/*           -> acaris-auth (Layanan Autentikasi)
+  - /api/consultations/*  -> acaris-consultation (Layanan Bimbingan)
+  - /api/documents/*      -> acaris-document (Layanan Dokumen AI)
+  - /docs                 -> acaris-docs (Dokumentasi API)
 ```
 
 ---
@@ -39,7 +41,7 @@ Google Cloud Platform (GCP) menyediakan infrastruktur andal untuk menjalankan ko
 - **Google Cloud Platform**: Ekosistem utama penyedia layanan cloud.  
 - **Cloud SQL (PostgreSQL)**: Database relasional utama untuk menyimpan data pengguna, dokumen, bimbingan, dan log chatbot.  
 - **Cloud Storage (GCS)**: Menyimpan aset file pdf dokumen mahasiswa (KRS, KHS, transkrip) dan foto profil secara aman.  
-- **Cloud Run**: Serverless compute untuk mendeploy container backend utama (`acaris-service`) dan dokumentasi (`acaris-docs`).  
+- **Cloud Run**: Serverless compute untuk mendeploy container arsitektur microservices (`acaris-auth`, `acaris-consultation`, `acaris-document`, `acaris-docs`).  
 - **Memorystore Redis**: Caching data, manajemen sesi, dan *rate limiter* request API.  
 - **Load Balancer (HTTP/S)**: Gateway utama untuk mengaktifkan HTTPS/SSL, menyatukan sub-layanan, dan mengarahkan trafik berdasarkan URL path.  
 
@@ -77,12 +79,12 @@ Bucket Name     : acaris-storage
 
 ### 🚀 Cloud Run  
 <img src="https://raw.githubusercontent.com/Aku-Mars/gambar/refs/heads/main/cloud-run.png" width="150" height="150" alt="Cloud Run Icon"/>  
-Deployment serverless untuk container aplikasi backend Express dan Elysia.  
+Deployment serverless untuk container aplikasi backend Express (Microservices) dan Elysia.  
 
 ```YAML
 Location        : asia-southeast2 (Jakarta)
 Auto-scaling    : 0 to 10 instances
-Port            : 3000 (acaris-service), 8080 (acaris-docs)
+Port            : 3000 (Auth, Consultation, Document), 8080 (Docs)
 ```
 📖 [Pelajari selengkapnya tentang Cloud Run](https://cloud.google.com/run/docs)  
 
@@ -109,7 +111,7 @@ Mendistribusikan trafik dan menghubungkan multi-service di bawah satu alamat dom
 ```YAML
 Location          : Global / Regional (asia-southeast2)
 Type              : Application Load Balancer (HTTP/S)
-Routing Mode      : Path-based Routing (/api, /docs)
+Routing Mode      : Path-based Routing (/api/auth, /api/consultations, /api/documents, /docs)
 Certificate       : Google-managed SSL Certificate
 ```
 📖 [Pelajari selengkapnya tentang Load Balancing](https://cloud.google.com/load-balancing/docs)  
@@ -118,13 +120,19 @@ Certificate       : Google-managed SSL Certificate
 
 ## 🌟 Layanan Utama (Services)  
 
-Proyek ini menggunakan struktur **Monorepo** untuk menyederhanakan pengelolaan kode program di GCP:  
+Proyek ini menggunakan struktur **Monorepo** dengan arsitektur **Microservices** untuk menyederhanakan pengelolaan kode program secara modular di GCP. Saat ini terdiri dari:  
 
-#### 🧠 Acaris Backend Service (`acaris-service`)
-Layanan utama Express.js yang mengelola registrasi, autentikasi JWT, bimbingan akademik, slot jadwal, booking bimbingan, dashboard, serta integrasi webhook ke AI.  
+#### 🔐 Auth Service (`acaris-auth`)
+Microservice Express.js yang menangani otentikasi JWT, manajemen pengguna (mahasiswa dan dosen), dan keamanan akun.
+
+#### 🤝 Consultation Service (`acaris-consultation`)
+Microservice Express.js yang mengelola alur bimbingan akademik, pemesanan slot jadwal dosen, manajemen dashboard, serta integrasi webhook dengan AI Chatbot (Aca).
+
+#### 📄 AI Document Service (`acaris-document`)
+Microservice Express.js untuk menangani pemrosesan dan manajemen dokumen, ekstraksi informasi KRS/Transkrip, dan berinteraksi dengan layanan cloud storage.
 
 #### 📚 Docs Service (`acaris-docs`)
-Website dokumentasi API interaktif berbasis Elysia.js dengan UI Scalar yang menyajikan API playground untuk mencoba setiap endpoint Acaris.  
+Website dokumentasi API interaktif berbasis Elysia.js dengan UI Scalar yang menyajikan API playground untuk mencoba seluruh endpoint layanan Acaris.  
 
 #### 🤖 AI Chatbot Service (n8n Workflow)
 Layanan AI/chatbot bimbingan akademik ("Aca") yang di-host secara terpisah di VPS menggunakan n8n, dihubungkan secara aman dengan backend Acaris.  

@@ -41,7 +41,7 @@ const generateOTPTemplate = (code) => {
 
     <div style="background-color: #f9fafb; padding: 15px; text-align: center; border-top: 1px solid #d9d9d9;">
       <p style="color: #7f7f7f; font-size: 12px; margin: 0;">
-        &copy; 2024 Acaris System. All rights reserved.
+        &copy; 2026 Acaris System. All rights reserved.
       </p>
     </div>
 
