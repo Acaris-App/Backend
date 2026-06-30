@@ -1998,6 +1998,345 @@
             "description": "Hapus dokumen dari database dan otomatis hapus file dari GCS."
           },
           "response": []
+        },
+        {
+          "name": "POST Create Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Admin Baru",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "newadmin@dummy.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "password123",
+                  "type": "text"
+                },
+                {
+                  "key": "npm_nip",
+                  "value": "DUMMYNEWADMIN",
+                  "type": "text"
+                },
+                {
+                  "key": "profile_picture",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "admin"
+              ]
+            },
+            "description": "Admin membuat akun administrator baru."
+          }
+        },
+        {
+          "name": "PUT Update User Data",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Mahasiswa Dummy Updated",
+                  "type": "text"
+                },
+                {
+                  "key": "angkatan",
+                  "value": "2020",
+                  "type": "text"
+                },
+                {
+                  "key": "current_semester",
+                  "value": "8",
+                  "type": "text"
+                },
+                {
+                  "key": "ipk",
+                  "value": "3.85",
+                  "type": "text"
+                },
+                {
+                  "key": "profile_picture",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "26",
+                  "description": "ID User (Mahasiswa/Dosen/Admin)"
+                }
+              ]
+            },
+            "description": "Admin memperbarui data diri, IPK, semester, atau foto profil user tertentu."
+          }
+        },
+        {
+          "name": "GET Dokumen Mahasiswa Tertentu (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "26",
+                  "description": "ID Mahasiswa"
+                }
+              ]
+            },
+            "description": "Admin melihat daftar seluruh dokumen akademik milik mahasiswa tertentu."
+          }
+        },
+        {
+          "name": "POST Upload Dokumen Mahasiswa (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "document_type",
+                  "value": "krs",
+                  "type": "text"
+                },
+                {
+                  "key": "semester",
+                  "value": "8",
+                  "type": "text"
+                },
+                {
+                  "key": "judul",
+                  "value": "KRS Semester 8 Admin Upload",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "26",
+                  "description": "ID Mahasiswa"
+                }
+              ]
+            },
+            "description": "Admin mengunggah dokumen atas nama mahasiswa tertentu."
+          }
+        },
+        {
+          "name": "PUT Update Dokumen Mahasiswa (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/documents/:documentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "documents",
+                ":documentId"
+              ],
+              "variable": [
+                {
+                  "key": "documentId",
+                  "value": "1",
+                  "description": "ID Dokumen Mahasiswa"
+                }
+              ]
+            },
+            "description": "Admin mengupdate file fisik dari dokumen mahasiswa tertentu."
+          }
+        },
+        {
+          "name": "DELETE Dokumen Mahasiswa (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/documents/:documentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "documents",
+                ":documentId"
+              ],
+              "variable": [
+                {
+                  "key": "documentId",
+                  "value": "1",
+                  "description": "ID Dokumen Mahasiswa"
+                }
+              ]
+            },
+            "description": "Admin menghapus dokumen mahasiswa tertentu."
+          }
+        },
+        {
+          "name": "GET Riwayat Bimbingan Mahasiswa (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/:userId/bimbingan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":userId",
+                "bimbingan"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "26",
+                  "description": "ID Mahasiswa"
+                }
+              ]
+            },
+            "description": "Admin memantau riwayat bimbingan fisik mahasiswa tertentu."
+          }
+        },
+        {
+          "name": "GET Semua Kode Kelas (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/classes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "classes"
+              ]
+            },
+            "description": "Admin melihat daftar semua Kode Kelas yang tersedia di dalam sistem."
+          }
         }
       ]
     },
