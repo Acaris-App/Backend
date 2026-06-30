@@ -1162,6 +1162,29 @@ const app = new Elysia()
           responses: nullDataRoleResponses("Keterangan berhasil diperbarui"),
         },
       })
+      .get("/mahasiswa/:mahasiswaId/chatbot", () => ({}), {
+        params: t.Object({ mahasiswaId: t.String({ example: "1" }) }),
+        detail: {
+          tags: ["Dosen"],
+          summary: "Riwayat chatbot mahasiswa",
+          description: "Melihat daftar sesi chatbot yang dilakukan oleh mahasiswa bimbingan tertentu.",
+          security: authSecurity,
+          responses: adminUserChatbotResponses,
+        },
+      })
+      .get("/mahasiswa/:mahasiswaId/chatbot/:sessionId", () => ({}), {
+        params: t.Object({
+          mahasiswaId: t.String({ example: "1" }),
+          sessionId: t.String({ example: "S-12345-ABCDEF" })
+        }),
+        detail: {
+          tags: ["Dosen"],
+          summary: "Detail chatbot mahasiswa",
+          description: "Melihat detail riwayat pesan obrolan dalam sesi chatbot mahasiswa bimbingan.",
+          security: authSecurity,
+          responses: adminUserChatbotDetailResponses,
+        },
+      })
   )
 
   .group("/admin", (admin) =>
