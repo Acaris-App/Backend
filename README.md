@@ -1,4 +1,4 @@
-# 🌐 Acaris - Cloud-Native Academic Guidance
+# 🌐 Acaris - Cloud-Native Academic Guidance System
 
 ## 🌟 Base URL  
 
