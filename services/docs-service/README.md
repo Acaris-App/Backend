@@ -44,4 +44,4 @@ asia-southeast2
 
 ## Catatan
 
-Dokumentasi ini hanya berisi dokumentasi API teknis Acaris.
+Dokumentasi ini hanya berisi dokumentasi API teknis dari Acaris.
