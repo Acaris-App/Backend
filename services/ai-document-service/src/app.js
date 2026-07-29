@@ -61,6 +61,9 @@ app.use('/chatbot', chatbotRoutes);
 app.use('/api/chat-bot', chatbotRoutes);
 app.use('/admin', adminRoutes);
 app.use('/academic', academicRoutes);
+// The external URL map currently concatenates the rewritten prefix and suffix.
+// Keep aliases internal so the public /api/academic/* contract stays stable.
+app.use('/', academicRoutes);
 
 // ================= ERROR HANDLER =================
 app.use(errorHandler);
