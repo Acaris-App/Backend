@@ -258,6 +258,7 @@ SELECT
   n.sks,
   n.kode_periode,
   n.nilai_huruf,
+  n.bobot_efektif,
   n.nilai_angka,
   n.lulus,
   n.perlu_perhatian
@@ -287,7 +288,9 @@ Aturan prompt chatbot:
 
 ```text
 - Nilai efektif adalah nilai terbaik dari semua percobaan.
-- A, B, C, dan D lulus pada tingkat mata kuliah.
+- A, B+, B, C+, C, dan D lulus pada tingkat mata kuliah.
+- Gunakan bobot efektif berikut untuk IPK: A=4,00; B+=3,50; B=3,00;
+  C+=2,50; C=2,00; D=1,00; E=0,00.
 - Nilai D perlu perhatian; maksimal tiga nilai D efektif.
 - Jika jumlah D lebih dari tiga, jumlah_d_melebihi_batas adalah minimum mata
   kuliah D yang perlu diperbaiki.

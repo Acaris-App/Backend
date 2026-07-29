@@ -1,7 +1,15 @@
 const db = require('../config/db');
 const repository = require('../repositories/academic.repository');
 
-const gradePoints = { A: 4, B: 3, C: 2, D: 1, E: 0 };
+const gradePoints = {
+  A: 4,
+  'B+': 3.5,
+  B: 3,
+  'C+': 2.5,
+  C: 2,
+  D: 1,
+  E: 0
+};
 
 const asObject = (value) => {
   if (!value) return null;
@@ -18,8 +26,8 @@ const getItems = (payload) => payload?.daftar_nilai || payload?.data?.daftar_nil
 const getInfo = (payload) => payload?.informasi_semester || payload?.semester_info || {};
 
 const normalizeGrade = (value) => {
-  const grade = String(value || '').trim().toUpperCase().replace(/[+\-]/g, '');
-  return gradePoints[grade] === undefined ? null : grade;
+  const grade = String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+  return Object.prototype.hasOwnProperty.call(gradePoints, grade) ? grade : null;
 };
 
 const normalizeScore = (value) => {
