@@ -224,6 +224,83 @@ Pastikan:
 - nilai D di atas tiga masuk `jumlah_d_melebihi_batas`;
 - import ulang tidak menggandakan row dari dokumen sumber yang sama.
 
+## Ubah Postgres Tool Chatbot
+
+Workflow chatbot lama mengambil seluruh `dokumen_mahasiswa.isi_teks_dokumen`.
+Setelah backfill, arahkan pertanyaan nilai dan riwayat studi ke view terstruktur.
+Gunakan parameter query n8n, jangan interpolasi string NPM ke SQL.
+
+Query nilai efektif:
+
+```sql
+SELECT
+  n.kode_mata_kuliah,
+  n.nama_mata_kuliah,
+  n.sks,
+  n.kode_periode,
+  n.nilai_huruf,
+  n.nilai_angka,
+  n.lulus,
+  n.perlu_perhatian
+FROM v_nilai_efektif n
+JOIN users u ON u.id = n.mahasiswa_user_id
+WHERE u.npm_nip = $1
+ORDER BY n.kode_periode, n.kode_mata_kuliah;
+```
+
+Query ringkasan D/E:
+
+```sql
+SELECT
+  r.total_mata_kuliah_dinilai,
+  r.jumlah_d,
+  r.jumlah_e,
+  r.jumlah_wajib_diulang,
+  r.jumlah_d_melebihi_batas,
+  r.sks_lulus,
+  r.ipk_efektif
+FROM v_ringkasan_akademik r
+JOIN users u ON u.id = r.mahasiswa_user_id
+WHERE u.npm_nip = $1;
+```
+
+Aturan prompt chatbot:
+
+```text
+- Nilai efektif adalah nilai terbaik dari semua percobaan.
+- A, B, C, dan D lulus pada tingkat mata kuliah.
+- Nilai D perlu perhatian; maksimal tiga nilai D efektif.
+- Jika jumlah D lebih dari tiga, jumlah_d_melebihi_batas adalah minimum mata
+  kuliah D yang perlu diperbaiki.
+- Nilai E tidak lulus dan wajib diulang.
+- Jangan menyatakan mata kuliah lama setara kurikulum baru tanpa mapping resmi.
+- Jika ringkasan tidak ditemukan, jelaskan bahwa KHS belum berhasil dinormalisasi.
+```
+
+Untuk rekomendasi, n8n dapat memanggil Backend dengan JWT mahasiswa melalui
+`GET /api/academic/recommendations`. Jika workflow tidak boleh menyimpan JWT,
+duplikasi query rekomendasi tidak disarankan; buat internal endpoint service-to-
+service dengan secret terpisah pada pengembangan berikutnya.
+
+## Transisi Bucket Private
+
+Bucket saat ini tidak boleh langsung dibuat private karena mobile dan n8n masih
+menggunakan URL `storage.googleapis.com` yang tersimpan di database. Urutan aman:
+
+1. Buat service account runtime khusus tanpa file key.
+2. Beri `roles/storage.objectAdmin` hanya pada `acaris-storage`.
+3. Pasang service account tersebut pada Auth dan AI Document Cloud Run.
+4. Beri kemampuan `iam.serviceAccounts.signBlob` agar library GCS membuat signed URL.
+5. Ubah seluruh response foto, dokumen, dan knowledge base menjadi signed URL baca
+   dengan masa berlaku yang sesuai, tetapi pertahankan object path canonical di DB.
+6. Ubah payload ekstraksi n8n agar menerima signed URL baru setiap trigger.
+7. Uji upload/list/download/update/delete di mobile dan n8n.
+8. Baru hapus binding `allUsers:roles/storage.objectViewer` dan aktifkan Public
+   Access Prevention.
+
+Jangan mengunduh JSON service-account key. Gunakan attached service account Cloud
+Run dan attached service account VM n8n atau signed URL dari Backend.
+
 ## Rollback
 
 Jika deploy Backend gagal, kembalikan Cloud Run ke revision sebelumnya. Jika perlu
