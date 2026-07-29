@@ -5,6 +5,7 @@ const controller = require('../controllers/academic.controller');
 
 router.get('/summary', authenticate, controller.summary);
 router.get('/courses', authenticate, controller.courses);
+router.get('/recommendations', authenticate, controller.recommendations);
 
 router.post('/internal/import-khs', (req, res, next) => {
   const expected = process.env.N8N_ACADEMIC_CALLBACK_SECRET;

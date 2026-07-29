@@ -33,7 +33,8 @@
     "test": "npm run check:syntax && npm run check:postman",
     "dev": "nodemon src/app.js",
     "worker": "node src/jobs/email.job.js",
-    "backfill:academic": "node src/scripts/backfill-academic.js"
+    "backfill:academic": "node src/scripts/backfill-academic.js",
+    "seed:curriculum": "node src/scripts/seed-curriculum-2025.js"
   },
   "repository": {
     "type": "git",

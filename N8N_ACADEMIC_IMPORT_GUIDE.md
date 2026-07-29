@@ -173,6 +173,13 @@ field berikut pada setiap course bila informasi tersebut tersedia:
 Mapping konsentrasi belum diaktifkan oleh callback awal. Jangan membuat empat tabel
 terpisah; gunakan tabel `konsentrasi_mata_kuliah` dan seed empat konsentrasi.
 
+Dokumen Kurikulum TI 2025 yang tersedia tidak menyebut empat nama konsentrasi
+secara resmi. Seed awal menggunakan empat kelompok analitis berikut agar fitur
+perbandingan dapat berjalan, dan harus diganti jika program studi memberikan daftar
+resmi: RPL/Platform, Data-AI-Visual, Jaringan-Cloud-Keamanan, dan Sistem
+Informasi-Enterprise-Tata Kelola. Tidak ada prasyarat mata kuliah yang di-seed
+karena dokumen sumber tidak mencantumkan prasyarat eksplisit.
+
 ## Backfill KHS Production
 
 Setelah callback aktif dan master mata kuliah sudah terisi, jalankan dari folder
@@ -190,6 +197,14 @@ yang belum memiliki hasil ekstraksi tidak diisi dengan data kosong.
 Untuk tujuh KHS tanpa ekstraksi dan KHS dengan format lama, jalankan ulang workflow
 ekstraksi dokumen. Setelah n8n selesai mengirim callback, tidak perlu menjalankan
 backfill untuk dokumen itu lagi.
+
+Hasil backfill pertama pada 29 Juli 2026: 5 dari 42 KHS yang sudah mempunyai teks
+berhasil diimpor menjadi 46 baris mata kuliah untuk 4 mahasiswa. Sebagian besar
+kegagalan memakai kode kurikulum lama `INF620...`/`UNI620...`, sementara master
+yang tersedia adalah Kurikulum 2025 dengan kode `INF625...`. Jangan mengganti kode
+lama menjadi kode baru hanya berdasarkan nomor atau kemiripan. Unggah dokumen
+kurikulum lama atau tabel ekuivalensi resmi, lalu tambahkan alias yang terverifikasi.
+KHS tanpa `daftar_nilai` perlu diekstrak ulang dengan prompt format terbaru.
 
 ## Verifikasi SQL
 

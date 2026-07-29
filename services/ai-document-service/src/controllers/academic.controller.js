@@ -29,3 +29,8 @@ exports.courses = async (req, res, next) => {
   try { res.json({ status: 'success', data: await academicService.getCourses({ user: req.user }) }); }
   catch (error) { next(error); }
 };
+
+exports.recommendations = async (req, res, next) => {
+  try { res.json({ status: 'success', data: await academicService.getRecommendations({ user: req.user }) }); }
+  catch (error) { next(error); }
+};

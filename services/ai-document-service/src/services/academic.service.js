@@ -115,6 +115,11 @@ exports.getCourses = ({ user }) => {
   return repository.getEffectiveCourses(user.id);
 };
 
+exports.getRecommendations = ({ user }) => {
+  ensureMahasiswa(user);
+  return repository.getRecommendations(user.id);
+};
+
 exports.importCurriculum = async ({ knowledgeBaseId, payload }) => {
   const parsed = asObject(payload) || payload;
   const courses = parsed?.courses || parsed?.mata_kuliah || [];

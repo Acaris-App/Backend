@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 exports.findDocument = async (documentId) => {
   const result = await db.query(
-    `SELECT id, user_id, document_type, semester, file_path
+    `SELECT id, user_id, document_type, semester, file_path, uploaded_at
      FROM dokumen_mahasiswa
      WHERE id = $1`,
     [documentId]
@@ -24,8 +24,8 @@ exports.findCourseByName = async (name) => {
   const result = await db.query(
     `SELECT id, kode, nama, sks
      FROM mata_kuliah
-     WHERE LOWER(regexp_replace(nama, '[^a-z0-9]+', '', 'g')) =
-           LOWER(regexp_replace($1, '[^a-z0-9]+', '', 'g'))
+     WHERE regexp_replace(LOWER(nama), '[^a-z0-9]+', '', 'g') =
+           regexp_replace(LOWER($1), '[^a-z0-9]+', '', 'g')
        AND status = 'aktif'
      LIMIT 1`,
     [name]
@@ -177,4 +177,61 @@ exports.getEffectiveCourses = async (userId) => {
     [userId]
   );
   return result.rows;
+};
+
+exports.getRecommendations = async (userId) => {
+  const summary = await exports.getSummary(userId);
+  const repeats = await db.query(
+    `SELECT kode_mata_kuliah, nama_mata_kuliah, sks, nilai_huruf,
+            CASE WHEN nilai_huruf = 'E' THEN 'wajib_diulang' ELSE 'pertimbangkan_perbaikan' END AS alasan
+     FROM v_nilai_efektif
+     WHERE mahasiswa_user_id = $1 AND nilai_huruf IN ('D', 'E')
+     ORDER BY CASE nilai_huruf WHEN 'E' THEN 0 ELSE 1 END, kode_mata_kuliah`,
+    [userId]
+  );
+  const remaining = await db.query(
+    `SELECT DISTINCT mk.id, mk.kode, mk.nama, mk.sks, kmk.semester_rekomendasi, kmk.sifat
+     FROM kurikulum_mata_kuliah kmk
+     JOIN kurikulum k ON k.id = kmk.kurikulum_id AND k.status = 'aktif'
+     JOIN mata_kuliah mk ON mk.id = kmk.mata_kuliah_id AND mk.status = 'aktif'
+     LEFT JOIN v_nilai_efektif n
+       ON n.mahasiswa_user_id = $1 AND n.mata_kuliah_id = mk.id AND n.lulus
+     WHERE n.mata_kuliah_id IS NULL
+       AND NOT EXISTS (
+         SELECT 1 FROM mata_kuliah_prasyarat p
+         LEFT JOIN v_nilai_efektif pn
+           ON pn.mahasiswa_user_id = $1
+          AND pn.mata_kuliah_id = p.prasyarat_mata_kuliah_id
+         WHERE p.kurikulum_id = k.id AND p.mata_kuliah_id = mk.id
+           AND (pn.mata_kuliah_id IS NULL OR
+             CASE pn.nilai_huruf WHEN 'A' THEN 4 WHEN 'B' THEN 3 WHEN 'C' THEN 2 WHEN 'D' THEN 1 ELSE 0 END <
+             CASE p.nilai_minimum WHEN 'A' THEN 4 WHEN 'B' THEN 3 WHEN 'C' THEN 2 WHEN 'D' THEN 1 ELSE 0 END)
+       )
+     ORDER BY kmk.semester_rekomendasi NULLS LAST, mk.kode`,
+    [userId]
+  );
+  const concentrations = await db.query(
+    `SELECT k.id, k.kode, k.nama,
+            COUNT(kmk.kurikulum_mata_kuliah_id) AS total_mata_kuliah,
+            COUNT(n.mata_kuliah_id) FILTER (WHERE n.lulus) AS sudah_lulus,
+            ROUND(100.0 * COUNT(n.mata_kuliah_id) FILTER (WHERE n.lulus) /
+              NULLIF(COUNT(kmk.kurikulum_mata_kuliah_id), 0), 2) AS progres_persen
+     FROM konsentrasi k
+     LEFT JOIN konsentrasi_mata_kuliah kmk ON kmk.konsentrasi_id = k.id
+     LEFT JOIN kurikulum_mata_kuliah c ON c.id = kmk.kurikulum_mata_kuliah_id
+     LEFT JOIN v_nilai_efektif n
+       ON n.mahasiswa_user_id = $1 AND n.mata_kuliah_id = c.mata_kuliah_id
+     WHERE k.status = 'aktif'
+     GROUP BY k.id, k.kode, k.nama
+     ORDER BY progres_persen DESC NULLS LAST, k.nama`,
+    [userId]
+  );
+  return {
+    policy: { nilai_efektif: 'terbaik', batas_nilai_d: 3, nilai_e_wajib_diulang: true },
+    summary,
+    repeat_priorities: repeats.rows,
+    minimum_d_repeats: Number(summary.jumlah_d_melebihi_batas || 0),
+    eligible_remaining_courses: remaining.rows,
+    concentration_progress: concentrations.rows
+  };
 };
