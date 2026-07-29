@@ -32,7 +32,8 @@
     "jmeter:local:smoke": "powershell -ExecutionPolicy Bypass -File ../../tests/load/run-local-jmeter.ps1",
     "test": "npm run check:syntax && npm run check:postman",
     "dev": "nodemon src/app.js",
-    "worker": "node src/jobs/email.job.js"
+    "worker": "node src/jobs/email.job.js",
+    "backfill:academic": "node src/scripts/backfill-academic.js"
   },
   "repository": {
     "type": "git",

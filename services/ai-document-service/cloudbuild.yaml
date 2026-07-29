@@ -41,7 +41,8 @@ steps:
     - '--set-secrets=N8N_DOCUMENT_EXTRACT_WEBHOOK_URL=N8N_DOCUMENT_EXTRACT_WEBHOOK_URL:latest'
     - '--set-secrets=N8N_CHATBOT_WEBHOOK_URL=N8N_CHATBOT_WEBHOOK_URL:latest'
     - '--set-secrets=N8N_GENERATE_SUMMARY_WEBHOOK_ID=N8N_GENERATE_SUMMARY_WEBHOOK_ID:latest'
-    - '--set-secrets=N8N_CLOSE_SESSION_WEBHOOK_ID=N8N_CLOSE_SESSION_WEBHOOK_ID:latest'
+     - '--set-secrets=N8N_CLOSE_SESSION_WEBHOOK_ID=N8N_CLOSE_SESSION_WEBHOOK_ID:latest'
+     - '--set-secrets=N8N_ACADEMIC_CALLBACK_SECRET=N8N_ACADEMIC_CALLBACK_SECRET:latest'
 
 images:
   - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/ai-document-service:$SHORT_SHA'

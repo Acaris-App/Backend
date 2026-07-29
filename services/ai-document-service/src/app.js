@@ -54,11 +54,13 @@ app.get('/health', (req, res) => {
 const documentRoutes = require('./routes/document.routes');
 const chatbotRoutes = require('./routes/chatbot.routes');
 const adminRoutes = require('./routes/admin.routes');
+const academicRoutes = require('./routes/academic.routes');
 
 app.use('/document', documentRoutes);
 app.use('/chatbot', chatbotRoutes);
 app.use('/api/chat-bot', chatbotRoutes);
 app.use('/admin', adminRoutes);
+app.use('/academic', academicRoutes);
 
 // ================= ERROR HANDLER =================
 app.use(errorHandler);
