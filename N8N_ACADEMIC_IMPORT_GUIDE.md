@@ -198,13 +198,32 @@ Untuk tujuh KHS tanpa ekstraksi dan KHS dengan format lama, jalankan ulang workf
 ekstraksi dokumen. Setelah n8n selesai mengirim callback, tidak perlu menjalankan
 backfill untuk dokumen itu lagi.
 
-Hasil backfill pertama pada 29 Juli 2026: 5 dari 42 KHS yang sudah mempunyai teks
-berhasil diimpor menjadi 46 baris mata kuliah untuk 4 mahasiswa. Sebagian besar
-kegagalan memakai kode kurikulum lama `INF620...`/`UNI620...`, sementara master
-yang tersedia adalah Kurikulum 2025 dengan kode `INF625...`. Jangan mengganti kode
-lama menjadi kode baru hanya berdasarkan nomor atau kemiripan. Unggah dokumen
-kurikulum lama atau tabel ekuivalensi resmi, lalu tambahkan alias yang terverifikasi.
-KHS tanpa `daftar_nilai` perlu diekstrak ulang dengan prompt format terbaru.
+Kurikulum SIAKAD 2020 sudah ditambahkan sebagai master terpisah dengan kode
+`TI-2020`. Kode `INF620...`/`UNI620...` tidak dikonversi menjadi `INF625...`.
+Mahasiswa angkatan sebelum 2025 ditetapkan ke TI-2020, sedangkan angkatan 2025
+dan sesudahnya ditetapkan ke TI-2025. KHS tanpa `daftar_nilai` tetap perlu
+diekstrak ulang dengan prompt format terbaru.
+
+Lima mata kuliah agama pada semester 2 dimodelkan sebagai kelompok alternatif
+`AGAMA`: mahasiswa cukup lulus salah satu sesuai agamanya. Sistem tidak akan
+merekomendasikan kelima mata kuliah agama sekaligus setelah salah satunya lulus.
+
+Hasil backfill setelah master TI-2020 tersedia pada 29 Juli 2026:
+
+```text
+KHS dengan teks ekstraksi: 42
+KHS berhasil dinormalisasi: 31
+Hasil mata kuliah terstruktur: 302
+Mahasiswa dengan data terstruktur: 7
+KHS format lama/tidak lengkap: 11
+KHS tanpa teks ekstraksi: 7
+Total perlu ekstraksi ulang n8n: 18
+```
+
+Sebelas KHS gagal karena tidak mempunyai `daftar_nilai` atau memiliki item tanpa
+nilai valid. Tujuh KHS lainnya belum pernah menerima teks hasil ekstraksi. Semua
+18 dokumen tersebut perlu dikirim ulang melalui workflow ekstraksi terbaru; master
+kode TI-2020 tidak lagi menjadi penghambat.
 
 ## Verifikasi SQL
 

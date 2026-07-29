@@ -37,6 +37,11 @@ const importKhs = async ({ documentId, payload }) => {
     throw { status: 422, message: 'Dokumen sumber bukan KHS yang valid' };
   }
 
+  const curriculum = await repository.findStudentCurriculum(document.user_id);
+  if (!curriculum) {
+    throw { status: 422, message: 'Kurikulum mahasiswa belum ditetapkan' };
+  }
+
   const items = getItems(parsed);
   if (!Array.isArray(items) || items.length === 0) {
     throw { status: 422, message: 'Hasil ekstraksi KHS tidak memiliki daftar nilai' };
@@ -66,6 +71,7 @@ const importKhs = async ({ documentId, payload }) => {
       documentId: document.id,
       periodId,
       type: 'khs',
+      curriculumId: curriculum.id,
       key: importKey,
       raw: parsed
     });
@@ -73,7 +79,9 @@ const importKhs = async ({ documentId, payload }) => {
       importId, documentId: document.id, mahasiswaUserId: document.user_id
     });
     for (const item of normalized) {
-      const course = await repository.findCourseByCode(item.code) || await repository.findCourseByName(item.name);
+      const course = await repository.findCourseForCurriculum(
+        curriculum.id, item.code, item.name
+      );
       if (!course) throw { status: 422, message: `Mata kuliah ${item.code} tidak ditemukan di master kurikulum` };
       await repository.insertCourseResult(client, {
         mahasiswaUserId: document.user_id,

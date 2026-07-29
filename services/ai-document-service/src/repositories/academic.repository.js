@@ -20,6 +20,35 @@ exports.findCourseByCode = async (code) => {
   return result.rows[0] || null;
 };
 
+exports.findStudentCurriculum = async (userId) => {
+  const result = await db.query(
+    `SELECT k.id, k.kode, k.nama
+     FROM mahasiswa_kurikulum mk
+     JOIN kurikulum k ON k.id = mk.kurikulum_id
+     WHERE mk.mahasiswa_user_id = $1`,
+    [userId]
+  );
+  return result.rows[0] || null;
+};
+
+exports.findCourseForCurriculum = async (curriculumId, code, name) => {
+  const result = await db.query(
+    `SELECT mk.id, mk.kode, mk.nama, mk.sks
+     FROM kurikulum_mata_kuliah kmk
+     JOIN mata_kuliah mk ON mk.id = kmk.mata_kuliah_id
+     WHERE kmk.kurikulum_id = $1
+       AND (
+         UPPER(mk.kode) = UPPER($2)
+         OR regexp_replace(LOWER(mk.nama), '[^a-z0-9]+', '', 'g') =
+            regexp_replace(LOWER($3), '[^a-z0-9]+', '', 'g')
+       )
+     ORDER BY CASE WHEN UPPER(mk.kode) = UPPER($2) THEN 0 ELSE 1 END
+     LIMIT 1`,
+    [curriculumId, code, name]
+  );
+  return result.rows[0] || null;
+};
+
 exports.findCourseByName = async (name) => {
   const result = await db.query(
     `SELECT id, kode, nama, sks
@@ -67,15 +96,19 @@ exports.createImport = async (client, data) => {
   const result = await client.query(
     `INSERT INTO academic_imports
        (mahasiswa_user_id, source_document_id, periode_akademik_id,
-        knowledge_base_id, import_type, idempotency_key, status, attempt_count, raw_result, started_at)
-     VALUES ($1, $2, $3, $4, $5, $6, 'processing', 1, $7::jsonb, NOW())
+        knowledge_base_id, kurikulum_id, import_type, idempotency_key, status,
+        attempt_count, raw_result, started_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'processing', 1, $8::jsonb, NOW())
      ON CONFLICT (idempotency_key)
      DO UPDATE SET status = 'processing', attempt_count = academic_imports.attempt_count + 1,
                    raw_result = EXCLUDED.raw_result, error_message = NULL,
-                   started_at = NOW(), updated_at = NOW()
+                   periode_akademik_id = EXCLUDED.periode_akademik_id,
+                   kurikulum_id = EXCLUDED.kurikulum_id,
+                   started_at = NOW(), completed_at = NULL, updated_at = NOW()
      RETURNING id`,
     [data.mahasiswaUserId || null, data.documentId || null, data.periodId || null,
-      data.knowledgeBaseId || null, data.type, data.key, JSON.stringify(data.raw)]
+      data.knowledgeBaseId || null, data.curriculumId || null, data.type, data.key,
+      JSON.stringify(data.raw)]
   );
   return result.rows[0].id;
 };
@@ -191,12 +224,27 @@ exports.getRecommendations = async (userId) => {
   );
   const remaining = await db.query(
     `SELECT DISTINCT mk.id, mk.kode, mk.nama, mk.sks, kmk.semester_rekomendasi, kmk.sifat
-     FROM kurikulum_mata_kuliah kmk
+     FROM mahasiswa_kurikulum assignment
+     JOIN kurikulum_mata_kuliah kmk ON kmk.kurikulum_id = assignment.kurikulum_id
      JOIN kurikulum k ON k.id = kmk.kurikulum_id AND k.status = 'aktif'
      JOIN mata_kuliah mk ON mk.id = kmk.mata_kuliah_id AND mk.status = 'aktif'
      LEFT JOIN v_nilai_efektif n
        ON n.mahasiswa_user_id = $1 AND n.mata_kuliah_id = mk.id AND n.lulus
-     WHERE n.mata_kuliah_id IS NULL
+     WHERE assignment.mahasiswa_user_id = $1
+       AND n.mata_kuliah_id IS NULL
+       AND (
+         kmk.kelompok_alternatif IS NULL
+         OR NOT EXISTS (
+           SELECT 1
+           FROM kurikulum_mata_kuliah alt
+           JOIN v_nilai_efektif alt_n
+             ON alt_n.mahasiswa_user_id = $1
+            AND alt_n.mata_kuliah_id = alt.mata_kuliah_id
+            AND alt_n.lulus
+           WHERE alt.kurikulum_id = kmk.kurikulum_id
+             AND alt.kelompok_alternatif = kmk.kelompok_alternatif
+         )
+       )
        AND NOT EXISTS (
          SELECT 1 FROM mata_kuliah_prasyarat p
          LEFT JOIN v_nilai_efektif pn
@@ -212,16 +260,19 @@ exports.getRecommendations = async (userId) => {
   );
   const concentrations = await db.query(
     `SELECT k.id, k.kode, k.nama,
-            COUNT(kmk.kurikulum_mata_kuliah_id) AS total_mata_kuliah,
+            COUNT(c.id) AS total_mata_kuliah,
             COUNT(n.mata_kuliah_id) FILTER (WHERE n.lulus) AS sudah_lulus,
             ROUND(100.0 * COUNT(n.mata_kuliah_id) FILTER (WHERE n.lulus) /
               NULLIF(COUNT(kmk.kurikulum_mata_kuliah_id), 0), 2) AS progres_persen
-     FROM konsentrasi k
+     FROM mahasiswa_kurikulum assignment
+     JOIN konsentrasi k ON TRUE
      LEFT JOIN konsentrasi_mata_kuliah kmk ON kmk.konsentrasi_id = k.id
-     LEFT JOIN kurikulum_mata_kuliah c ON c.id = kmk.kurikulum_mata_kuliah_id
+     LEFT JOIN kurikulum_mata_kuliah c
+       ON c.id = kmk.kurikulum_mata_kuliah_id
+      AND c.kurikulum_id = assignment.kurikulum_id
      LEFT JOIN v_nilai_efektif n
        ON n.mahasiswa_user_id = $1 AND n.mata_kuliah_id = c.mata_kuliah_id
-     WHERE k.status = 'aktif'
+     WHERE assignment.mahasiswa_user_id = $1 AND k.status = 'aktif'
      GROUP BY k.id, k.kode, k.nama
      ORDER BY progres_persen DESC NULLS LAST, k.nama`,
     [userId]
