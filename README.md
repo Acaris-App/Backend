@@ -153,5 +153,5 @@ Skema arsitektur cloud sistem bimbingan Acaris:
 Estimasi pengeluaran bulanan dihitung menggunakan Google Cloud Pricing Calculator dengan asumsi penggunaan penuh untuk seluruh infrastruktur Acaris:  
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Aku-Mars/gambar/refs/heads/main/GCPC.png" alt="GCP Pricing Calculator"/>
+  <img src="https://raw.githubusercontent.com/Acaris-App/dokumentasi-backend/main/2.Implementasi_Sistem/cloud.google.com-Google%20Cloud%20Estimate%20Summary-fpscreenshot.jpeg" alt="GCP Pricing Calculator"/>
 </p>  
