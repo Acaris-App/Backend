@@ -143,7 +143,7 @@ Layanan AI/chatbot bimbingan akademik ("Aca") yang di-host secara terpisah di VP
 
 Skema arsitektur cloud sistem bimbingan Acaris:  
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Aku-Mars/gambar/refs/heads/main/Cloud%20Architecture.png" alt="Cloud Architecture"/>
+  <img src="https://raw.githubusercontent.com/Acaris-App/dokumentasi-backend/main/2.Implementasi_Sistem/Diagram-Arsi.drawio.png" alt="Cloud Architecture"/>
 </p>  
 
 ---
