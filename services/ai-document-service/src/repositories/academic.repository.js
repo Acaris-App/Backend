@@ -250,7 +250,9 @@ exports.getRecommendations = async (userId) => {
          LEFT JOIN v_nilai_efektif pn
            ON pn.mahasiswa_user_id = $1
           AND pn.mata_kuliah_id = p.prasyarat_mata_kuliah_id
-         WHERE p.kurikulum_id = k.id AND p.mata_kuliah_id = mk.id
+          WHERE p.kurikulum_id = k.id
+            AND p.mata_kuliah_id = mk.id
+            AND p.verification_status = 'verified'
            AND (pn.mata_kuliah_id IS NULL OR
              CASE pn.nilai_huruf WHEN 'A' THEN 4 WHEN 'B' THEN 3 WHEN 'C' THEN 2 WHEN 'D' THEN 1 ELSE 0 END <
              CASE p.nilai_minimum WHEN 'A' THEN 4 WHEN 'B' THEN 3 WHEN 'C' THEN 2 WHEN 'D' THEN 1 ELSE 0 END)
@@ -259,13 +261,13 @@ exports.getRecommendations = async (userId) => {
     [userId]
   );
   const concentrations = await db.query(
-    `SELECT k.id, k.kode, k.nama,
+      `SELECT k.id, k.kode, k.nama,
             COUNT(c.id) AS total_mata_kuliah,
             COUNT(n.mata_kuliah_id) FILTER (WHERE n.lulus) AS sudah_lulus,
             ROUND(100.0 * COUNT(n.mata_kuliah_id) FILTER (WHERE n.lulus) /
               NULLIF(COUNT(kmk.kurikulum_mata_kuliah_id), 0), 2) AS progres_persen
-     FROM mahasiswa_kurikulum assignment
-     JOIN konsentrasi k ON TRUE
+      FROM mahasiswa_kurikulum assignment
+      JOIN konsentrasi k ON k.kurikulum_id = assignment.kurikulum_id
      LEFT JOIN konsentrasi_mata_kuliah kmk ON kmk.konsentrasi_id = k.id
      LEFT JOIN kurikulum_mata_kuliah c
        ON c.id = kmk.kurikulum_mata_kuliah_id

@@ -1,0 +1,31 @@
+const fs = require('fs');
+const path = require('path');
+
+const root = path.resolve(__dirname, '../..');
+const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+const seed2020 = read('services/ai-document-service/src/scripts/seed-curriculum-2020.js');
+const seed2025 = read('services/ai-document-service/src/scripts/seed-curriculum-2025.js');
+const migration = read('migrations/20260731_harden_curriculum_sources.sql');
+const repository = read('services/ai-document-service/src/repositories/academic.repository.js');
+
+const assert = (condition, message) => {
+  if (!condition) throw new Error(message);
+};
+
+assert((seed2020.match(/\n  (?:RPL|DAI|JKK|SIT): \[/g) || []).length === 4,
+  'TI-2020 seed must retain four concentration groups.');
+assert(seed2020.includes("RPL: 'Rekayasa Perangkat Lunak'") &&
+  seed2020.includes("JKK: 'Teknik Komputer'") &&
+  seed2020.includes("SIT: 'Teknologi Informasi'") &&
+  seed2020.includes("DAI: 'Sistem Cerdas'"),
+  'TI-2020 seed must use the four official concentration names.');
+assert((seed2025.match(/\n  (?:SK|RPL|TI): \[/g) || []).length === 3,
+  'TI-2025 seed must define exactly three concentration groups.');
+assert(migration.includes("verification_status = 'verified'"),
+  'Curriculum migration must define verified prerequisite records.');
+assert(migration.includes("'proposed'"),
+  'Curriculum migration must preserve unverified prerequisite proposals.');
+assert(repository.includes("p.verification_status = 'verified'"),
+  'Recommendation queries must filter prerequisites by verification status.');
+
+console.log('Curriculum catalog checks passed.');

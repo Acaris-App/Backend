@@ -108,6 +108,7 @@ $env:PGDATABASE = 'acaris_db'
 $env:PGPASSWORD = gcloud secrets versions access latest --secret=DB_PASSWORD --project=$project
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_create_academic_schema.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_add_student_curriculum_assignment.sql
+psql -v ON_ERROR_STOP=1 -f migrations/20260731_harden_curriculum_sources.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_fix_academic_imports_and_summary.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_support_plus_minus_grades.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_limit_plus_grades_only.sql
@@ -131,6 +132,12 @@ $env:NODE_ENV = 'production'
 npm ci
 npm run seed:curriculum
 npm run seed:curriculum-2020
+# Re-run after seeds so verified/proposed prerequisite edges can resolve course IDs.
+Pop-Location
+
+psql -v ON_ERROR_STOP=1 -f migrations/20260731_harden_curriculum_sources.sql
+
+Push-Location services/ai-document-service
 npm run backfill:academic
 Pop-Location
 ```
@@ -140,6 +147,27 @@ with `isi_teks_dokumen`. Re-run n8n extraction for documents without valid extra
 output; do not manufacture grades or backfill empty data. The legacy lecturer and
 role SQL seeds in `migrations/` are separate data operations and must not be run as
 part of the academic seed unless explicitly approved.
+
+## Curriculum Source Policy
+
+The curriculum catalog is read from PostgreSQL tables `kurikulum`,
+`kurikulum_mata_kuliah`, and `mata_kuliah`; Vector Store is not the source of truth
+for a complete course list. The n8n curriculum tool returns `found`,
+`result_status`, `requested_year`, `course_count`, and `courses`. A missing year
+must not silently fall back to another curriculum year.
+
+Prerequisites are stored in `mata_kuliah_prasyarat`. Only rows with
+`verification_status = 'verified'` may affect eligibility or recommendations.
+Rows marked `proposed` are review candidates and must not block or authorize a
+course. The migration `20260731_harden_curriculum_sources.sql` records source URLs,
+verification status, and curriculum-specific concentration scope.
+
+The concentration names are curriculum-scoped. TI-2020 uses Rekayasa Perangkat
+Lunak, Teknik Komputer, Teknologi Informasi, and Sistem Cerdas. The supplied 2025
+reference identifies three fields: Sistem Komputer, Rekayasa Perangkat Lunak, and
+Teknologi Informasi. Course-to-concentration mappings for TI-2025 are intentionally
+left empty until an official mapping is available; no inferred mapping should be
+treated as academic policy.
 
 ## Verification
 
