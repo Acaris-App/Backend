@@ -109,6 +109,7 @@ $env:PGPASSWORD = gcloud secrets versions access latest --secret=DB_PASSWORD --p
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_create_academic_schema.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_add_student_curriculum_assignment.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260731_harden_curriculum_sources.sql
+psql -v ON_ERROR_STOP=1 -f migrations/20260801_map_ti_2025_concentrations.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_fix_academic_imports_and_summary.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_support_plus_minus_grades.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_limit_plus_grades_only.sql
@@ -165,9 +166,10 @@ verification status, and curriculum-specific concentration scope.
 The concentration names are curriculum-scoped. TI-2020 uses Rekayasa Perangkat
 Lunak, Teknik Komputer, Teknologi Informasi, and Sistem Cerdas. The supplied 2025
 reference identifies three fields: Sistem Komputer, Rekayasa Perangkat Lunak, and
-Teknologi Informasi. Course-to-concentration mappings for TI-2025 are intentionally
-left empty until an official mapping is available; no inferred mapping should be
-treated as academic policy.
+Teknologi Informasi. The TI-2025 operational course mapping is maintained in
+`20260801_map_ti_2025_concentrations.sql` and `seed-curriculum-2025.js`. It is
+derived from the curriculum field descriptions and course scope, not from the
+conflicting BK mapping tables; it must not be used as a prerequisite rule.
 
 ## Verification
 
