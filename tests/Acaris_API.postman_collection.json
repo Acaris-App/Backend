@@ -108,12 +108,7 @@
                 },
                 {
                   "key": "npm_nip",
-                  "value": "DUMMYMAHASISWA",
-                  "type": "text"
-                },
-                {
-                  "key": "angkatan",
-                  "value": "2021",
+                  "value": "2255069999",
                   "type": "text"
                 },
                 {
@@ -130,6 +125,12 @@
                   "key": "current_semester",
                   "value": "8",
                   "type": "text"
+                },
+                {
+                  "key": "konsentrasi",
+                  "value": "Rekayasa Perangkat Lunak",
+                  "type": "text",
+                  "description": "Wajib untuk mahasiswa semester 5 ke atas. Nilai valid: Rekayasa Perangkat Lunak, Sistem Cerdas, Teknik Komputer, Teknologi Informasi, atau Sistem Komputer."
                 },
                 {
                   "key": "profile_picture",
@@ -150,7 +151,7 @@
                 "mahasiswa"
               ]
             },
-            "description": "Register akun mahasiswa. Gunakan multipart/form-data. profile_picture opsional. Setelah sukses, OTP dikirim ke email."
+            "description": "Register akun mahasiswa. Gunakan multipart/form-data. profile_picture opsional. angkatan tidak diinput. Tahun masuk dibaca dari dua digit pertama NPM: sebelum 2025 memakai TI-2020, mulai 2025 memakai TI-2025. konsentrasi wajib untuk current_semester 5 ke atas dan harus tersedia pada kurikulum otomatis tersebut. Setelah sukses, OTP dikirim ke email."
           },
           "response": []
         },

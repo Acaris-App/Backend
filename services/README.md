@@ -110,6 +110,7 @@ psql -v ON_ERROR_STOP=1 -f migrations/20260729_create_academic_schema.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_add_student_curriculum_assignment.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260731_harden_curriculum_sources.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260801_map_ti_2025_concentrations.sql
+psql -v ON_ERROR_STOP=1 -f migrations/20260803_require_student_concentration.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_fix_academic_imports_and_summary.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_support_plus_minus_grades.sql
 psql -v ON_ERROR_STOP=1 -f migrations/20260729_limit_plus_grades_only.sql

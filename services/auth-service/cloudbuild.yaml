@@ -1,11 +1,11 @@
 steps:
   # Build image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/auth-service:$SHORT_SHA', '-f', 'services/auth-service/Dockerfile', 'services/auth-service']
+    args: ['build', '-t', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/auth-service:$BUILD_ID', '-f', 'services/auth-service/Dockerfile', 'services/auth-service']
 
   # Push ke Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/auth-service:$SHORT_SHA']
+    args: ['push', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/auth-service:$BUILD_ID']
 
   # Deploy ke Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -15,7 +15,7 @@ steps:
     - 'deploy'
     - 'acaris-auth'
     - '--image'
-    - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/auth-service:$SHORT_SHA'
+    - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/auth-service:$BUILD_ID'
     - '--region'
     - 'asia-southeast2'
     - '--platform'
@@ -38,7 +38,7 @@ steps:
     - '--set-secrets=REDIS_URL=REDIS_URL:latest'
 
 images:
-  - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/auth-service:$SHORT_SHA'
+  - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/auth-service:$BUILD_ID'
 
 options:
   logging: CLOUD_LOGGING_ONLY
