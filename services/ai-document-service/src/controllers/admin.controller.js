@@ -189,3 +189,10 @@ exports.getAllKodeKelas = async (req, res, next) => {
     res.status(200).json({ status: 'success', message: 'Berhasil mengambil daftar kode kelas', data });
   } catch (err) { next(err); }
 };
+
+exports.getSchedule = async (req, res, next) => {
+  try {
+    const data = await adminService.getSchedule({ user: req.user });
+    res.status(200).json({ status: 'success', message: 'Berhasil mengambil jadwal aktif', data });
+  } catch (err) { next(err); }
+};
