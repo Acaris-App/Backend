@@ -30,6 +30,7 @@ steps:
     - '--set-env-vars=DB_NAME=acaris_db'
     - '--set-env-vars=EMAIL_USER=marsneedduitbanget@gmail.com'
     - '--set-env-vars=GCS_BUCKET=acaris-storage'
+    - '--set-env-vars=GEMINI_MODEL=gemini-3.5-flash-lite'
 
 
     # SECRETS — diambil dari Google Secret Manager
@@ -43,6 +44,7 @@ steps:
     - '--set-secrets=N8N_GENERATE_SUMMARY_WEBHOOK_ID=N8N_GENERATE_SUMMARY_WEBHOOK_ID:latest'
     - '--set-secrets=N8N_CLOSE_SESSION_WEBHOOK_ID=N8N_CLOSE_SESSION_WEBHOOK_ID:latest'
     - '--set-secrets=N8N_ACADEMIC_CALLBACK_SECRET=N8N_ACADEMIC_CALLBACK_SECRET:latest'
+    - '--set-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest'
 
 images:
   - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/backend/ai-document-service:$SHORT_SHA'
